@@ -1,24 +1,25 @@
-import {TelemetryGeneratorService} from './../../service/telemetry-generator.service';
-import {TranslateService} from '@ngx-translate/core';
-import {AlertController, Events, PopoverController,NavParams} from 'ionic-angular';
-import {Platform, ToastController, ViewController} from 'ionic-angular';
-import {Component, Inject} from '@angular/core';
+import { TelemetryGeneratorService } from './../../service/telemetry-generator.service';
+import { TranslateService } from '@ngx-translate/core';
+import { NavParams } from 'ionic-angular/navigation/nav-params';
+import { PopoverController, Events, AlertController } from 'ionic-angular/index';
+import { ViewController } from 'ionic-angular';
+import { Component } from '@angular/core';
 import {
-  AuthService,
-  ContentDeleteResponse,
-  ContentDeleteStatus,
   ContentService,
-  CorrelationData,
-  OAuthSession,
+  AuthService,
+  Environment,
   Rollup,
+  CorrelationData,
+  InteractType,
+  InteractSubtype,
   TelemetryObject
-} from 'sunbird-sdk';
-import {CommonUtilService} from '../../service/common-util.service';
-import {Environment, InteractSubtype, InteractType} from '../../service/telemetry-constants';
-import { SbPopoverComponent } from '../popups/sb-popover/sb-popover';
-import { FileSizePipe } from '@app/pipes/file-size/file-size';
-import { SbGenericPopoverComponent } from '../popups/sb-generic-popup/sb-generic-popover';
-import moment from 'moment';
+} from 'sunbird';
+import { ToastController, Platform } from 'ionic-angular';
+import { CommonUtilService } from '../../service/common-util.service';
+import { ReportIssuesComponent } from '../report-issues/report-issues';
+import { ProfileConstants } from '../../app/app.constant';
+import { UnenrollAlertComponent } from '../unenroll-alert/unenroll-alert';
+
 @Component({
   selector: 'content-actions',
   templateUrl: 'content-actions.html'
@@ -39,18 +40,17 @@ export class ContentActionsComponent {
 
   constructor(
     public viewCtrl: ViewController,
-    @Inject('CONTENT_SERVICE') private contentService: ContentService,
+    private contentService: ContentService,
     private navParams: NavParams,
     private toastCtrl: ToastController,
     public popoverCtrl: PopoverController,
-    @Inject('AUTH_SERVICE') private authService: AuthService,
+    private authService: AuthService,
     private alertctrl: AlertController,
     private events: Events,
     private translate: TranslateService,
     private platform: Platform,
     private commonUtilService: CommonUtilService,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private fileSizePipe: FileSizePipe
+    private telemetryGeneratorService: TelemetryGeneratorService
   ) {
     this.content = this.navParams.get('content');
     this.data = this.navParams.get('data');
@@ -71,21 +71,22 @@ export class ContentActionsComponent {
     this.getUserId();
   }
 
-  ionViewWillLeave(): void {
-    this.backButtonFunc();
-  }
-
   getUserId() {
-    this.authService.getSession().subscribe((session: OAuthSession) => {
-      if (!session) {
+    this.authService.getSessionData((session: string) => {
+      if (session === null || session === 'null') {
         this.userId = '';
       } else {
-        this.userId = session.userToken ? session.userToken : '';
-        // Needed: this get executed if user is on course details page.
+        const res = JSON.parse(session);
+        this.userId = res[ProfileConstants.USER_TOKEN] ? res[ProfileConstants.USER_TOKEN] : '';
+        // Needed: this get exeuted if user is on course details page.
         if (this.pageName === 'course' && this.userId) {
           // If course is not enrolled then hide flag/report issue menu.
           // If course has batchId then it means it is enrolled course
-          this.showFlagMenu = !!this.content.batchId;
+          if (this.content.batchId) {
+            this.showFlagMenu = true;
+          } else {
+            this.showFlagMenu = false;
+          }
         }
       }
     });
@@ -95,12 +96,13 @@ export class ContentActionsComponent {
    * Construct content delete request body
    */
   getDeleteRequestBody() {
-    return {
+    const apiParams = {
       contentDeleteList: [{
         contentId: this.contentId,
         isChildContent: this.isChild
       }]
     };
+    return apiParams;
   }
 
   /**
@@ -109,43 +111,35 @@ export class ContentActionsComponent {
   close(i) {
     switch (i) {
       case 0: {
-        const confirm = this.popoverCtrl.create(SbPopoverComponent, {
-          content: this.content,
-          // isChild: this.isDepthChild,
-          objRollup: this.objRollup,
-          // pageName: PageId.COLLECTION_DETAIL,
-          corRelationList: this.corRelationList,
-          sbPopoverHeading: this.commonUtilService.translateMessage('REMOVE_FROM_DEVICE'),
-          // sbPopoverMainTitle: this.commonUtilService.translateMessage('REMOVE_FROM_DEVICE_MSG'),
-          sbPopoverMainTitle: this.content.name,
-          actionsButtons: [
+        const confirm = this.alertctrl.create({
+          title: this.commonUtilService.translateMessage('REMOVE_FROM_DEVICE'),
+          message: this.commonUtilService.translateMessage('REMOVE_FROM_DEVICE_MSG'),
+          mode: 'wp',
+          cssClass: 'confirm-alert',
+          buttons: [
             {
-              btntext: this.commonUtilService.translateMessage('REMOVE'),
-              btnClass: 'popover-color'
+              text: this.commonUtilService.translateMessage('CANCEL'),
+              role: 'cancel',
+              cssClass: 'alert-btn-cancel',
+              handler: () => {
+                this.viewCtrl.dismiss();
+              }
             },
-          ],
-          icon: null,
-          metaInfo:
-          // this.contentDetail.contentTypesCount.TextBookUnit + 'items' +
-          // this.batchDetails.courseAdditionalInfo.leafNodesCount + 'items' +
-             '(' + this.fileSizePipe.transform(this.content.size, 2) + ')',
-          sbPopoverContent: 'Are you sure you want to delete ?'
-        }, {
-            cssClass: 'sb-popover danger',
-          });
-        confirm.present({
-          ev: event
+            {
+              text: this.commonUtilService.translateMessage('REMOVE'),
+              cssClass: 'alert-btn-delete',
+              handler: () => {
+                this.deleteContent();
+              },
+            }
+          ]
         });
-        confirm.onDidDismiss((canDelete: any) => {
-          if (canDelete) {
-            this.deleteContent();
-          }
-        });
+        confirm.present();
         break;
       }
       case 1: {
         this.viewCtrl.dismiss();
-        // this.reportIssue();
+        this.reportIssue();
         break;
       }
     }
@@ -154,45 +148,23 @@ export class ContentActionsComponent {
   /*
    * shows alert to confirm unenroll send back user selection */
   unenroll() {
-    const confirm = this.popoverCtrl.create(SbGenericPopoverComponent, {
-      sbPopoverHeading: this.commonUtilService.translateMessage('UNENROLL_FROM_COURSE'),
-      sbPopoverMainTitle: this.commonUtilService.translateMessage('UNENROLL_CONFIRMATION_MESSAGE'),
-      actionsButtons: [
-        {
-          btntext: this.commonUtilService.translateMessage('CANCEL'),
-          btnClass: 'sb-btn sb-btn-sm  sb-btn-outline-info'
-        },
-        {
-          btntext: this.commonUtilService.translateMessage('CONFIRM'),
-          btnClass: 'popover-color'
-        }
-      ],
-      icon: null
-    }, {
-        cssClass: 'sb-popover info',
+    const popover = this.popoverCtrl.create(UnenrollAlertComponent, {}, {
+      cssClass: 'confirm-alert-box'
+    });
+    popover.present();
+    popover.onDidDismiss((unenroll: boolean = false) => {
+      this.viewCtrl.dismiss({
+        caller: 'unenroll',
+        unenroll: unenroll
       });
-      confirm.present({
-        ev: event
-      });
-      confirm.onDidDismiss((leftBtnClicked: any) => {
-        let unenroll: any = false;
-        if ( leftBtnClicked == null ) {
-          unenroll = false;
-        } else if ( leftBtnClicked ) {
-          unenroll = false;
-        } else {
-          unenroll = true;
-        }
-        this.viewCtrl.dismiss({
-          caller: 'unenroll',
-          unenroll: unenroll
-        });
-      });
+    });
   }
 
   deleteContent() {
-    const telemetryObject = new TelemetryObject(this.content.identifier, this.content.contentType, this.content.pkgVersion);
-
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = this.content.identifier;
+    telemetryObject.type = this.content.contentType;
+    telemetryObject.version = this.content.pkgVersion;
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.DELETE_CLICKED,
@@ -203,12 +175,10 @@ export class ContentActionsComponent {
       this.objRollup,
       this.corRelationList);
 
-      const loader = this.commonUtilService.getLoader();
-      loader.present();
-    this.contentService.deleteContent(this.getDeleteRequestBody()).toPromise()
-      .then((data: ContentDeleteResponse[]) => {
-        loader.dismiss();
-        if (data && data[0].status === ContentDeleteStatus.NOT_FOUND) {
+
+    this.contentService.deleteContent(this.getDeleteRequestBody()).then((res: any) => {
+      const data = JSON.parse(res);
+      if (data.result && data.result.status === 'NOT_FOUND') {
         this.showToaster(this.getMessageByConstant('CONTENT_DELETE_FAILED'));
       } else {
         // Publish saved resources update event
@@ -220,13 +190,20 @@ export class ContentActionsComponent {
         this.viewCtrl.dismiss('delete.success');
       }
     }).catch((error: any) => {
-      loader.dismiss();
       console.log('delete response: ', error);
       this.showToaster(this.getMessageByConstant('CONTENT_DELETE_FAILED'));
       this.viewCtrl.dismiss();
     });
   }
 
+  reportIssue() {
+    const popUp = this.popoverCtrl.create(ReportIssuesComponent, {
+      content: this.content
+    }, {
+        cssClass: 'report-issue-box'
+      });
+    popUp.present();
+  }
 
   showToaster(message) {
     const toast = this.toastCtrl.create({
@@ -252,35 +229,5 @@ export class ContentActionsComponent {
       (this.data.batchStatus !== 2 &&
         (this.data.contentStatus === 0 || this.data.contentStatus === 1 || this.data.courseProgress < 100) &&
         this.data.enrollmentType !== 'invite-only'));
-  }
-
-  isUnenrollDisabled() {
-    if (!this.batchDetails || this.isObjectEmpty(this.batchDetails)) {
-      return true;
-    }
-
-    if (!this.batchDetails.endDate) {
-      let progress;
-
-      if (this.data && this.data.courseProgress) {
-        progress = this.data.courseProgress ? Math.round(this.data.courseProgress) : 0;
-      }
-
-      return !(this.batchDetails.enrollmentType === 'open' && progress !== 100);
-    } else {
-      if (moment(this.batchDetails.endDate).diff(moment(new Date())) !== 0) {
-        let progress;
-
-        if (this.data && this.data.courseProgress) {
-          progress = this.data.courseProgress ? Math.round(this.data.courseProgress) : 0;
-        }
-
-        return !(this.batchDetails.enrollmentType === 'open' && progress !== 100);
-      }
-    }
-  }
-
-  private isObjectEmpty(obj) {
-    return Object.keys(obj).length === 0 && obj.constructor === Object
   }
 }

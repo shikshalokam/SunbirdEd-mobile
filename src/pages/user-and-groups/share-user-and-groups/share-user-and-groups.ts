@@ -1,32 +1,32 @@
-import {Component, Inject, NgZone} from '@angular/core';
-import {LoadingController} from 'ionic-angular';
 import {
-  GetAllProfileRequest,
-  Group,
+  Component,
+  NgZone
+} from '@angular/core';
+import {
+  LoadingController
+} from 'ionic-angular';
+import {
   GroupService,
+  Group,
   Profile,
-  ProfileExportRequest,
-  ProfileExportResponse,
+  ProfileRequest,
   ProfileService,
-  ProfileType
-} from 'sunbird-sdk';
-import {SocialSharing} from '@ionic-native/social-sharing';
-import {TelemetryGeneratorService} from '../../../service/telemetry-generator.service';
-import {
-    InteractType,
-    InteractSubtype,
-    Environment,
-    PageId
-} from '../../../service/telemetry-constants';
-import { AppHeaderService } from '@app/service';
-
-declare const cordova;
+  ProfileExportRequest,
+  FileUtil,
+  GroupRequest,
+  InteractType,
+  InteractSubtype,
+  Environment,
+  PageId
+} from 'sunbird';
+import { SocialSharing } from '@ionic-native/social-sharing';
+import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
 @Component({
   selector: 'page-share-user-and-groups',
   templateUrl: 'share-user-and-groups.html',
 })
 export class ShareUserAndGroupPage {
-  ProfileType = ProfileType;
+
   groupName: Group;
   userList: Array<Profile> = [];
   groupList: Array<Group> = [];
@@ -39,67 +39,73 @@ export class ShareUserAndGroupPage {
    private userGroupMap: Map<string, Array<Profile>> = new Map();
 
   constructor(
-    @Inject('GROUP_SERVICE') private groupService: GroupService,
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
+    private groupService: GroupService,
+    private profileService: ProfileService,
     private zone: NgZone,
+    private fileUtil: FileUtil,
     private socialShare: SocialSharing,
     private loadingCtrl: LoadingController,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private headerService: AppHeaderService
+    private telemetryGeneratorService: TelemetryGeneratorService
   ) {
 
   }
 
   ionViewWillEnter() {
-    this.headerService.hideHeader();
     this.getAllProfile();
     this.getAllGroup();
   }
 
   getAllProfile() {
-    const profileRequest: GetAllProfileRequest = {
+    const profileRequest: ProfileRequest = {
       local: true
     };
-    this.profileService.getAllProfiles(profileRequest)
-      .map((profiles) => profiles.filter((profile) => !!profile.handle))
-      .toPromise()
-      .then((profiles) => {
+    this.profileService.getAllUserProfile(profileRequest).then((profiles) => {
       this.zone.run(() => {
         if (profiles && profiles.length) {
-          this.userList = profiles;
+          this.userList = JSON.parse(profiles);
         }
 
         this.userList.forEach(profile => {
           this.userWeightMap.set(profile.uid, 0);
         });
       });
+    }).catch((error) => {
+      console.log('Something went wrong while fetching user list', error);
     });
   }
 
   getAllGroup() {
     this.zone.run(() => {
-      this.groupService.getAllGroups().subscribe((groups: Group[]) => {
-        if (groups && groups.length) {
-          this.groupList = groups;
+
+      const groupRequest: GroupRequest = {
+        uid: ''
+      };
+
+      this.groupService.getAllGroup(groupRequest).then((groups) => {
+        if (groups.result && groups.result.length) {
+          this.groupList = groups.result;
         }
 
         this.groupList.forEach(group => {
-          const gruopUserRequest: GetAllProfileRequest = {
+          const gruopUserRequest: ProfileRequest = {
             local: true,
             groupId: group.gid
           };
-          this.profileService.getAllProfiles(gruopUserRequest)
-            .map((profiles) => profiles.filter((profile) => !!profile.handle))
-            .toPromise().then((profiles) => {
+          this.profileService.getAllUserProfile(gruopUserRequest).then((profiles) => {
             this.zone.run(() => {
               if (profiles && profiles.length) {
-                this.userGroupMap.set(group.gid, profiles);
+                const userForGroups = JSON.parse(profiles);
+                this.userGroupMap.set(group.gid, userForGroups);
               }
+              console.log('UserList', profiles);
             });
-          }).catch(() => {
+          }).catch((error) => {
+            console.log('Something went wrong while fetching user list', error);
           });
         });
-      }, (error) => {
+
+        console.log('GroupList', groups);
+      }).catch((error) => {
         console.log('Something went wrong while fetching data', error);
       });
     });
@@ -225,7 +231,7 @@ export class ShareUserAndGroupPage {
     const profileExportRequest: ProfileExportRequest = {
       userIds: this.selectedUserList,
       groupIds: this.selectedGroupList,
-      destinationFolder: cordova.file.externalDataDirectory
+      destinationFolder: this.fileUtil.internalStoragePath()
     };
 
     const loader = this.loadingCtrl.create({
@@ -234,8 +240,8 @@ export class ShareUserAndGroupPage {
     });
 
     loader.present();
-    this.profileService.exportProfile(profileExportRequest).toPromise()
-    .then((path: ProfileExportResponse) => {
+    this.profileService.exportProfile(profileExportRequest).then((path: any) => {
+      path = JSON.parse(path);
       loader.dismiss();
       if (this.selectedUserList && this.selectedGroupList) {
         const valueMap = new Map();
@@ -251,7 +257,7 @@ export class ShareUserAndGroupPage {
         );
       }
       this.socialShare.share('', '', 'file://' + path.exportedFilePath, '');
-    }) .catch(() => {
+    }) .catch((err) => {
       loader.dismiss();
     });
   }

@@ -1,18 +1,4 @@
 page-profile {
-    .refreshspinner {
-        stroke:#024f9d !important;
-        width: 30px;
-        left: 0;
-        top: 0;
-        height: 40px;
-        position: relative!important;
-      }
-    .spinner-div{
-        padding: 40px;
-        background-color: #ECEFF0;
-        text-align: center;
-        border : none !important;
-    }
     .profile-last-login-text {
         color: #bdbdbd;
         text-align: center;
@@ -183,7 +169,7 @@ page-profile {
 
     .scroll-content {
         background-color: #FAFAFA !important;
-        // @include padding(0 !important);
+        @include padding(0 !important);
     }
 
 
@@ -303,7 +289,7 @@ page-profile {
     }
     .school-recent {
         margin: 0 auto;
-        @include padding(0, 16px, 16px, 16px);
+        @include padding(0, 30px, 25px, 30px);
         text-align: center;
     }
 
@@ -315,7 +301,7 @@ page-profile {
         .phone{
           display: inline-block;
           border-radius: 25px;
-          @include padding($base-block-space, $base-block-space*2);
+          @include padding(15px);
           @include margin(null, null, 10px, null);
           background-color: #fff;
           color: #007AFF;
@@ -328,7 +314,7 @@ page-profile {
         .email{
             display: inline-block;
           border-radius: 25px;
-          @include padding($base-block-space, $base-block-space*2);
+          padding: 15px;
           background-color: #fff;
           color: #007AFF;
           border-bottom: 0.3px solid #196DAB;
@@ -375,53 +361,8 @@ page-profile {
     .custom-round{
         border-radius: 64px !important;
     }
-
-    .bottom-cover {
-        height: 65px;
-    }
-
-    .training-1 {
-        flex: 1;
-    }
-
-    .training-2 {
-        width: 15%;
-    }
-
-    .flex-nowrap {
-        display: flex;
-        justify-content: space-between;
-        flex-wrap: nowrap;
-    }
-
+    
 }
-
-.sb-btn-tile {
-    .button-inner {
-      flex-direction: column;
-    }
-    .sb-dt-card-danger-icon{
-      font-size : ($font-size-base * 2) + 2;
-      color: $orange;
-      @include margin(0,0,($base-block-space * .5),0);
-    }
-    .sb-dt-card-blue-icon{
-      font-size : ($font-size-base * 2) + 2;
-      color: $primary-color;
-      @include margin(0,0,($base-block-space * .5),0);
-    }   
-    .sb-btn-footer-text {
-      color : $gray;
-      font-weight: 100;
-      font-size: ($font-size-base - 2);
-      text-align: center;
-      text-transform: initial;
-    }
-    ion-icon {
-      line-height: 30px;
-    }
-   
-  }
 
 .padding-right-10 {
     @include padding(null, 10px, null, null !important);
@@ -540,35 +481,3 @@ page-profile {
     overflow: hidden;
     text-overflow: ellipsis;
 }
-
-.asPerStateRecord{
-    color: white;
-    font-size: 10px;
-    white-space:pre;
-    display:inline-block;
-    font-weight:bold;
-    background-color: black;
-    padding: 6px;
-    position: absolute;
-    right: 13px;
-    top: 22px;
-    
-}
-.isymbol{
-    position: relative;
-    top: 0;
-    line-height: 12px;
-    margin-left: 5px;
-}
-.info-icon{
-    vertical-align: sub;
-    margin-right: 13px;
-    font-size: 1.8em !important;
-    color: #a4a4a4;
-
-}
-.info-icon-text{
-    font-size: 10px;
-    text-align: center;
-}
-

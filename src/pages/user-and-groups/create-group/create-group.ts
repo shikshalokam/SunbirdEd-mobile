@@ -1,32 +1,34 @@
-import {Component, Inject} from '@angular/core';
-import {IonicPage, NavController, NavParams} from 'ionic-angular';
-import {TranslateService} from '@ngx-translate/core';
-import {FormBuilder, FormGroup, Validators} from '@angular/forms';
+import { Component } from '@angular/core';
 import {
-  Environment,
-  ImpressionType,
-  InteractSubtype,
-  InteractType,
-  ObjectType,
-  PageId,
-} from '../../../service/telemetry-constants';
+  IonicPage,
+  NavController,
+  NavParams
+} from 'ionic-angular';
+import { TranslateService } from '@ngx-translate/core';
 import {
-  Framework,
-  FrameworkCategoryCode,
-  FrameworkCategoryCodesGroup,
-  FrameworkDetailsRequest,
-  FrameworkService,
-  FrameworkUtilService,
-  GetFrameworkCategoryTermsRequest,
-  GetSuggestedFrameworksRequest,
+  FormBuilder,
+  FormGroup,
+  Validators
+} from '@angular/forms';
+import {
+  CategoryRequest,
   Group,
-  GroupService
-} from 'sunbird-sdk';
-import {GroupMembersPage} from './../group-members/group-members';
-import {GuestEditProfilePage} from '../../profile/guest-edit.profile/guest-edit.profile';
-import {TelemetryGeneratorService} from '../../../service/telemetry-generator.service';
-import {CommonUtilService} from '../../../service/common-util.service';
-import { AppHeaderService } from '@app/service';
+  GroupService,
+  InteractType,
+  InteractSubtype,
+  Environment,
+  PageId,
+  ImpressionType,
+  ObjectType,
+  SuggestedFrameworkRequest,
+  FrameworkService,
+} from 'sunbird';
+import { FormAndFrameworkUtilService } from '../../profile/formandframeworkutil.service';
+import { GroupMembersPage } from './../group-members/group-members';
+import { GuestEditProfilePage } from '../../profile/guest-edit.profile/guest-edit.profile';
+import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
+import { CommonUtilService } from '../../../service/common-util.service';
+import { FrameworkCategory } from '@app/app';
 
 @IonicPage()
 @Component({
@@ -57,14 +59,13 @@ export class CreateGroupPage {
   constructor(
     private navCtrl: NavController,
     private fb: FormBuilder,
+    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
     private translate: TranslateService,
     private navParams: NavParams,
     private commonUtilService: CommonUtilService,
-    @Inject('GROUP_SERVICE') private groupService: GroupService,
+    private groupService: GroupService,
     private telemetryGeneratorService: TelemetryGeneratorService,
-    @Inject('FRAMEWORK_SERVICE') private frameworkService: FrameworkService,
-    @Inject('FRAMEWORK_UTIL_SERVICE') private frameworkUtilService: FrameworkUtilService,
-    private headerService: AppHeaderService
+    private framework: FrameworkService
   ) {
     this.group = this.navParams.get('groupInfo') || {};
     this.groupEditForm = this.fb.group({
@@ -75,9 +76,6 @@ export class CreateGroupPage {
 
     this.isEditGroup = this.group.hasOwnProperty('gid') ? true : false;
     this.getSyllabusDetails();
-  }
-  ionViewWillEnter() {
-    this.headerService.hideHeader();
   }
 
   ionViewDidLoad() {
@@ -103,12 +101,13 @@ export class CreateGroupPage {
     this.loader = this.commonUtilService.getLoader();
     this.loader.present();
 
-    const getSuggestedFrameworksRequest: GetSuggestedFrameworksRequest = {
-      language: this.translate.currentLang,
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
+    const suggestedFrameworkRequest: SuggestedFrameworkRequest = {
+      isGuestUser: true,
+      selectedLanguage: this.translate.currentLang,
+      categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
     };
-    this.frameworkUtilService.getActiveChannelSuggestedFrameworkList(getSuggestedFrameworksRequest).toPromise()
-      .then((result: Framework[]) => {
+    this.framework.getSuggestedFrameworkList(suggestedFrameworkRequest)
+      .then((result) => {
         if (result && result.length) {
           result.forEach(element => {
             // renaming the fields to text, value and checked
@@ -147,13 +146,13 @@ export class CreateGroupPage {
       this.group.name = formValue.name;
       this.group.grade = (!formValue.class.length) ? [] : [formValue.class];
       this.group.syllabus = (!formValue.syllabus.length) ? [] : [formValue.syllabus];
-      this.group.gradeValue = {};
+      this.group.gradeValueMap = {};
 
       if (this.group.grade && this.group.grade.length) {
         this.group.grade.forEach(gradeCode => {
           for (let i = 0; i < this.classList.length; i++) {
             if (this.classList[i].code === gradeCode) {
-              this.group.gradeValue[this.classList[i].code] = this.classList[i].name;
+              this.group.gradeValueMap[this.classList[i].code] = this.classList[i].name;
               break;
             }
           }
@@ -185,13 +184,13 @@ export class CreateGroupPage {
       this.group.name = formValue.name;
       this.group.grade = (!formValue.class.length) ? [] : Array.isArray(formValue.class) ? formValue.class : [formValue.class];
       this.group.syllabus = (!formValue.syllabus.length) ? [] : [formValue.syllabus];
-      this.group.gradeValue = {};
+      this.group.gradeValueMap = {};
 
       if (this.group.grade && this.group.grade.length > 0) {
         this.group.grade.forEach(gradeCode => {
           for (let i = 0; i < this.classList.length; i++) {
             if (this.classList[i].code === gradeCode) {
-              this.group.gradeValue[this.classList[i].code] = this.classList[i].name;
+              this.group.gradeValueMap[this.classList[i].code] = this.classList[i].name;
               break;
             }
           }
@@ -199,7 +198,7 @@ export class CreateGroupPage {
       }
 
       this.groupService.updateGroup(this.group)
-        .subscribe((val) => {
+        .then((val) => {
           loader.dismiss();
           this.telemetryGeneratorService.generateInteractTelemetry(
             InteractType.OTHER,
@@ -208,11 +207,11 @@ export class CreateGroupPage {
             PageId.CREATE_GROUP
           );
           this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 2));
-        },
-          (error) => {
-            loader.dismiss();
-            console.error('Error : ' + error);
-          });
+        })
+        .catch((error) => {
+          loader.dismiss();
+          console.error('Error : ' + error);
+        });
     } else {
       this.commonUtilService.showToast(this.commonUtilService.translateMessage('ENTER_GROUP_NAME'));
     }
@@ -235,20 +234,16 @@ export class CreateGroupPage {
       class: []
     });
 
-    const frameworkDetailsRequest: FrameworkDetailsRequest = {
-      frameworkId: frameworkId,
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-    };
-    this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-      .then((framework: Framework) => {
-        this.isFormValid = true;
-        const request: GetFrameworkCategoryTermsRequest = {
-          currentCategoryCode: FrameworkCategoryCode.GRADE_LEVEL,
-          language: this.translate.currentLang,
-          requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES,
-          frameworkId: frameworkId
+    this.formAndFrameworkUtilService.getFrameworkDetails(frameworkId)
+      .then((categories) => {
+        const request: CategoryRequest = {
+          currentCategory: 'gradeLevel',
+          selectedLanguage: this.translate.currentLang,
+          categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
         };
-        return this.frameworkUtilService.getFrameworkCategoryTerms(request).toPromise();
+        this.isFormValid = true;
+
+        return this.formAndFrameworkUtilService.getCategoryData(request);
       })
       .then((classes) => {
         this.loader.dismiss();

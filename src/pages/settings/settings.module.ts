@@ -9,7 +9,6 @@ import { PrivacypolicyPage } from './privacypolicy/privacypolicy';
 import { TranslateModule } from '@ngx-translate/core';
 import { OnboardingPageModule } from '../onboarding/onboarding.module';
 import { LanguageSettingsPageModule } from '../language-settings/language-settings.module';
-import { PermissionPageModule } from '../permission/permission.module';
 
 @NgModule({
  declarations: [
@@ -31,8 +30,7 @@ import { PermissionPageModule } from '../permission/permission.module';
     OnboardingPageModule,
     LanguageSettingsPageModule,
     IonicPageModule.forChild(SettingsPage),
-    TranslateModule.forChild(),
-    PermissionPageModule
+    TranslateModule.forChild()
   ],
   exports: [SettingsPage]
 })

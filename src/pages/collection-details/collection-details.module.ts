@@ -2,12 +2,13 @@ import { NgModule } from '@angular/core';
 import { IonicPageModule } from 'ionic-angular';
 import { CollectionDetailsPage } from './collection-details';
 import { TranslateModule } from '@ngx-translate/core';
+import { GenieSDKServiceProvider } from 'sunbird';
+import { FrameworkModule } from 'sunbird';
 import { IonicImageLoader } from 'ionic-image-loader';
 import { Ionic2RatingModule } from 'ionic2-rating';
 import { ComponentsModule } from '../../component/components.module';
 import { DirectivesModule } from '../../directives/directives.module';
 import { PipesModule } from '../../pipes/pipes.module';
-import { ContentShareHandler } from '@app/service/content/content-share-handler';
 
 @NgModule({
   declarations: [
@@ -18,12 +19,13 @@ import { ContentShareHandler } from '@app/service/content/content-share-handler'
     IonicPageModule.forChild(CollectionDetailsPage),
     TranslateModule.forChild(),
     ComponentsModule,
+    FrameworkModule,
     IonicImageLoader,
     DirectivesModule,
     Ionic2RatingModule,
     PipesModule
   ],
-  providers: [ContentShareHandler],
+  providers: [GenieSDKServiceProvider],
   exports: [
     CollectionDetailsPage
   ]

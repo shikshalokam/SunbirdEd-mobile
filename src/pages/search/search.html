@@ -1,177 +1,67 @@
 <ion-header>
   <ion-navbar>
-    <ion-input type="search" *ngIf="!dialCode" #searchInput dir="{{commonUtilService.getAppDirection()}}"
-               (keyup.enter)="handleSearch()"
-               (ngModelChange)="searchContentResult = undefined; filterIcon = false; isEmptyResult = false"
-               [(ngModel)]="searchKeywords" [placeholder]="'SEARCH_PLACEHOLDER' | translate"></ion-input>
-    <ion-buttons class="search-buttons-group" end *ngIf="!dialCode">
-      <button ion-button (click)="handleSearch()" *ngIf="searchKeywords && !filterIcon">
-        <img style="width: 18px; height: 18px" src="./assets/imgs/ic_action_search.svg">
-      </button>
-      <button ion-button (click)="handleCancel()" *ngIf="filterIcon">
-        <img style="width: 18px; height: 18px" src="./assets/imgs/ic_action_close.svg">
-      </button>
+    <ion-input type="search" #searchInput dir="{{commonUtilService.getAppDirection()}}" placeholder="Search" [(ngModel)]="searchKeywords" (keyup.enter)="handleSearch()"
+      clearInput></ion-input>
+    <ion-buttons end>
       <button ion-button (click)="showFilter()" *ngIf="filterIcon">
-        <img style="width: 18px; height: 18px" src="./assets/imgs/ic_action_filter.svg">
+        <img [src]="filterIcon" class="tool-icon" float-end />
       </button>
     </ion-buttons>
   </ion-navbar>
 </ion-header>
-<ion-content #contentView>
-  <ng-container *ngIf="searchHistory$ && (searchHistory$ | async) as searchHistory">
-    <ng-container *ngIf="!(
-          showLoader ||
-          isEmptyResult ||
-          displayDialCodeResult ||
-          (dialCodeContentResult && dialCodeContentResult.length) ||
-          (searchContentResult && searchContentResult.length) ||
-          (!showLoader && showEmptyMessage)
-    )">
-      <ng-container *ngIf="!searchHistory.length && !searchKeywords">
-        <div class="sb-no-search-history">
-      <span>
-        {{'SEARCH_TO_FIND_CONTENT' | translate: {'%s': appName} }}
-      </span>
-        </div>
-      </ng-container>
-
-      <ng-container *ngIf="searchKeywords">
-        <div class="sb-search-history-entry sb-search-header-meta row">
-          <div class="col-auto invisible">
-            <img src="assets/imgs/icon_recent.svg">
-          </div>
-          <div class="col" (tap)="handleSearch()">
-            {{'SEE_ALL_RESULTS_FOR' | translate: {'%s': searchKeywords} }}
-          </div>
-          <div class="col-auto">
-            <img style="width: 14px; height: 14px" src="./assets/imgs/ic_action_search.svg">
-          </div>
-        </div>
-      </ng-container>
-
-      <ng-container *ngIf="searchHistory.length">
-        <div (tap)="onSearchHistoryTap(searchEntry)" *ngFor="let searchEntry of searchHistory"
-             class="sb-search-history-entry row">
-          <div class="col-auto">
-            <img style="width: 14px; height: 14px" src="./assets/imgs/icon_recent.svg">
-          </div>
-          <div class="col">
-            {{searchEntry.query}}
-          </div>
-          <div class="col-auto">
-            <img style="width: 14px; height: 14px" src="./assets/imgs/ic_action_search_grey.svg">
-          </div>
-        </div>
-      </ng-container>
-    </ng-container>
-  </ng-container>
-
-  <ng-container *ngIf="isEmptyResult">
-    <div class="sb-no-search-history">
-      <span>
-        {{ 'EMPTY_SEARCH_RESULTS' | translate }}
-      </span>
-    </div>
-  </ng-container>
-
-  <!-- <div class="spinner-container" *ngIf="showLoader">
+<ion-content>
+  <div class="spinner-container" *ngIf="showLoader">
     <ion-spinner padding class="loader"></ion-spinner>
-  </div> -->
-
-  <ion-list class="m-n" *ngIf="showLoader">
-    <ion-item>
-        <skeleton-item height="12px" width="75%"></skeleton-item>
-        <skeleton-item height="12px" width="40%"></skeleton-item>
-    </ion-item>
-    <ion-item *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11,12,13]">
-      <ion-avatar item-end>
-        <skeleton-item height="56px" width="56px"></skeleton-item>
-      </ion-avatar>
-      <skeleton-item height="12px" width="40%"></skeleton-item>
-      <skeleton-item height="12px" width="30%"></skeleton-item>
-    </ion-item>
-  </ion-list>
+  </div>
   <div text-center *ngIf="isEmptyResult">
     <h4>{{ 'EMPTY_SEARCH_RESULTS' | translate }}</h4>
   </div>
-  <!-- Testing here  -->
-  <ion-list no-lines *ngIf="displayDialCodeResult" class="collection-list">
-    <div *ngFor="let resultlist of displayDialCodeResult">
-
-      <!-- Course -->
-      <div
-        *ngIf="resultlist && resultlist.isCourse && resultlist.dialCodeContentResult && resultlist.dialCodeContentResult.length">
-        <div class="sb-textbook-container">
-          <div class="sb-textbook-items">
-            <div class="sb-textbook-title-container">
-              <span class="textbook-icon">
-                <ion-icon ios="ios-albums" md="md-albums"></ion-icon>
-              </span>
-              <span class="textbook-title">
-                Courses
-              </span>
-            </div>
-            <!-- Card style -->
-            <div class="sb-card-container sb-card-textbook-container">
-                <div class="sb-card" *ngFor="let content of resultlist.dialCodeContentResult; let i = index; let last = last" (click)="openContent(undefined, content,index)">
-                  <div class="img-container" style="display: flex;
-                  justify-content: center;
-                  flex-direction: column;
-                  text-align: center;
-                  overflow: hidden;">
-                    <img src="{{ content?.courseLogoUrl || content?.appIcon || defaultAppIcon }}">
-                  </div>
-                  <div class="sb-card-details">
-                    <div class="title">{{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }} </div>
-                    <div class="grade_ellipsis">
-                      <span class="info subject">{{ content.size | fileSize: 0}}</span>
-                    </div>
-                  </div>
-                </div>
-            </div>
-          </div>
-        </div>
+  <!-- <ion-list no-lines *ngIf="dialCodeResult && dialCodeResult.length" class="collection-list">
+    <div ion-item no-margin *ngFor="let result of dialCodeResult" no-padding>
+      <div no-lines class="collection-header" margin-start>
+        <div class="collection-name">
+          <span>{{'FROM' | translate}} </span>{{ result.name }}</div>
+        <button ion-button clear no-padding class="view-collection" (click)="openContent(result,result, 0)">
+          {{'VIEW' | translate}} {{ result.contentType }} &nbsp;
+          <ion-icon ios="ios-arrow-forward" md="ios-arrow-forward"></ion-icon>
+        </button>
+      </div>
+      <div *ngIf="result && result.content && result.content.length">
+        <ion-list no-padding *ngFor="let content of result.content" class="content-list">
+          <ion-item (click)="openContent(result, content,index)">
+            <ion-avatar item-start>
+              <img src="{{ defaultAppIcon }}" width="24px" height="24px">
+            </ion-avatar>
+            <h3>
+              {{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }}
+            </h3>
+            <p>
+              <span>{{ content.contentType }}</span>
+              <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
+            </p>
+          </ion-item>
+          <div class="divider"></div>
+        </ion-list>
       </div>
 
-      <div *ngIf="resultlist && !resultlist.isCourse">
-        <h4 class="dial-section-header">{{resultlist.name}}</h4>
+    </div>
+  </ion-list> -->
 
-        <!-- Collection List -->
-        <div ion-item no-margin *ngFor="let result of resultlist.dialCodeResult" no-padding>
-          <div no-lines class="collection-header" margin-start>
-            <div class="collection-name">
-              <span>{{'FROM' | translate}} </span>{{ result.name }}</div>
-            <button ion-button clear no-padding class="view-collection" (click)="openCollection(result)">
-              {{'VIEW' | translate}} {{ result.contentType }} &nbsp;
-              <ion-icon ios="ios-arrow-forward" md="ios-arrow-forward"></ion-icon>
-            </button>
-          </div>
-          <div *ngIf="result && result.content && result.content.length">
-            <ion-list no-padding *ngFor="let content of result.content let i = index; let last = last"
-                      class="content-list">
-              <ion-item (click)="openContent(result, content,index)">
-                <ion-avatar item-start>
-                  <img src="{{ defaultAppIcon }}" width="24px" height="24px">
-                </ion-avatar>
-                <h3>
-                  {{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }}
-                </h3>
-                <p>
-                  <span>{{ content.contentType }}</span>
-                  <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
-                </p>
-              </ion-item>
-              <div *ngIf="!last" class="inner-divider"></div>
-            </ion-list>
-          </div>
-          <div class="divider"></div>
+  <ion-list no-lines *ngIf="displayDialCodeResult" class="collection-list">
+    <div *ngFor="let resultlist of displayDialCodeResult">
+      <h4 class="dial-section-header">{{resultlist.name}}</h4>
+      <div ion-item no-margin *ngFor="let result of resultlist.dialCodeResult" no-padding>
+        <div no-lines class="collection-header" margin-start>
+          <div class="collection-name">
+            <span>{{'FROM' | translate}} </span>{{ result.name }}</div>
+          <button ion-button clear no-padding class="view-collection" (click)="openCollection(result)">
+            {{'VIEW' | translate}} {{ result.contentType }} &nbsp;
+            <ion-icon ios="ios-arrow-forward" md="ios-arrow-forward"></ion-icon>
+          </button>
         </div>
-
-        <!-- Content List -->
-        <ion-list no-lines *ngIf="resultlist.dialCodeContentResult && resultlist.dialCodeContentResult.length">
-          <ion-list *ngFor="let content of resultlist.dialCodeContentResult; let i = index; let last = last"
-                    class="content-list">
-            <ion-item padding-start (click)="openContent(undefined, content,index)">
+        <div *ngIf="result && result.content && result.content.length">
+          <ion-list no-padding *ngFor="let content of result.content let i = index; let last = last" class="content-list">
+            <ion-item (click)="openContent(result, content,index)">
               <ion-avatar item-start>
                 <img src="{{ defaultAppIcon }}" width="24px" height="24px">
               </ion-avatar>
@@ -182,41 +72,105 @@
                 <span>{{ content.contentType }}</span>
                 <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
               </p>
-              <p>
-                <span *ngIf="content.gradeLevel && content.gradeLevel.length">
-                  {{ content?.gradeLevel[0] }}
-                </span>
-                <span *ngIf="content.subject"> • {{ content?.subject}}</span>
-              </p>
             </ion-item>
             <div *ngIf="!last" class="inner-divider"></div>
           </ion-list>
-        </ion-list>
+        </div>
+        <div class="divider"></div>
       </div>
+      
+      <ion-list no-lines *ngIf="resultlist.dialCodeContentResult && resultlist.dialCodeContentResult.length">
+        <ion-list *ngFor="let content of resultlist.dialCodeContentResult; let i = index; let last = last" class="content-list">
+          <ion-item padding-start (click)="openContent(undefined, content,index)">
+            <ion-avatar item-start>
+              <img src="{{ defaultAppIcon }}" width="24px" height="24px">
+            </ion-avatar>
+            <h3> {{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }}</h3>
+            <p>
+              <span>{{ content.contentType }}</span>
+              <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
+            </p>
+            <p>
+              <span *ngIf="content.gradeLevel && content.gradeLevel.length">
+                {{ content?.gradeLevel[0] }}
+              </span>
+              <span *ngIf="content.subject"> • {{ content?.subject}}</span>
+            </p>
+          </ion-item>
+          <div *ngIf="!last" class="inner-divider"></div>
+        </ion-list>
+      </ion-list>
     </div>
   </ion-list>
 
-  <!-- Testing here -->
+  <ion-list no-lines *ngIf="dialCodeContentResult && dialCodeContentResult.length">
+    <ion-list *ngFor="let content of dialCodeContentResult; let i = index; let last = last" class="content-list">
+      <ion-item padding-start (click)="openContent(content, content,index)">
+        <ion-avatar item-start>
+          <img src="{{ defaultAppIcon }}" width="24px" height="24px">
+        </ion-avatar>
+        <h3> {{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }}</h3>
+        <p>
+          <span>{{ content.contentType }}</span>
+          <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
+        </p>
+        <p>
+          <span *ngIf="content.gradeLevel && content.gradeLevel.length">
+            {{ content?.gradeLevel[0] }}
+          </span>
+          <span *ngIf="content.subject"> • {{ content?.subject}}</span>
+        </p>
+      </ion-item>
+      <div *ngIf="!last" class="divider"></div>
+    </ion-list>
 
-  <div *ngIf="dialCodeContentResult && dialCodeContentResult.length">
-    <div class="sb-card-container sb-card-textbook-container">
-      <textbook-card class="tb-border-btm" *ngFor="let content of dialCodeContentResult; let i = index; let last = last"
-        (click)="openContent(content, content,i)" [content]="content" [layoutName]='search'></textbook-card>
-    </div>
-  </div>
+  </ion-list>
 
+  <ion-list *ngIf="searchContentResult && searchContentResult.length">
+    <ion-item padding-right *ngFor="let content of searchContentResult; let i = index" (click)="openContent(undefined, content,i)">
+      <ion-avatar item-start>
+        <!-- <img-loader src="{{ content.appIcon }}" backgroundSize="cover" width="100%" height="100%" spinner="true" fallback="./assets/imgs/ic_launcher.png"
+          fallbackAsPlaceholder="true" useImg></img-loader> -->
+        <img src="{{ content.appIcon || defaultAppIcon }}" width="24px" height="24px" />
 
-  <div *ngIf="searchContentResult && searchContentResult.length">
-    <div class="sb-search-history-entry sb-search-header-meta row">
-      <div class="col">
-        {{'SHOWING_RESULTS_FOR' | translate: {'%count': searchContentResult.length, '%query': searchKeywords} }}
+      </ion-avatar>
+      <h3> {{ (content.name && content.name.length > 30) ? (content.name | slice:0:30) + '...' : (content.name) }}</h3>
+      <p>
+        <span>{{ content.contentType }}</span>
+        <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
+      </p>
+      <div *ngIf="content.gradeLevel && content.gradeLevel.length">
+        <div class="ellipsis inline-block width" *ngIf="content.subject">
+          <span *ngFor="let gradelevel of content.gradeLevel; let i= index">{{i == 0 ? '' : ',' +' '}} {{ gradelevel }}
+          </span>
+        </div>
+        <div *ngIf="content.subject" class="subject inline-block">
+          <span>
+            {{ content.gradeLevel && content.gradeLevel.length ? '•' : '' }} {{ content.subject }}
+          </span>
+        </div>
+        <div *ngIf="!content.subject" class="ellipsis">
+          <span *ngFor="let gradelevel of content.gradeLevel; let i= index">
+            {{i == 0 ? '' : ',' + ' '}} {{ gradelevel }}
+          </span>
+        </div>
       </div>
-    </div>
-    <div class="sb-card-container sb-card-textbook-container">
-      <textbook-card class="tb-border-btm" *ngFor="let content of searchContentResult; let i = index; let last = last"
-        (click)="openContent(undefined, content,i)" [content]="content" [layoutName]="search"></textbook-card>
-    </div>
-  </div>
+      <!-- <span *ngIf="!content.subject">
+          <span *ngIf="content.gradeLevel.length">
+            <span *ngFor="let gradelevel of content.gradeLevel; let i= index">{{i == 0 ? '' : ',' +' '}} {{ gradelevel }}</span>
+          </span>
+        </span> -->
+      <!-- <span *ngIf="content.gradeLevel.length && !content.subject">
+            <span  style="width:50%" *ngFor="let gradelevel of content.gradeLevel; let i= index">{{i == 0 ? '' : ',' +' '}} {{ gradelevel }}</span>
+          </span> -->
+      <!-- <span *ngIf="content.gradeLevel.length<=2 && !content.subject">
+              <span  style="width:50%" *ngFor="let gradelevel of content.gradeLevel; let i= index">{{i == 0 ? '' : ',' +' '}} {{ gradelevel }}</span>
+            </span> -->
+      <!-- </span> -->
+      <!-- <span *ngIf="content.subject">{{ content.gradeLevel && content.gradeLevel.length ? '•' : '' }} {{ content.subject }}</span> -->
+
+    </ion-item>
+  </ion-list>
   <div class="empty-search-result" *ngIf="!showLoader && showEmptyMessage" text-center padding-top>
     {{ 'EMPTY_SEARCH_RESULTS' | translate }}
   </div>

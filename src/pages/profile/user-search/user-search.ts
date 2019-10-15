@@ -1,10 +1,25 @@
-import {Component, Inject, NgZone, Renderer2, ViewChild} from '@angular/core';
-import {LoadingController, NavController} from 'ionic-angular';
-import {ProfilePage} from './../profile';
-import {TelemetryGeneratorService} from '@app/service';
-import {CommonUtilService} from '../../../service/common-util.service';
-import {AuthService, ProfileService, ServerProfileSearchCriteria, Visit} from 'sunbird-sdk';
-import {Environment, ImpressionType, PageId} from '../../../service/telemetry-constants';
+import {
+  Component,
+  NgZone,
+  ViewChild,
+  Renderer2
+} from '@angular/core';
+import {
+  AuthService,
+  UserProfileService,
+  ImpressionType,
+  PageId,
+  Environment,
+  Visit,
+  TelemetryService
+} from 'sunbird';
+import {
+  NavController,
+  LoadingController
+} from 'ionic-angular';
+import { ProfilePage } from './../profile';
+import { generateImpressionTelemetry } from '../../../app/telemetryutil';
+import { CommonUtilService } from '../../../service/common-util.service';
 
 @Component({
   selector: 'user-search',
@@ -30,14 +45,14 @@ export class UserSearchComponent {
   isContentLoaded = false;
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
-    @Inject('AUTH_SERVICE') private authService: AuthService,
     private navCtrl: NavController,
+    private authService: AuthService,
+    private userService: UserProfileService,
+    private telemetryService: TelemetryService,
     private zone: NgZone,
     private renderer: Renderer2,
     private loadingCtrl: LoadingController,
-    private commonUtilService: CommonUtilService,
-    private telemetryGeneratorService: TelemetryGeneratorService
+    private commonUtilService: CommonUtilService
   ) { }
 
   /**
@@ -54,15 +69,13 @@ export class UserSearchComponent {
       // this.renderer.invokeElementMethod(event.target, 'blur');
       this.renderer.selectRootElement(event.target).blur();
     }
-    this.authService.getSession().toPromise().then(session => {
+    this.authService.getSessionData(session => {
       if (Boolean(session)) {
-        const req: ServerProfileSearchCriteria = {
+        const req = {
           query: this.searchInput,
           offset: this.apiOffset,
-          filters: {
-            identifier: new Set()
-          },
           limit: this.apiLimit,
+          identifiers: [],
           fields: []
         };
         if (req.query === '') {
@@ -70,27 +83,34 @@ export class UserSearchComponent {
           this.showEmptyMessage = false;
           loader.dismiss();
         } else {
-          this.profileService.getServerProfiles(req)
-            .toPromise().then((res: any) => {
-            const result = JSON.parse(JSON.parse(res).searchUser);
-            if (this.searchInput !== this.prevSearchInput) {
-              this.userList = [];
+          this.userService.searchUser(req,
+            (res: any) => {
+              this.zone.run(() => {
+                const result = JSON.parse(JSON.parse(res).searchUser);
+
+                if (this.searchInput !== this.prevSearchInput) {
+                  this.userList = [];
+                }
+                Array.prototype.push.apply(this.userList, result.content);
+                this.enableInfiniteScroll = (this.apiOffset + this.apiLimit) < result.count ? true : false;
+
+                if (scrollEvent) {
+                  scrollEvent.complete();
+                }
+                this.showEmptyMessage = result.content.length ? false : true;
+                this.prevSearchInput = this.searchInput;
+                loader.dismiss();
+              });
+            },
+            (error: any) => {
+              console.error('Error', error);
+              if (scrollEvent) {
+                scrollEvent.complete();
+              }
+              this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
+              loader.dismiss();
             }
-            Array.prototype.push.apply(this.userList, result.content);
-            this.enableInfiniteScroll = (this.apiOffset + this.apiLimit) < result.count;
-            if (scrollEvent) {
-              scrollEvent.complete();
-            }
-            this.showEmptyMessage = result.content.length ? false : true;
-            this.prevSearchInput = this.searchInput;
-            loader.dismiss();
-          }).catch(() => {
-            if (scrollEvent) {
-              scrollEvent.complete();
-            }
-            this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
-            loader.dismiss();
-          });
+          );
         }
       }
     });
@@ -118,12 +138,12 @@ export class UserSearchComponent {
   }
 
   ionViewDidLoad() {
-    this.telemetryGeneratorService.generateImpressionTelemetry(
+    this.telemetryService.impression(generateImpressionTelemetry(
       ImpressionType.SEARCH, '',
       PageId.PROFILE,
       Environment.USER, '', '', '',
       undefined, undefined
-    );
+    ));
   }
 
   ionViewDidEnter() {
@@ -146,6 +166,7 @@ export class UserSearchComponent {
       }
 
       onScrollEnd(event: any): void {
+        console.log("end of scroll");
         this.getVisibleElementRange();
       }
 
@@ -157,10 +178,12 @@ export class UserSearchComponent {
 
       getVisibleElementRange() {
         this.userList.forEach((element, index) => {
+          console.log(`Index ${index}: `, this.isElementInViewport(document.getElementById(<string>index)));
           if (document.getElementById(<string>index)) {
             this.generateVisitObject(element, index);
           }
         });
+        console.log("VisibleItemArray=", this.visibleItems);
       }
 
       isElementInViewport(el) {
@@ -183,6 +206,7 @@ export class UserSearchComponent {
 
       ionViewWillLeave() {
         this.visibleItems = _.uniq(this.visibleItems);
+        console.log("Visible Items", this.visibleItems);
       }
   */
 

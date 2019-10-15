@@ -1,33 +1,38 @@
-import { AppVersion } from '@ionic-native/app-version';
-import { GUEST_STUDENT_TABS, GUEST_TEACHER_TABS, initTabs } from './../../app/module.service';
+import { initTabs, GUEST_TEACHER_TABS, GUEST_STUDENT_TABS } from './../../app/module.service';
 import { CommonUtilService } from './../../service/common-util.service';
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
-import { App, Platform, Popover, PopoverController, ToastController } from 'ionic-angular';
-import { QRAlertCallBack, QRScannerAlert } from './qrscanner_alert';
+import {
+  PopoverController,
+  Popover,
+  Platform
+} from 'ionic-angular';
+import {
+  QRScannerAlert,
+  QRAlertCallBack
+} from './qrscanner_alert';
+import {
+  Environment,
+  Mode,
+  InteractType,
+  InteractSubtype,
+  PageId,
+  PermissionService,
+  ImpressionType,
+  ImpressionSubtype,
+  TelemetryObject,
+  TabsPage,
+  ProfileType,
+  ContainerService,
+  Profile
+} from 'sunbird';
 import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
 import { QRScannerResultHandler } from './qrscanresulthandler.service';
 import { ProfileSettingsPage } from '../profile-settings/profile-settings';
+import { App } from 'ionic-angular';
 import { AppGlobalService } from '../../service/app-global.service';
-import { Subscription, Observable, Observer } from 'rxjs';
-import { Profile, ProfileType, TelemetryObject } from 'sunbird-sdk';
-import {
-  Environment,
-  ImpressionSubtype,
-  ImpressionType,
-  InteractSubtype,
-  InteractType,
-  Mode,
-  PageId
-} from '../../service/telemetry-constants';
-import { ContainerService } from '@app/service/container.services';
-import { TabsPage } from '../tabs/tabs';
-import { AndroidPermissionsService } from '@app/service/android-permissions/android-permissions.service';
-import { AndroidPermissionsStatus, AndroidPermission, PermissionAskedEnum } from '@app/service/android-permissions/android-permission';
-import { SbPopoverComponent } from '@app/component';
-// import { PermissionPage } from '../permission/permission';
+import { Subscription } from 'rxjs';
 
-declare const cordova;
 @Injectable()
 export class SunbirdQRScanner {
   profile: Profile;
@@ -40,17 +45,16 @@ export class SunbirdQRScanner {
     'TRY_AGAIN',
   ];
   private mQRScannerText;
-  readonly permissionList = [AndroidPermission.CAMERA];
+  readonly permissionList = ['android.permission.CAMERA'];
   backButtonFunc = undefined;
   private pauseSubscription?: Subscription;
   source: string;
   showButton = false;
-    t1: number;
-    t2: number;
-  appName = '';
+
   constructor(
     private popCtrl: PopoverController,
     private translate: TranslateService,
+    private permission: PermissionService,
     private platform: Platform,
     private qrScannerResultHandler: QRScannerResultHandler,
     private telemetryGeneratorService: TelemetryGeneratorService,
@@ -58,10 +62,6 @@ export class SunbirdQRScanner {
     private commonUtil: CommonUtilService,
     private appGlobalService: AppGlobalService,
     private container: ContainerService,
-    private permission: AndroidPermissionsService,
-    private commonUtilService: CommonUtilService,
-    private appVersion: AppVersion,
-    private toastController: ToastController
   ) {
     const that = this;
     this.translate.get(this.QR_SCANNER_TEXT).subscribe((data) => {
@@ -73,12 +73,9 @@ export class SunbirdQRScanner {
     this.translate.onLangChange.subscribe(() => {
       that.mQRScannerText = that.translate.instant(that.QR_SCANNER_TEXT);
     });
-
-    this.appVersion.getAppName().then((appName: any) => this.appName = appName);
-
   }
 
-  public async startScanner(source: string, showButton: boolean = false,
+  public startScanner(source: string, showButton: boolean = false,
     screenTitle = this.mQRScannerText['SCAN_QR_CODE'],
     displayText = this.mQRScannerText['SCAN_QR_INSTRUCTION'],
     displayTextColor = '#0b0b0b',
@@ -89,166 +86,56 @@ export class SunbirdQRScanner {
 
     /* Just need to override the back button functionality other wise  on pressing back button it will take to two pages back */
     this.backButtonFunc = this.platform.registerBackButtonAction(() => {
-      console.log('INNNNN BackButton');
-      //  this.stopScanner();
       this.backButtonFunc();
     }, 10);
     this.pauseSubscription = this.platform.pause.subscribe(() => this.stopScanner());
     this.generateImpressionTelemetry(source);
     this.generateStartEvent(source);
 
-    return this.permission.checkPermissions(this.permissionList)
-      .mergeMap((statusMap: { [key: string]: AndroidPermissionsStatus }) => {
-        const toRequest: AndroidPermission[] = [];
-
-        for (const permission in statusMap) {
-          if (!statusMap[permission].hasPermission) {
-            toRequest.push(permission as AndroidPermission);
+    this.permission.hasPermission(this.permissionList).then((response: any) => {
+      const result = JSON.parse(response);
+      if (result.status) {
+        const permissionResult = result.result;
+        const askPermission = [];
+        this.permissionList.forEach(element => {
+          if (!permissionResult[element]) {
+            askPermission.push(element);
           }
-        }
-
-        if (!toRequest.length) {
-          return Observable.of({ hasPermission: true });
-        }
-
-        return Observable.create((observer: Observer<AndroidPermissionsStatus>) => {
-          cordova.plugins.diagnostic.getPermissionAuthorizationStatus((status) => {
-            switch (status) {
-                case cordova.plugins.diagnostic.permissionStatus.NOT_REQUESTED:
-                case cordova.plugins.diagnostic.permissionStatus.DENIED_ALWAYS:
-                    // call popover
-                    this.appGlobalService.getIsPermissionAsked(PermissionAskedEnum.isCameraAsked).toPromise()
-                    .then((isPemissionAsked: boolean) => {
-                      if (!isPemissionAsked) {
-                        observer.next({ hasPermission: false } as AndroidPermissionsStatus);
-                        observer.complete();
-                        return;
-                      }
-                      observer.next({ isPermissionAlwaysDenied: true } as AndroidPermissionsStatus);
-                      observer.complete();
-                      return;
-                    });
-                    break;
-                case cordova.plugins.diagnostic.permissionStatus.DENIED:
-                    // call popover
-                    observer.next({ hasPermission: false } as AndroidPermissionsStatus);
-                    observer.complete();
-                    return;
-                    // call permission settings error
-                default:
-                    observer.next(undefined);
-                    observer.complete();
-            }
-          }, (e) => {
-            console.error(e);
-            observer.next(undefined);
-            observer.complete();
-          }, cordova.plugins.diagnostic.permission.CAMERA);
         });
 
-      }).toPromise().then((status?: AndroidPermissionsStatus) => {
-        if (!status) {
-          this.commonUtil.showToast('PERMISSION_DENIED');
-        }
+        if (askPermission.length > 0) {
+          this.permission.requestPermission(askPermission).then((res: any) => {
+            const requestResult = JSON.parse(res);
+            if (requestResult.status) {
+              let permissionGranted = true;
+              const permissionRequestResult = requestResult.result;
+              askPermission.forEach(element => {
+                if (!permissionRequestResult[element]) {
+                  permissionGranted = false;
+                }
+              });
 
-        if (status.isPermissionAlwaysDenied) {
-          return this.showSettingErrorToast();
-        }
-
-        if (status.hasPermission) {
-          this.startQRScanner(screenTitle, displayText, displayTextColor, buttonText, showButton, source);
-        } else if (!status.hasPermission) {
-          this.showPopover();
-        }
-      });
-  }
-
-  async showSettingErrorToast() {
-    const toast = await this.toastController.create({
-      message: this.commonUtilService.translateMessage('CAMERA_PERMISSION_DESCRIPTION', this.appName),
-      cssClass: 'permissionSettingToast',
-      showCloseButton: true,
-      closeButtonText: this.commonUtilService.translateMessage('SETTINGS'),
-      position: 'bottom',
-      duration: 3000
-    });
-
-    toast.present();
-    toast.onWillDismiss((_null, role) => {
-      switch (role) {
-        case 'close':
-        this.telemetryGeneratorService.generateInteractTelemetry(
-          InteractType.TOUCH,
-          InteractSubtype.SETTINGS_CLICKED,
-          Environment.ONBOARDING,
-          PageId.QRCodeScanner);
-        this.app.getActiveNavs()[0].push('PermissionPage', { changePermissionAccess: true });
-          break;
-        case 'backdrop':
-          console.log('Duration timeout');
-          break;
-        default:
-          console.log('toast dismissed');
-      }
-    });
-    toast.onDidDismiss(() => {
-    });
-  }
-  async showPopover() {
-    const confirm = this.popCtrl.create(SbPopoverComponent, {
-      isNotShowCloseIcon: false,
-      sbPopoverHeading: this.commonUtilService.translateMessage('PERMISSION_REQUIRED'),
-      sbPopoverMainTitle: this.commonUtilService.translateMessage('CAMERA'),
-      actionsButtons: [
-        {
-          btntext: this.commonUtilService.translateMessage('NOT_NOW'),
-          btnClass: 'popover-button-cancel',
-        },
-        {
-          btntext: this.commonUtilService.translateMessage('ALLOW'),
-          btnClass: 'popover-button-allow',
-        }
-      ],
-      handler: (whichBtnClicked: string) => {
-        if (whichBtnClicked ===  this.commonUtilService.translateMessage('NOT_NOW')) {
-          this.telemetryGeneratorService.generateInteractTelemetry(
-            InteractType.TOUCH,
-            InteractSubtype.PERMISSION_POPOVER_NOT_NOW_CLICKED,
-            Environment.ONBOARDING,
-            PageId.QRCodeScanner);
-            this.showSettingErrorToast();
-        } else {
-          this.telemetryGeneratorService.generateInteractTelemetry(
-            InteractType.TOUCH,
-            InteractSubtype.PERMISSION_POPOVER_ALLOW_CLICKED,
-            Environment.ONBOARDING,
-            PageId.QRCodeScanner);
-          this.appGlobalService.setIsPermissionAsked(PermissionAskedEnum.isCameraAsked, true);
-          this.permission.requestPermissions(this.permissionList).subscribe( (status: AndroidPermissionsStatus) => {
-            if (status && status.hasPermission) {
-              this.startScanner(this.source, this.showButton);
-            } else {
-              this.showSettingErrorToast();
+              if (permissionGranted) {
+                this.startQRScanner(screenTitle, displayText, displayTextColor, buttonText, showButton, source);
+              } else {
+                this.commonUtil.showToast('PERMISSION_DENIED');
+              }
             }
+          }).catch((error) => {
+
           });
+        } else {
+          this.startQRScanner(screenTitle, displayText, displayTextColor, buttonText, showButton, source);
         }
-      },
-      img: {
-        path : './assets/imgs/ic_photo_camera.png',
-      },
-       metaInfo: this.commonUtilService.translateMessage('CAMERA_PERMISSION_DESCRIPTION', this.appName),
-    }, {
-        cssClass: 'sb-popover sb-popover-permissions primary dw-active-downloads-popover',
-      });
-
-    confirm.present();
-
+      }
+    }).catch((error) => {
+      console.log('Error : ' + error);
+    });
   }
+
   public stopScanner() {
     // Unregister back button listner
-    console.log('InsideSTopScannere===>>');
     this.backButtonFunc();
-    // QRScannerAlert.dismiss();
     (<any>window).qrScanner.stopScanner();
     if (this.pauseSubscription) {
       this.pauseSubscription.unsubscribe();
@@ -299,8 +186,6 @@ export class SunbirdQRScanner {
             this.qrScannerResultHandler.handleDialCode(source, scannedData);
           } else if (this.qrScannerResultHandler.isContentId(scannedData)) {
             this.qrScannerResultHandler.handleContentId(source, scannedData);
-          } else if (scannedData.includes('/certs/')) {
-            this.qrScannerResultHandler.handleCertsQR(source, scannedData);
           } else {
             this.qrScannerResultHandler.handleInvalidQRCode(source, scannedData);
             this.showInvalidCodeAlert();
@@ -316,12 +201,14 @@ export class SunbirdQRScanner {
     this.telemetryGeneratorService.generateImpressionTelemetry(
       ImpressionType.VIEW,
       ImpressionSubtype.QRCodeScanInitiate,
-      source,
+      PageId.QRCodeScanner,
       source === PageId.ONBOARDING_PROFILE_PREFERENCES ? Environment.ONBOARDING : Environment.HOME);
   }
 
   generateStartEvent(pageId: string) {
-    const telemetryObject = new TelemetryObject('', 'qr', undefined);
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = '';
+    telemetryObject.type = 'qr';
     this.telemetryGeneratorService.generateStartTelemetry(
       PageId.QRCodeScanner,
       telemetryObject);
@@ -329,8 +216,9 @@ export class SunbirdQRScanner {
 
   generateEndEvent(pageId: string, qrData: string) {
     if (pageId) {
-      const telemetryObject: TelemetryObject = new TelemetryObject(qrData, 'qr', undefined);
-
+      const telemetryObject: TelemetryObject = new TelemetryObject();
+      telemetryObject.id = qrData;
+      telemetryObject.type = 'qr';
       this.telemetryGeneratorService.generateEndTelemetry(
         'qr',
         Mode.PLAY,
@@ -342,16 +230,6 @@ export class SunbirdQRScanner {
   }
 
   showInvalidCodeAlert() {
-    this.telemetryGeneratorService.generateInteractTelemetry(
-      InteractType.OTHER,
-      InteractSubtype.QR_CODE_INVALID,
-      this.source === PageId.ONBOARDING_PROFILE_PREFERENCES ? Environment.ONBOARDING : Environment.HOME,
-      this.source
-    );
-    if (this.source !== 'permission') {
-      this.commonUtil.afterOnBoardQRErrorAlert('INVALID_QR', 'UNKNOWN_QR');
-      return;
-    }
     let popUp: Popover;
     const self = this;
     const callback: QRAlertCallBack = {

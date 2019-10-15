@@ -1,7 +1,4 @@
 page-qr-code-result{
-    .toolbar-md{
-        min-height: auto;
-    }
     .card-container{
         margin-bottom: 20px;
         padding: 0 !important;
@@ -30,7 +27,7 @@ page-qr-code-result{
         }
         .button.button-block.button-block-md {
             margin: 0;
-            border-radius: 0px !important;
+            border-radius: 0;
         }
     
         .badge {
@@ -164,11 +161,6 @@ page-qr-code-result{
         height: 100%;
         z-index: 1000;
         opacity: 1 !important;
-    }
-    .downloadicon {
-        display: inline-block;
-        font-size: 1.1em;
-        margin-top: -2px;
     }
     }
     

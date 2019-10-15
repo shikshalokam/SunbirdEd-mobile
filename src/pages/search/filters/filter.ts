@@ -118,11 +118,4 @@ export class FilterPage {
     }, 11);
   }
 
-  ionViewWillLeave() {
-    // Unregister the custom back button action for this page
-    if (this.unregisterBackButton) {
-      this.unregisterBackButton();
-    }
-  }
-
 }

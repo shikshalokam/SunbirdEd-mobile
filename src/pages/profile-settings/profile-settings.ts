@@ -1,34 +1,59 @@
-import {GUEST_STUDENT_TABS, GUEST_TEACHER_TABS, initTabs} from './../../app/module.service';
-import {AppGlobalService} from '../../service/app-global.service';
-import {Component, Inject, ViewChild} from '@angular/core';
-import {TranslateService} from '@ngx-translate/core';
-import {FormBuilder, FormGroup} from '@angular/forms';
-import {Events, IonicPage, LoadingController, NavController, Platform, App, IonicApp, NavParams, Select} from 'ionic-angular';
-import {PreferenceKey} from '../../app/app.constant';
-import * as _ from 'lodash';
-import {TelemetryGeneratorService} from '../../service/telemetry-generator.service';
-import {SunbirdQRScanner} from '../qrscanner/sunbirdqrscanner.service';
-import {CommonUtilService} from '../../service/common-util.service';
 import {
-  CategoryTerm,
-  Framework,
-  FrameworkCategoryCodesGroup,
-  FrameworkDetailsRequest,
-  FrameworkService,
-  FrameworkUtilService,
-  GetFrameworkCategoryTermsRequest,
-  GetSuggestedFrameworksRequest,
-  Profile,
+  GUEST_TEACHER_TABS,
+  initTabs,
+  GUEST_STUDENT_TABS
+} from './../../app/module.service';
+import {
+  NavParams,
+  IonicApp,
+  Select,
+  App
+} from 'ionic-angular/index';
+import { AppGlobalService } from '../../service/app-global.service';
+import {
   ProfileService,
+  TabsPage,
+  InteractSubtype,
+  PageId,
+  InteractType,
   ProfileType,
-  SharedPreferences
-} from 'sunbird-sdk';
-import {Environment, InteractSubtype, InteractType, PageId, ImpressionType, ImpressionSubtype} from '../../service/telemetry-constants';
-import {ContainerService} from '../../service/container.services';
-import {TabsPage} from '@app/pages/tabs/tabs';
-import {ProfileConstants} from '../../app';
-import { AppHeaderService } from '@app/service';
-import {AppVersion} from "@ionic-native/app-version";
+  ContainerService,
+  FrameworkService,
+  SuggestedFrameworkRequest
+} from 'sunbird';
+import {
+  Component,
+  ViewChild
+} from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import {
+  FormBuilder,
+  FormGroup
+} from '@angular/forms';
+import {
+  IonicPage,
+  NavController
+} from 'ionic-angular';
+import { FormAndFrameworkUtilService } from '../profile/formandframeworkutil.service';
+import {
+  CategoryRequest,
+  SharedPreferences,
+  Profile,
+  Environment
+} from 'sunbird';
+import {
+  LoadingController,
+  Events,
+  Platform
+} from 'ionic-angular';
+import {
+  PreferenceKey,
+  FrameworkCategory
+} from '../../app/app.constant';
+import * as _ from 'lodash';
+import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
+import { SunbirdQRScanner } from '../qrscanner/sunbirdqrscanner.service';
+import { CommonUtilService } from '../../service/common-util.service';
 
 @IonicPage()
 @Component({
@@ -36,8 +61,6 @@ import {AppVersion} from "@ionic-native/app-version";
   templateUrl: 'profile-settings.html',
 })
 export class ProfileSettingsPage {
-  public pageId = 'ProfileSettingsPage';
-
   @ViewChild('boardSelect') boardSelect: Select;
   @ViewChild('mediumSelect') mediumSelect: Select;
   @ViewChild('gradeSelect') gradeSelect: Select;
@@ -61,8 +84,7 @@ export class ProfileSettingsPage {
   selectedLanguage = 'en';
   profileForTelemetry: any = {};
   hideBackButton = true;
-  appName: string;
-  headerObservable: any;
+
   // syllabusOptions = {
   //   title: this.commonUtilService.translateMessage('SYLLABUS').toLocaleUpperCase(),
   //   cssClass: 'select-box'
@@ -81,12 +103,14 @@ export class ProfileSettingsPage {
   };
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
     private navCtrl: NavController,
     private navParams: NavParams,
     private fb: FormBuilder,
+    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
     private translate: TranslateService,
     private loadingCtrl: LoadingController,
+    private preference: SharedPreferences,
+    private profileService: ProfileService,
     private telemetryGeneratorService: TelemetryGeneratorService,
     private appGlobalService: AppGlobalService,
     private events: Events,
@@ -96,14 +120,11 @@ export class ProfileSettingsPage {
     private container: ContainerService,
     private ionicApp: IonicApp,
     private app: App,
-    private telemetryService: TelemetryGeneratorService,
-    @Inject('FRAMEWORK_SERVICE') private frameworkService: FrameworkService,
-    @Inject('FRAMEWORK_UTIL_SERVICE') private frameworkUtilService: FrameworkUtilService,
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
-    private headerService: AppHeaderService,
-    private appVersion: AppVersion
+    private framework: FrameworkService,
+    private telemetryService: TelemetryGeneratorService
+
   ) {
-    this.preferences.getString(PreferenceKey.SELECTED_LANGUAGE_CODE).toPromise()
+    this.preference.getString(PreferenceKey.SELECTED_LANGUAGE_CODE)
       .then(val => {
         if (val && val.length) {
           this.selectedLanguage = val;
@@ -116,44 +137,24 @@ export class ProfileSettingsPage {
 
   ionViewDidLoad() {
     if (Boolean(this.navParams.get('stopScanner'))) {
-      setTimeout(() => {
-        this.scanner.stopScanner();
-      }, 500);
+      this.scanner.stopScanner();
     }
-    this.telemetryGeneratorService.generateImpressionTelemetry(
-      ImpressionType.VIEW, '',
-      PageId.ONBOARDING_PROFILE_PREFERENCES,
-      Environment.ONBOARDING
-    );
-    this.appVersion.getAppName().then((appName) => {
-      this.appName = (appName).toUpperCase();
-    });
   }
 
   ionViewWillEnter() {
-    this.headerObservable = this.headerService.headerEventEmitted$.subscribe(eventName => {
-      this.handleHeaderEvents(eventName);
-    });
     this.hideBackButton = Boolean(this.navParams.get('hideBackButton'));
-    if (!this.hideBackButton) {
-      this.headerService.showHeaderWithBackButton();
-    } else {
-      this.headerService.hideHeader();  
-    }
     if (this.navParams.get('isCreateNavigationStack')) {
-      this.navCtrl.insertPages(0, [{page: 'LanguageSettingsPage'}, {page: 'UserTypeSelectionPage'}]);
+      this.navCtrl.insertPages(0, [{ page: 'LanguageSettingsPage' }, { page: 'UserTypeSelectionPage' }]);
     }
     this.getSyllabusDetails();
   }
 
   ionViewWillLeave() {
-    this.headerObservable.unsubscribe();
-    this.unregisterBackButton();
+   this.unregisterBackButton();
   }
-
   /**
-   * It will Dismiss active popup
-   */
+ * It will Dismiss active popup
+ */
   dismissPopup() {
     const activePortal = this.ionicApp._modalPortal.getActive() ||
       this.ionicApp._toastPortal.getActive() ||
@@ -170,20 +171,18 @@ export class ProfileSettingsPage {
    * Initializes guest user object
    */
   getGuestUser() {
-    this.profileService.getActiveSessionProfile({requiredFields: ProfileConstants.REQUIRED_FIELDS})
-      .toPromise()
-      .then((response: any) => {
-        this.profile = response;
-        if (this.navParams.get('isChangeRoleRequest')) {
-          this.profile.syllabus = [];
-          this.profile.board = [];
-          this.profile.grade = [];
-          this.profile.subject = [];
-          this.profile.medium = [];
-        }
-        this.profileForTelemetry = this.profile;
-        this.initUserForm();
-      }).catch(() => {
+    this.profileService.getCurrentUser().then((response: any) => {
+      this.profile = JSON.parse(response);
+      if (this.navParams.get('isChangeRoleRequest')) {
+        this.profile.syllabus = [];
+        this.profile.board = [];
+        this.profile.grade = [];
+        this.profile.subject = [];
+        this.profile.medium = [];
+      }
+      this.profileForTelemetry = this.profile;
+      this.initUserForm();
+    }).catch(() => {
       this.profile = undefined;
       this.initUserForm();
     });
@@ -211,41 +210,40 @@ export class ProfileSettingsPage {
   }
 
   /**
-   * It will fetch syllabus details
-   */
+	 * It will fetch syllabus details
+	 */
   getSyllabusDetails() {
     this.loader = this.commonUtilService.getLoader();
     this.loader.present();
 
-    const getSuggestedFrameworksRequest: GetSuggestedFrameworksRequest = {
-      language: this.translate.currentLang,
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
+    const suggestedFrameworkRequest: SuggestedFrameworkRequest = {
+      isGuestUser: true,
+      selectedLanguage: this.translate.currentLang,
+      categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
     };
-    this.frameworkUtilService.getActiveChannelSuggestedFrameworkList(getSuggestedFrameworksRequest).toPromise()
-      .then((result: Framework[]) => {
-        console.log('getActiveChannelSuggestedFrameworkList', result);
+    this.framework.getSuggestedFrameworkList(suggestedFrameworkRequest)
+      .then((result) => {
         this.syllabusList = [];
         if (result && result !== undefined && result.length > 0) {
           result.forEach(element => {
             // renaming the fields to text, value and checked
-            const value = {'name': element.name, 'code': element.identifier};
+            const value = { 'name': element.name, 'code': element.identifier };
             this.syllabusList.push(value);
           });
           this.loader.dismiss();
+
           if (this.profile && this.profile.syllabus && this.profile.syllabus[0] !== undefined) {
-            const frameworkDetailsRequest: FrameworkDetailsRequest = {
-              frameworkId: this.profile.syllabus[0] ? this.profile.syllabus[0] : '',
-              requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-            };
-            this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-              .then((framework: Framework) => {
-                this.categories = framework.categories;
+            this.formAndFrameworkUtilService.getFrameworkDetails(this.profile.syllabus[0])
+              .then(catagories => {
+                this.categories = catagories;
                 this.resetForm(0, false);
               }).catch(error => {
-              console.error('Error', error);
-              this.loader.dismiss();
-              this.commonUtilService.showToast('NEED_INTERNET_TO_CHANGE');
-            });
+                console.error('Error', error);
+                this.loader.dismiss();
+                this.commonUtilService.showToast('NEED_INTERNET_TO_CHANGE');
+              });
+          } else {
+            this.loader.dismiss();
           }
         } else {
           this.loader.dismiss();
@@ -255,14 +253,14 @@ export class ProfileSettingsPage {
   }
 
   /**
-   * This will internally call framework API
-   * @param {string} currentCategory - request Parameter passing to the framework API
-   * @param {string} list - Local variable name to hold the list data
-   */
-  getCategoryData(req: GetFrameworkCategoryTermsRequest, list): void {
+	 * This will internally call framework API
+	 * @param {string} currentCategory - request Parameter passing to the framework API
+	 * @param {string} list - Local variable name to hold the list data
+	 */
+  getCategoryData(req: CategoryRequest, list): void {
     if (this.frameworkId) {
-      this.frameworkUtilService.getFrameworkCategoryTerms(req).toPromise()
-        .then((result: CategoryTerm[]) => {
+      this.formAndFrameworkUtilService.getCategoryData(req, this.frameworkId).
+        then((result) => {
           if (this.loader !== undefined) {
             this.loader.dismiss();
           }
@@ -270,7 +268,7 @@ export class ProfileSettingsPage {
           if (list !== 'gradeList') {
             this[list] = _.orderBy(this[list], ['name'], ['asc']);
           }
-          if (req.currentCategoryCode === 'board') {
+          if (req.currentCategory === 'board') {
             const boardName = this.syllabusList.find(framework => this.frameworkId === framework.code);
             if (boardName) {
               const boardCode = result.find(board => boardName.name === board.name);
@@ -300,54 +298,50 @@ export class ProfileSettingsPage {
   }
 
   /**
-   * It will check previous value and make a API call
-   * @param index
-   * @param currentField
-   * @param prevSelectedValue
-   */
-  checkPrevValue(index, currentField, prevSelectedValue: any[]) {
+	 * It will check previous value and make a API call
+	 * @param index
+	 * @param currentField
+	 * @param prevSelectedValue
+	 */
+  checkPrevValue(index, currentField, prevSelectedValue = []) {
     if (index === 1) {
       const loader = this.commonUtilService.getLoader();
-      this.frameworkId = prevSelectedValue ? (Array.isArray(prevSelectedValue[0]) ? prevSelectedValue[0][0] : prevSelectedValue[0]) : '';
-      const frameworkDetailsRequest: FrameworkDetailsRequest = {
-        frameworkId: this.frameworkId,
-        requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-      };
-      this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-        .then((framework: Framework) => {
-          this.categories = framework.categories;
+      this.frameworkId = prevSelectedValue[0];
+      this.formAndFrameworkUtilService.getFrameworkDetails(this.frameworkId)
+        .then(catagories => {
+          this.categories = catagories;
           console.log('this.categories', this.categories);
-          const request: GetFrameworkCategoryTermsRequest = {
-            currentCategoryCode: this.categories[0].code,
-            language: this.translate.currentLang,
-            requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES,
-            frameworkId: this.frameworkId
+          const request: CategoryRequest = {
+            currentCategory: this.categories[0].code,
+            selectedLanguage: this.translate.currentLang,
+            categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
           };
           this.getCategoryData(request, currentField);
         }).catch(() => {
-        this.commonUtilService.showToast('NEED_INTERNET_TO_CHANGE');
-        loader.dismiss();
-      });
+          this.commonUtilService.showToast('NEED_INTERNET_TO_CHANGE');
+          loader.dismiss();
+        });
 
     } else {
-      const request: GetFrameworkCategoryTermsRequest = {
-        currentCategoryCode: this.categories[index - 1].code,
-        prevCategoryCode: this.categories[index - 2].code,
-        selectedTermsCodes: prevSelectedValue,
-        language: this.selectedLanguage,
-        requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES,
-        frameworkId: this.frameworkId
+      const request: CategoryRequest = {
+        currentCategory: this.categories[index - 1].code,
+        prevCategory: this.categories[index - 2].code,
+        selectedCode: prevSelectedValue,
+        selectedLanguage: this.selectedLanguage,
+        categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
       };
+      console.log('else getCategoryData', request);
       this.getCategoryData(request, currentField);
     }
   }
 
   /**
-   * It will reset user form, based on given index
-   * @param {number}  index
-   * @param {boolean} showloader Flag for showing loader or not
-   */
+	 * It will reset user form, based on given index
+	 * @param {number}  index
+	 * @param {boolean} showloader Flag for showing loader or not
+	 */
   resetForm(index, showloader: boolean): void {
+    console.log('resetForm index', index);
     const oldAttribute: any = {};
     const newAttribute: any = {};
     switch (index) {
@@ -361,16 +355,13 @@ export class ProfileSettingsPage {
           this.loader = this.commonUtilService.getLoader();
           this.loader.present();
         }
-        oldAttribute.board = this.profileForTelemetry.board &&  this.profileForTelemetry.board.length ? this.profileForTelemetry.board : '';
+        oldAttribute.board = this.profileForTelemetry.board ? this.profileForTelemetry.board : '';
         newAttribute.board = this.userForm.value.syllabus ? this.userForm.value.syllabus : '';
         if (!_.isEqual(oldAttribute, newAttribute)) {
-          this.appGlobalService.generateAttributeChangeTelemetry(
-            oldAttribute, newAttribute, PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING
-          );
+          this.appGlobalService.generateAttributeChangeTelemetry(oldAttribute, newAttribute);
         }
         this.profileForTelemetry.board = this.userForm.value.syllabus;
         this.checkPrevValue(1, 'boardList', [this.userForm.value.syllabus]);
-        document.querySelectorAll('[ion-button=alert-button]')[0].setAttribute('disabled', 'false');
         break;
 
       case 1:
@@ -390,9 +381,7 @@ export class ProfileSettingsPage {
         oldAttribute.medium = this.profileForTelemetry.medium ? this.profileForTelemetry.medium : '';
         newAttribute.medium = this.userForm.value.medium ? this.userForm.value.medium : '';
         if (!_.isEqual(oldAttribute, newAttribute)) {
-          this.appGlobalService.generateAttributeChangeTelemetry(
-            oldAttribute, newAttribute, PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING
-          );
+          this.appGlobalService.generateAttributeChangeTelemetry(oldAttribute, newAttribute);
         }
         this.profileForTelemetry.medium = this.userForm.value.medium;
         this.checkPrevValue(3, 'gradeList', this.userForm.value.medium);
@@ -411,9 +400,7 @@ export class ProfileSettingsPage {
     oldAttribute.class = this.profileForTelemetry.grade ? this.profileForTelemetry.grade : '';
     newAttribute.class = this.userForm.value.grades ? this.userForm.value.grades : '';
     if (!_.isEqual(oldAttribute, newAttribute)) {
-      this.appGlobalService.generateAttributeChangeTelemetry(
-        oldAttribute, newAttribute, PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING
-      );
+      this.appGlobalService.generateAttributeChangeTelemetry(oldAttribute, newAttribute);
     }
     this.profileForTelemetry.grade = this.userForm.value.grades;
   }
@@ -498,12 +485,13 @@ export class ProfileSettingsPage {
   }
 
   submitEditForm(formVal, loader): void {
-    const req: Profile = {
-      ...this.profile,
-      board: formVal.boards,
-      grade: formVal.grades,
-      medium: formVal.medium
-    };
+    const req: Profile = new Profile();
+    req.board = formVal.boards;
+    req.grade = formVal.grades;
+    req.medium = formVal.medium;
+    req.uid = this.profile.uid;
+    req.handle = this.profile.handle;
+
     if (this.navParams.get('selectedUserType')) {
       req.profileType = this.navParams.get('selectedUserType');
     } else {
@@ -518,78 +506,63 @@ export class ProfileSettingsPage {
       formVal.grades.forEach(gradeCode => {
         for (let i = 0; i < this.gradeList.length; i++) {
           if (this.gradeList[i].code === gradeCode) {
-            if (!req.gradeValue) {
-              req.gradeValue = {};
+            if (!req.gradeValueMap) {
+              req.gradeValueMap = {};
             }
-            req.gradeValue[this.gradeList[i].code] = this.gradeList[i].name;
+            req.gradeValueMap[this.gradeList[i].code] = this.gradeList[i].name;
             break;
           }
         }
       });
     }
-    this.profileService.updateProfile(req).toPromise()
+    this.profileService.updateProfile(req)
       .then((res: any) => {
         if (req.profileType === ProfileType.TEACHER) {
           initTabs(this.container, GUEST_TEACHER_TABS);
         } else if (req.profileType === ProfileType.STUDENT) {
           initTabs(this.container, GUEST_STUDENT_TABS);
         }
+
         this.events.publish('refresh:profile');
-        this.appGlobalService.guestUserProfile = res;
+        this.appGlobalService.guestUserProfile = JSON.parse(res);
         this.commonUtilService.showToast('PROFILE_UPDATE_SUCCESS');
-        this.events.publish('onboarding-card:completed', {isOnBoardingCardCompleted: true});
+        this.events.publish('onboarding-card:completed', { isOnBoardingCardCompleted: true });
         this.events.publish('refresh:profile');
-        this.appGlobalService.guestUserProfile = res;
+        this.appGlobalService.guestUserProfile = JSON.parse(res);
         this.appGlobalService.setOnBoardingCompleted();
-        this.telemetryGeneratorService.generateProfilePopulatedTelemetry(
-          PageId.ONBOARDING_PROFILE_PREFERENCES, req, 'manual', Environment.ONBOARDING
-        );
+        this.telemetryGeneratorService.generateProfilePopulatedTelemetry(PageId.DIAL_CODE_SCAN_RESULT, req.syllabus[0], 'manual');
         if (this.navParams.get('isChangeRoleRequest')) {
-          this.preferences.putString(PreferenceKey.SELECTED_USER_TYPE, req.profileType).toPromise().then();
+          this.preference.putString(PreferenceKey.SELECTED_USER_TYPE, req.profileType);
         }
 
         this.navCtrl.push(TabsPage, {
           loginMode: 'guest'
         });
       })
-      .catch(() => {
+      .catch((err: any) => {
         loader.dismiss();
         this.commonUtilService.showToast('PROFILE_UPDATE_FAILED');
+        console.log('Err', err);
       });
   }
 
   handleBackButton() {
-    this.unregisterBackButton = this.platform.registerBackButtonAction(() => {
+   this.unregisterBackButton = this.platform.registerBackButtonAction(() => {
       const navObj = this.app.getActiveNavs()[0];
 
       if (navObj.canGoBack()) {
-        this.telemetryGeneratorService.generateBackClickedTelemetry(
-          PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING, false);
         this.dismissPopup();
       } else {
         this.commonUtilService.showExitPopUp(PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING, false);
+
       }
       this.unregisterBackButton();
     }, 11);
-  }
-
-  handleHeaderEvents($event) {
-    switch ($event.name) {
-      case 'back':  this.telemetryGeneratorService.generateBackClickedTelemetry(
-                    PageId.ONBOARDING_PROFILE_PREFERENCES, Environment.ONBOARDING, true);
-                    this.dismissPopup();
-                    break;
-    }
-  }
-
-  openQRScanner() {
     this.telemetryGeneratorService.generateInteractTelemetry(
-      InteractType.TOUCH,
-      InteractSubtype.QRCodeScanClicked,
-      Environment.ONBOARDING,
+      InteractType.TOUCH, InteractSubtype.DEVICE_BACK_CLICKED,
       PageId.ONBOARDING_PROFILE_PREFERENCES,
-      );
-    this.scanner.startScanner(PageId.ONBOARDING_PROFILE_PREFERENCES, false);
+      Environment.ONBOARDING);
   }
-}
 
+
+}

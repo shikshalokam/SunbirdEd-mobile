@@ -1,32 +1,40 @@
 import { AppGlobalService } from './../../service/app-global.service';
+import { FormAndFrameworkUtilService } from './../profile/formandframeworkutil.service';
 import { CommonUtilService } from './../../service/common-util.service';
-import { Component, Inject, ViewChild } from '@angular/core';
-import { Events, IonicPage, LoadingController, NavController, NavParams, Select } from 'ionic-angular';
-import { FormBuilder, FormGroup } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
-import { initTabs, LOGIN_TEACHER_TABS } from '@app/app';
 import {
-  FrameworkService,
-  FrameworkUtilService,
-  GetSuggestedFrameworksRequest,
-  GetFrameworkCategoryTermsRequest,
-  FrameworkDetailsRequest,
-  Framework,
-  FrameworkCategoryCodesGroup,
+  Component,
+  ViewChild
+} from '@angular/core';
+import {
+  IonicPage,
+  NavController,
+  NavParams,
+  LoadingController
+} from 'ionic-angular';
+import {
+  FormBuilder,
+  FormGroup
+} from '@angular/forms';
+import {
+  CategoryRequest,
   Profile,
+  UpdateUserInfoRequest,
+  UserProfileService,
   ProfileService,
-  CategoryTerm,
-  UpdateServerProfileInfoRequest,
-  ServerProfileDetailsRequest,
-  CachedItemRequestSourceFrom
-} from 'sunbird-sdk';
-import { AppHeaderService } from '@app/service';
-import { ContainerService } from '@app/service/container.services';
-import { TabsPage } from '../tabs/tabs';
-import {FormAndFrameworkUtilService} from '../profile/formandframeworkutil.service';
-import {ProfileConstants} from '../../app';
-
-
+  ContainerService,
+  TabsPage,
+  FrameworkService,
+  SuggestedFrameworkRequest
+} from 'sunbird';
+import { TranslateService } from '@ngx-translate/core';
+import * as _ from 'lodash';
+import { Events } from 'ionic-angular';
+import {
+  initTabs,
+  LOGIN_TEACHER_TABS,
+  FrameworkCategory
+} from '@app/app';
+import { Select } from 'ionic-angular';
 
 @IonicPage()
 @Component({
@@ -52,11 +60,6 @@ export class CategoriesEditPage {
   showOnlyMandatoryFields: Boolean = true;
   editData: Boolean = true;
   loader: any;
-  headerConfig = {
-    showHeader: false,
-    showBurgerMenu: false,
-    actionButtons: []
-  };
 
   /* Custom styles for the select box popup */
   boardOptions = {
@@ -77,20 +80,19 @@ export class CategoriesEditPage {
   };
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
     private navCtrl: NavController,
     private loadingCtrl: LoadingController,
     private navParams: NavParams,
     private commonUtilService: CommonUtilService,
+    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
     private fb: FormBuilder,
     private translate: TranslateService,
     private appGlobalService: AppGlobalService,
+    private userProfileService: UserProfileService,
+    private profileService: ProfileService,
     private events: Events,
     private container: ContainerService,
-    @Inject('FRAMEWORK_SERVICE') private frameworkService: FrameworkService,
-    @Inject('FRAMEWORK_UTIL_SERVICE') private frameworkUtilService: FrameworkUtilService,
-    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
-    private headerService: AppHeaderService,
+    private framework: FrameworkService
   ) {
     this.profile = this.appGlobalService.getCurrentUser();
     if (this.navParams.get('showOnlyMandatoryFields')) {
@@ -109,11 +111,6 @@ export class CategoriesEditPage {
    */
   ionViewWillEnter() {
     this.getSyllabusDetails();
-    this.headerConfig = this.headerService.getDefaultPageConfig();
-    this.headerConfig.actionButtons = [];
-    this.headerConfig.showHeader = false;
-    this.headerConfig.showBurgerMenu = false;
-    this.headerService.updatePageConfig(this.headerConfig);
   }
 
   /**
@@ -141,12 +138,12 @@ export class CategoriesEditPage {
     if (this.profile.syllabus && this.profile.syllabus[0]) {
       this.frameworkId = this.profile.syllabus[0];
     }
-    const getSuggestedFrameworksRequest: GetSuggestedFrameworksRequest = {
-      language: this.translate.currentLang,
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
+    const suggestedFrameworkRequest: SuggestedFrameworkRequest = {
+      selectedLanguage: this.translate.currentLang,
+      categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
     };
-    this.frameworkUtilService.getActiveChannelSuggestedFrameworkList(getSuggestedFrameworksRequest).toPromise()
-      .then((result: Framework[]) => {
+    this.framework.getSuggestedFrameworkList(suggestedFrameworkRequest)
+      .then((result) => {
         if (result && result.length) {
           result.forEach(element => {
             // renaming the fields to text, value and checked
@@ -155,13 +152,9 @@ export class CategoriesEditPage {
           });
 
           if (this.profile && this.profile.syllabus && this.profile.syllabus[0] !== undefined) {
-            const frameworkDetailsRequest: FrameworkDetailsRequest = {
-              frameworkId: this.profile.syllabus[0],
-              requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-            };
-            this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-              .then((framework: Framework) => {
-                this.categories = framework.categories;
+            this.formAndFrameworkUtilService.getFrameworkDetails(this.profile.syllabus[0])
+              .then(catagories => {
+                this.categories = catagories;
                 this.resetForm(0);
               }).catch(() => {
                 this.loader.dismiss();
@@ -227,19 +220,14 @@ export class CategoriesEditPage {
     if (index === 1) {
       this.frameworkId = selectedValue[0];
       if (this.frameworkId.length !== 0) {
-        const frameworkDetailsRequest: FrameworkDetailsRequest = {
-          frameworkId: this.frameworkId,
-          requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-        };
-        this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-          .then((framework: Framework) => {
-            this.categories = framework.categories;
+        this.formAndFrameworkUtilService.getFrameworkDetails(this.frameworkId)
+          .then(catagories => {
+            this.categories = catagories;
             // loader.dismiss();
-            const request: GetFrameworkCategoryTermsRequest = {
-              currentCategoryCode: this.categories[0].code,
-              language: this.translate.currentLang,
-              requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES,
-              frameworkId: this.frameworkId
+            const request: CategoryRequest = {
+              currentCategory: this.categories[0].code,
+              selectedLanguage: this.translate.currentLang,
+              categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
             };
             this.getCategoryData(request, currentField);
           }).catch(() => {
@@ -247,13 +235,12 @@ export class CategoriesEditPage {
           });
       }
     } else {
-      const request: GetFrameworkCategoryTermsRequest = {
-        currentCategoryCode: this.categories[index - 1].code,
-        prevCategoryCode: this.categories[index - 2].code,
-        selectedTermsCodes: selectedValue,
-        language: this.translate.currentLang,
-        requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES,
-        frameworkId: this.frameworkId
+      const request: CategoryRequest = {
+        currentCategory: this.categories[index - 1].code,
+        prevCategory: this.categories[index - 2].code,
+        selectedCode: selectedValue,
+        selectedLanguage: this.translate.currentLang,
+        categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
       };
       this.getCategoryData(request, currentField);
     }
@@ -264,11 +251,11 @@ export class CategoriesEditPage {
    * @param request API request body
    * @param currentField Variable name of the current field list
    */
-  getCategoryData(request: GetFrameworkCategoryTermsRequest, currentField: string) {
-    this.frameworkUtilService.getFrameworkCategoryTerms(request).toPromise()
-      .then((result: CategoryTerm[]) => {
+  getCategoryData(request: CategoryRequest, currentField: string) {
+    this.formAndFrameworkUtilService.getCategoryData(request, this.frameworkId)
+      .then((result) => {
         this[currentField] = result;
-        if (request.currentCategoryCode === 'board') {
+        if (request.currentCategory === 'board') {
           const boardName = this.syllabusList.find(framework => this.frameworkId === framework.code);
           if (boardName) {
             const boardCode = result.find(board => boardName.name === board.name);
@@ -298,7 +285,8 @@ export class CategoriesEditPage {
         }
 
       })
-      .catch(() => {
+      .catch(error => {
+        console.error('Error=', error);
       });
   }
 
@@ -323,7 +311,7 @@ export class CategoriesEditPage {
       if (this.showOnlyMandatoryFields) {
         this.gradeSelect.open();
       } else {
-        this.showErrorToastMessage('CLASS');
+        this.showErrorToastMessage('GRADE');
       }
     } else {
       this.submitForm(formVal);
@@ -358,71 +346,53 @@ export class CategoriesEditPage {
 
   submitForm(formVal) {
     this.loader.present();
-    const req: UpdateServerProfileInfoRequest = {
-      userId: this.profile.uid,
-      framework: {}
-    };
+    const req: UpdateUserInfoRequest = new UpdateUserInfoRequest();
+    const framework = {};
     if (formVal.syllabus) {
-      req.framework['id'] = [formVal.syllabus];
+      framework['id'] = [formVal.syllabus];
     }
     if (formVal.boards) {
       const code = typeof (formVal.boards) === 'string' ? formVal.boards : formVal.boards[0];
-      req.framework['board'] = [this.boardList.find(board => code === board.code).name];
+      framework['board'] = [this.boardList.find(board => code === board.code).name];
     }
     if (formVal.medium && formVal.medium.length) {
       const Names = [];
       formVal.medium.forEach(element => {
         Names.push(this.mediumList.find(medium => element === medium.code).name);
       });
-      req.framework['medium'] = Names;
+      framework['medium'] = Names;
     }
     if (formVal.grades && formVal.grades.length) {
       const Names = [];
       formVal.grades.forEach(element => {
         Names.push(this.gradeList.find(grade => element === grade.code).name);
       });
-      req.framework['gradeLevel'] = Names;
+      framework['gradeLevel'] = Names;
     }
     if (formVal.subjects && formVal.subjects.length) {
       const Names = [];
       formVal.subjects.forEach(element => {
         Names.push(this.subjectList.find(subject => element === subject.code).name);
       });
-      req.framework['subject'] = Names;
+      framework['subject'] = Names;
     }
-    this.profileService.updateServerProfile(req).toPromise()
-      .then(() => {
+    req.userId = this.profile.uid;
+    req.framework = framework;
+    this.userProfileService.updateUserInfo(req,
+      (res: any) => {
         this.loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('PROFILE_UPDATE_SUCCESS'));
         this.events.publish('loggedInProfile:update', req.framework);
-        // if (this.showOnlyMandatoryFields) {
-        //   initTabs(this.container, LOGIN_TEACHER_TABS);
-        //   this.navCtrl.setRoot(TabsPage);
-        // } else {
-        //   this.navCtrl.pop();
-        // }
         if (this.showOnlyMandatoryFields) {
-          const reqObj: ServerProfileDetailsRequest = {
-            userId: this.profile.uid,
-            requiredFields: ProfileConstants.REQUIRED_FIELDS,
-            from : CachedItemRequestSourceFrom.SERVER
-          };
-          this.profileService.getServerProfilesDetails(reqObj).toPromise()
-            .then(updatedProfile => {
-              this.formAndFrameworkUtilService.updateLoggedInUser(updatedProfile, this.profile)
-                .then((value) => {
-                  initTabs(this.container, LOGIN_TEACHER_TABS);
-                  this.navCtrl.setRoot(TabsPage);
-                });
-            }).catch( e => {
-              initTabs(this.container, LOGIN_TEACHER_TABS);
-              this.navCtrl.setRoot(TabsPage);
-            });
+          initTabs(this.container, LOGIN_TEACHER_TABS);
+          this.navCtrl.setRoot(TabsPage);
         } else {
           this.navCtrl.pop();
         }
-      }).catch(() => {
+      },
+      (err: any) => {
         this.loader.dismiss();
+        console.log('Error', err);
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('PROFILE_UPDATE_FAILED'));
       });
   }

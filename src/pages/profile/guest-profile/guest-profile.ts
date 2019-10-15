@@ -1,37 +1,50 @@
-import { ActiveDownloadsPage } from './../../active-downloads/active-downloads';
-import {TranslateService} from '@ngx-translate/core';
-import {Component, Inject, OnInit, AfterViewInit} from '@angular/core';
-import {Events, NavController, PopoverController, ToastController} from 'ionic-angular';
-import * as _ from 'lodash';
-import {GuestEditProfilePage, OverflowMenuComponent} from '@app/pages/profile';
-import {UserTypeSelectionPage} from '@app/pages/user-type-selection';
-import {AppGlobalService, CommonUtilService, TelemetryGeneratorService, AppHeaderService} from '@app/service';
-import {MenuOverflow, PreferenceKey} from '@app/app';
+import { TranslateService } from '@ngx-translate/core';
+import { Component } from '@angular/core';
 import {
-  Framework,
-  FrameworkCategoryCodesGroup,
-  FrameworkDetailsRequest,
-  FrameworkService,
-  FrameworkUtilService,
-  GetSuggestedFrameworksRequest,
+  NavController,
+  PopoverController,
+  Events
+} from 'ionic-angular';
+import * as _ from 'lodash';
+import {
   ProfileService,
+  SharedPreferences,
   ProfileType,
-  SharedPreferences
-} from 'sunbird-sdk';
-import {PageId, Environment, InteractType, InteractSubtype} from '../../../service/telemetry-constants';
-import {ProfileConstants} from '../../../app';
+  ImpressionType,
+  PageId,
+  Environment,
+  SuggestedFrameworkRequest,
+  FrameworkService,
+} from 'sunbird';
+import {
+  GuestEditProfilePage,
+  OverflowMenuComponent,
+  FormAndFrameworkUtilService
+} from '@app/pages/profile';
+import { UserTypeSelectionPage } from '@app/pages/user-type-selection';
+import {
+  AppGlobalService,
+  TelemetryGeneratorService,
+  CommonUtilService
+} from '@app/service';
+import {
+  MenuOverflow,
+  PreferenceKey,
+  FrameworkCategory
+} from '@app/app';
 
 @Component({
   selector: 'page-guest-profile',
   templateUrl: 'guest-profile.html',
 })
 
-export class GuestProfilePage implements OnInit, AfterViewInit {
+export class GuestProfilePage {
 
   imageUri = 'assets/imgs/ic_profile_default.png';
-  ProfileType = ProfileType;
+
   showSignInCard = false;
   isNetworkAvailable: boolean;
+  showWarning = false;
   boards = '';
   grade = '';
   medium = '';
@@ -41,31 +54,24 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
   syllabus = '';
   selectedLanguage: string;
   loader: any;
-  headerObservable: any;
-  toast: any;
-
-
-  isUpgradePopoverShown = false;
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
     private navCtrl: NavController,
     private popoverCtrl: PopoverController,
+    private profileService: ProfileService,
     private events: Events,
+    private preference: SharedPreferences,
     private commonUtilService: CommonUtilService,
     private appGlobalService: AppGlobalService,
+    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
     private telemetryGeneratorService: TelemetryGeneratorService,
-    private translate: TranslateService,
-    @Inject('FRAMEWORK_SERVICE') private frameworkService: FrameworkService,
-    @Inject('FRAMEWORK_UTIL_SERVICE') private frameworkUtilService: FrameworkUtilService,
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
-    private headerServie: AppHeaderService,
-    public toastController: ToastController
+    private framework: FrameworkService,
+    private translate: TranslateService
   ) {
 
 
     // language code
-    this.preferences.getString(PreferenceKey.SELECTED_LANGUAGE_CODE).toPromise()
+    this.preference.getString(PreferenceKey.SELECTED_LANGUAGE_CODE)
       .then(val => {
         if (val && val.length) {
           this.selectedLanguage = val;
@@ -73,10 +79,9 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
       });
 
     // Event for optional and forceful upgrade
-    this.events.subscribe('force_optional_upgrade', async (upgrade) => {
-      if (upgrade && !this.isUpgradePopoverShown) {
-        await this.appGlobalService.openPopover(upgrade);
-        this.isUpgradePopoverShown = true;
+    this.events.subscribe('force_optional_upgrade', (upgrade) => {
+      if (upgrade) {
+        this.appGlobalService.openPopover(upgrade);
       }
     });
 
@@ -97,36 +102,13 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
   }
 
   ionViewDidLoad() {
+    this.telemetryGeneratorService.generateImpressionTelemetry(
+      ImpressionType.VIEW, '',
+      PageId.GUEST_PROFILE,
+      Environment.HOME
+    );
 
     this.appGlobalService.generateConfigInteractEvent(PageId.GUEST_PROFILE);
-  }
-
-  /**
-	 * Angular life cycle hooks
-	 */
-  ngOnInit() {
-
-  }
-
-  ionViewWillEnter() {
-    this.events.subscribe('update_header', (data) => {
-      this.headerServie.showHeaderWithHomeButton(['download']);
-    });
-    this.headerObservable = this.headerServie.headerEventEmitted$.subscribe(eventName => {
-      this.handleHeaderEvents(eventName);
-    });
-    this.headerServie.showHeaderWithHomeButton(['download']);
-  }
-
-  ngAfterViewInit() {
-
-  }
-
-  ionViewWillLeave(): void {
-    if(this.headerObservable) {
-      this.headerObservable.unsubscribe();
-    }
-    this.events.unsubscribe('update_header');
   }
 
   refreshProfileData(refresher: any = false, showLoader: boolean = true) {
@@ -135,29 +117,33 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
     if (showLoader) {
       this.loader.present();
     }
-    if (refresher) {
-      this.telemetryGeneratorService.generatePullToRefreshTelemetry(PageId.GUEST_PROFILE, Environment.HOME);
-    }
-    this.profileService.getActiveSessionProfile({requiredFields: ProfileConstants.REQUIRED_FIELDS}).toPromise()
-      .then((res: any) => {
-        this.profile = res;
-        this.getSyllabusDetails();
-        setTimeout(() => {
-          if (refresher) { refresher.complete(); }
-        }, 500);
-      })
-      .catch(() => {
+
+    this.profileService.getCurrentUser().then((res: any) => {
+      this.profile = JSON.parse(res);
+      this.getSyllabusDetails();
+      setTimeout(() => {
+        if (refresher) { refresher.complete(); }
+      }, 500);
+    })
+      .catch((err: any) => {
         this.loader.dismiss();
+        console.error('Error', err);
       });
   }
 
   editGuestProfile() {
     this.navCtrl.push(GuestEditProfilePage, {
-      profile: this.profile,
+      profile: JSON.parse(JSON.stringify(this.profile)),
       isCurrentUser: true
     });
   }
 
+  showNetworkWarning() {
+    this.showWarning = true;
+    setTimeout(() => {
+      this.showWarning = false;
+    }, 3000);
+  }
   /**
    * To show popover menu
    * @param {object} event
@@ -175,13 +161,13 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
   getSyllabusDetails() {
     let selectedFrameworkId = '';
 
-
-    const getSuggestedFrameworksRequest: GetSuggestedFrameworksRequest = {
-      language: this.translate.currentLang,
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
+    const suggestedFrameworkRequest: SuggestedFrameworkRequest = {
+      isGuestUser: true,
+      selectedLanguage: this.translate.currentLang,
+      categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
     };
-    this.frameworkUtilService.getActiveChannelSuggestedFrameworkList(getSuggestedFrameworksRequest).toPromise()
-      .then((result: Framework[]) => {
+    this.framework.getSuggestedFrameworkList(suggestedFrameworkRequest)
+      .then((result) => {
         if (result && result !== undefined && result.length > 0) {
 
           result.forEach(element => {
@@ -206,13 +192,9 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
   }
 
   getFrameworkDetails(frameworkId?: string): void {
-    const frameworkDetailsRequest: FrameworkDetailsRequest = {
-      frameworkId: this.profile.syllabus[0] || '',
-      requiredCategories: FrameworkCategoryCodesGroup.DEFAULT_FRAMEWORK_CATEGORIES
-    };
-    this.frameworkService.getFrameworkDetails(frameworkDetailsRequest).toPromise()
-      .then((framework: Framework) => {
-        this.categories = framework.categories;
+    this.formAndFrameworkUtilService.getFrameworkDetails(frameworkId)
+      .then(catagories => {
+        this.categories = catagories;
 
         if (this.profile.board && this.profile.board.length) {
           this.boards = this.getFieldDisplayValues(this.profile.board, 0);
@@ -246,48 +228,14 @@ export class GuestProfilePage implements OnInit, AfterViewInit {
    *
    */
   goToRoles() {
-    this.navCtrl.push(GuestEditProfilePage, {
+    this.navCtrl.push(UserTypeSelectionPage, {
       profile: this.profile,
-      isChangeRoleRequest: true,
-      isCurrentUser: true
+      isChangeRoleRequest: true
     });
   }
 
   buttonClick(isNetAvailable?) {
-    this.presentToastForOffline('NO_INTERNET_TITLE');
-  }
-
-  handleHeaderEvents($event) {
-    switch ($event.name) {
-      case 'download':
-        this.redirectToActivedownloads();
-        break;
-    }
-  }
-
-  private redirectToActivedownloads() {
-    this.telemetryGeneratorService.generateInteractTelemetry(
-      InteractType.TOUCH,
-      InteractSubtype.ACTIVE_DOWNLOADS_CLICKED,
-      Environment.HOME,
-      PageId.GUEST_PROFILE);
-    this.navCtrl.push(ActiveDownloadsPage);
-  }
-
-  // Offline Toast
-  async presentToastForOffline(msg: string) {
-    this.toast = await this.toastController.create({
-      duration: 3000,
-      message: this.commonUtilService.translateMessage(msg),
-      showCloseButton: true,
-      position: 'top',
-      closeButtonText: '',
-      cssClass: 'toastHeader'
-    });
-    this.toast.present();
-    this.toast.onDidDismiss(() => {
-      this.toast = undefined;
-    });
+    this.showNetworkWarning();
   }
 
 }

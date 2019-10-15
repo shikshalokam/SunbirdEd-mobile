@@ -1,4 +1,4 @@
-import { ProfileType, ProfileSource } from 'sunbird-sdk';
+import { ProfileType, UserSource } from 'sunbird';
 export const mockResponseUserAndGroups = {
     userId: '',
     playContent: '',
@@ -13,7 +13,7 @@ export const mockResponseUserAndGroups = {
             'language': 'en',
             'month': -1,
             'profileType': ProfileType.STUDENT,
-            'source': ProfileSource.LOCAL,
+            'source': UserSource.LOCAL,
             'standard': -1,
             'uid': '3af2e8a4-003e-438d-b360-2ae922696913'
         }
@@ -29,7 +29,7 @@ export const mockResponseUserAndGroups = {
             'language': 'en',
             'month': -1,
             'profileType': ProfileType.STUDENT,
-            'source': ProfileSource.LOCAL,
+            'source': UserSource.LOCAL,
             'standard': -1,
             'uid': '3af2e8a4-003e-438d-b360-2ae922696913'
         }

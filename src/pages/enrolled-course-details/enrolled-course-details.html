@@ -1,15 +1,32 @@
-<ion-content padding [ngClass]="{'content-with-footer': (((courseCardData && courseCardData?.batchId) && ( showResumeBtn || childrenData && childrenData?.length || downloadIdentifiers && downloadIdentifiers?.length && !isDownloadStarted )) || (courseCardData && !courseCardData?.batchId && course && course?.createdBy !== userId))}">
+<ion-header>
+	<ion-navbar>
+		<ion-title>
+			<!-- <ion-icon md="md-share" float-right></ion-icon> -->
+		</ion-title>
+		<ion-buttons end *ngIf="!isDepthChild">
+			<button ion-button icon-only (click)="share()">
+				<ion-icon md="md-share" float-right></ion-icon>
+			</button>
+			<button ion-button icon-only *ngIf="course?.isAvailableLocally" (click)="showOverflowMenu($event)" style="font-size: 1.8rem;">
+				<ion-icon md="md-more" float-end></ion-icon>
+			</button>
+		</ion-buttons>
+	</ion-navbar>
 	<pb-horizontal *ngIf="course?.progress" [progress]="course?.progress" class="course-progress" [ngClass]="{'blurbackground': batchExp}"></pb-horizontal>
+</ion-header>
+
+<ion-content padding [ngClass]="{'content-with-footer': (((courseCardData && courseCardData?.batchId) && ( showResumeBtn || childrenData && childrenData?.length || downloadIdentifiers && downloadIdentifiers?.length && !isDownloadStarted )) || (courseCardData && !courseCardData?.batchId && course && course?.createdBy !== userId))}">
 	<div class="content-details-holder" *ngIf="course">
 		<ion-grid class="padding-0">
 			<h6>{{course.name}}</h6>
 			<div *ngIf="course?.creator || course?.owner">
+				<!--style="padding-top: 0px;" -->
 				<span class="text-gray-color">{{ 'CONTENT_CREATED_BY' | translate }}</span>
 				<span class="content-meta-title">{{ course?.creator || course?.owner }}</span>
 			</div>
-			<!-- <ion-row class="padding-top-10 credits" (click)="viewCredits()" *ngIf="course?.creators || course?.creator || course?.attributions || course?.contributors">
+			<ion-row class="padding-top-10 credits" (click)="viewCredits()" *ngIf="course?.creators || course?.attributions || course?.contributors">
 				{{ 'CREDITS' | translate }}
-			</ion-row> -->
+			</ion-row>
 			<ion-row class="padding-top-101">
 				<ion-col class="padding-0">
 					<div class="size_txt padding-bottom-5" no-margin *ngIf="courseCardData?.batchId">
@@ -28,7 +45,7 @@
 			</ion-row>
 		</ion-grid>
 		<br />
-		<div class="about-section" *ngIf="course?.description">
+		<div class="about-section" *ngIf="course?.description || course?.gradeLevel || course?.subject || course?.board">
 			<h6 class="padding-10 background-gray font-size-20">{{ 'ABOUT' | translate }}</h6>
 			<p *ngIf="!showMoreFlag" class="text-gray-color">
 				{{ (course && course.description && course.description.length > 100) ? (course?.description | slice:0:100) + '...' : (course?.description)
@@ -37,29 +54,25 @@
 				<p *ngIf="course?.description?.length" class="text-gray-color">
 					{{ course?.description }}
 				</p>
-				<div *ngIf="course?.author" margin-top>
-					<div class="content-meta-title" text-uppercase>{{ 'AUTHOR' | translate }}</div>
+				<div *ngIf="course?.gradeLevel?.length" margin-top>
+					<div class="content-meta-title" text-uppercase>{{ 'CLASS' | translate }}</div>
 					<!-- <span *ngFor="let grade of course.gradeLevel"> -->
-					<span class="text-gray-color">{{course?.author}}</span>
+					<span class="text-gray-color">{{course?.gradeLevel}}</span>
 					<!-- </span> -->
 				</div>
-				<div *ngIf="course?.organisation" margin-top>
-					<div class="content-meta-title" text-uppercase>{{ 'PUBLISHED_BY' | translate:{'%s': appName} }}</div>
-					<!-- <span *ngFor="let grade of course.gradeLevel"> -->
-					<span class="text-gray-color">{{course?.organisation}}</span>
-					<!-- </span> -->
+				<div *ngIf="course?.subject" margin-top>
+					<div class="content-meta-title" text-uppercase>{{ 'SUBJECT' | translate }}</div>
+					<span class="text-gray-color">{{course?.subject}}</span>
 				</div>
-				<div *ngIf="course?.license" margin-top>
-					<div class="content-meta-title" text-uppercase>{{ 'LICENSE' | translate }}</div>
-					<!-- <span *ngFor="let grade of course.gradeLevel"> -->
-					<span class="text-gray-color">{{course?.license}}</span>
-					<!-- </span> -->
+
+				<div *ngIf="course?.board" margin-top>
+					<div class="content-meta-title" text-uppercase>{{ 'BOARD' | translate }}</div>
+					<span class="text-gray-color">{{course?.board}}</span>
 				</div>
-				<div *ngIf="course?.copyright" margin-top>
-					<div class="content-meta-title" text-uppercase>{{ 'COPYRIGHT' | translate }}</div>
-					<!-- <span *ngFor="let grade of course.gradeLevel"> -->
-					<span class="text-gray-color">{{course?.copyright}}</span>
-					<!-- </span> -->
+
+				<div *ngIf="course?.medium" margin-top>
+					<div class="content-meta-title" text-uppercase>{{ 'MEDIUM' | translate }}</div>
+					<span class="text-gray-color">{{course?.medium}}</span>
 				</div>
 				<!-- Batch details - only for enrolled courses -->
 				<div *ngIf="batchDetails?.name" margin-top>
@@ -78,13 +91,12 @@
 
 			</div>
 
-			<div class="read-more" *ngIf="course && course.description && course.description.length > 100 || course?.author || course?.organisation || course?.license || course?.copyright || batchDetails?.name"
-				(click)="showMoreFlag = !showMoreFlag">
-				<div *ngIf="showMoreFlag" class="padding-top-10" (click)="readLessorReadMore('read-less-clicked')">
+			<div class="read-more" *ngIf="course && course.description && course.description.length > 100 || course?.gradeLevel || course?.subject" (click)="showMoreFlag = !showMoreFlag">
+				<div *ngIf="showMoreFlag" class="padding-top-10">
 					{{ 'READ_LESS' | translate }}
 					<ion-icon name="ios-arrow-up"></ion-icon>
 				</div>
-				<div *ngIf="!showMoreFlag" (click)="readLessorReadMore('read-more-clicked')">
+				<div *ngIf="!showMoreFlag">
 					{{ 'READ_MORE' | translate }}
 					<ion-icon name="ios-arrow-down"></ion-icon>
 				</div>
@@ -100,7 +112,7 @@
 				</span>
 			</div>
 			<!-- enrolledCourseMimeType === 'application/vnd.ekstep.content-collection' -->
-			<ion-list *ngIf="childrenData && childrenData.length" padding-top class="list-mb-48">
+			<ion-list *ngIf="childrenData && childrenData.length" padding-top>
 				<span *ngIf="courseCardData && enrolledCourseMimeType === 'application/vnd.ekstep.content-collection'">
 					<ion-item *ngFor="let item of childrenData; let i = index;" class="child-item" (click)="navigateToChildrenDetailsPage(item, depth + '.' + (i + 1))">
 						<ion-icon [name]="item.status? 'ios-checkmark-circle': (item.lastRead? 'ios-radio-button-on': 'ios-radio-button-off')"></ion-icon>
@@ -123,10 +135,10 @@
 			<div *ngIf="showChildrenLoader">
 				<ion-row style="padding-top: 30px;" padding>
 					<ion-col text-center>
-            <p
-              *ngIf="downloadProgress !== 100">{{ 'FETCHING_CONTENTS' | translate: {'%s': downloadProgress ? downloadProgress : 0} }}</p>
-            <p *ngIf="downloadProgress === 100">{{importProgressMessage}}</p>
-            <ion-spinner padding></ion-spinner>
+						<p *ngIf="downloadProgress !== 100">{{ 'FETCHING_CONTENTS' | translate: {'%s': downloadProgress ?
+							downloadProgress : '0'} }}</p>
+						<p *ngIf="downloadProgress === 100">{{ 'LOADING_CONTENT' | translate }}</p>
+						<ion-spinner padding></ion-spinner>
 					</ion-col>
 				</ion-row>
 			</div>
@@ -141,7 +153,7 @@
 		</div>
 		<br />
 		<br />
-		<!-- <div class="license-section padding-10 background-gray" *ngIf="course?.license">
+		<div class="license-section padding-10 background-gray" *ngIf="course?.license">
 			<div class="row" *ngIf="showLicense">
 				<span>
 					<div class="size_txt content-meta-title">{{ 'LICENSE' | translate }}</div>
@@ -158,14 +170,14 @@
 					<ion-icon name="ios-arrow-down"></ion-icon>
 				</span>
 			</span>
-		</div> -->
+		</div>
 		<div padding-top></div>
 	</div>
 </ion-content>
 <!-- Page footer -->
 
 <ion-footer *ngIf="courseCardData?.batchId">
-	<ion-toolbar class="toolbar-p-16">
+	<ion-toolbar padding>
 		<button ion-button block *ngIf="!courseCardData?.lastReadContentId && childrenData?.length" (click)="startContent()">{{
 			'START_COURSE' | translate }}</button>
 		<button ion-button block *ngIf="showResumeBtn" (click)="resumeContent(courseCardData?.lastReadContentId)">{{
@@ -174,21 +186,19 @@
 			'DOWNLOAD_ALL_CONTENT' | translate }} ({{ (downloadSize && downloadSize > 0) ? (downloadSize | fileSize) : 'O BYTES'
 			}})
 		</button>
-    <button *ngIf="isDownloadStarted" ion-button block outline
-            [ngStyle]="{'background': '-webkit-linear-gradient(left, #DBECFF '  +(currentCount/queuedIdentifiers.length)*100+ '%, white 0%)'}">
-      {{ 'DOWNLOADING_2' | translate }}... {{ currentCount }} / {{ queuedIdentifiers?.length }}
-    </button>
+		<button *ngIf="isDownloadStarted" ion-button block outline>{{ 'DOWNLOADING_2' | translate }}... {{ currentCount }} /
+			{{ queuedIdentifiers.length }}</button>
 	</ion-toolbar>
 </ion-footer>
 <ion-footer *ngIf="!courseCardData?.batchId && course?.createdBy !== userId && !isAlreadyEnrolled">
-	<ion-toolbar class="toolbar-p-16">
+	<ion-toolbar padding>
 		<button ion-button block (click)="navigateToBatchListPage();">{{ 'ENROLL_COURSE' | translate }}</button>
 	</ion-toolbar>
 </ion-footer>
 
 <ion-backdrop class="loading-backdrop" *ngIf="showLoading && !isDownloadStarted" text-center>
 	<div class="backdrop-container">
-    <ion-label>{{ 'LOADING_CONTENTS' | translate: {'%s': downloadProgress ? downloadProgress : 0} }}</ion-label>
+		<ion-label>{{ 'LOADING_CONTENTS' | translate: {'%s': downloadProgress ? downloadProgress : 0} }}</ion-label>
 		<pb-horizontal [progress]="downloadProgress" isOnBoardCard="false"></pb-horizontal>
 	</div>
 

@@ -1,8 +1,7 @@
 import {
   Component,
   Input,
-  OnInit,
-  Inject
+  OnInit
 } from '@angular/core';
 import {
   NavController,
@@ -14,9 +13,8 @@ import { ContentDetailsPage } from '../../../pages/content-details/content-detai
 import { ContentType, MimeType, ContentCard, PreferenceKey, CardSectionName } from '../../../app/app.constant';
 import { CourseUtilService } from '../../../service/course-util.service';
 import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
-import {TelemetryObject, SharedPreferences} from 'sunbird-sdk';
+import { InteractType, InteractSubtype, TelemetryObject, SharedPreferences } from 'sunbird';
 import { CollectionDetailsEtbPage } from '../../../pages/collection-details-etb/collection-details-etb';
-import {InteractType, InteractSubtype} from '../../../service/telemetry-constants';
 
 /**
  * The course card component
@@ -77,13 +75,8 @@ export class ResourceCard implements OnInit {
     private courseUtilService: CourseUtilService,
     private events: Events,
     private telemetryGeneratorService: TelemetryGeneratorService,
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences) {
+    private preference: SharedPreferences) {
     this.defaultImg = 'assets/imgs/ic_launcher.png';
-  }
-
-  isResource(contentType) {
-    return contentType === ContentType.STORY ||
-      contentType === ContentType.WORKSHEET;
   }
 
   /**
@@ -94,12 +87,12 @@ export class ResourceCard implements OnInit {
    */
   navigateToDetailPage(content: any, layoutName: string): void {
     const identifier = content.contentId || content.identifier;
-    let telemetryObject: TelemetryObject ;
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = identifier;
     if (layoutName === this.layoutInProgress) {
-      telemetryObject = new TelemetryObject(identifier, ContentType.COURSE, undefined);
+      telemetryObject.type = ContentType.COURSE;
     } else {
-      const ObjectType = this.isResource(content.contentType) ? ContentType.RESOURCE : content.contentType;
-      telemetryObject = new TelemetryObject(identifier, ObjectType, undefined);
+      telemetryObject.type = this.isResource(content.contentType) ? ContentType.RESOURCE : content.contentType;
     }
 
 
@@ -127,6 +120,11 @@ export class ResourceCard implements OnInit {
         content: content
       });
     }
+  }
+
+  isResource(contentType) {
+    return contentType === ContentType.STORY ||
+      contentType === ContentType.WORKSHEET;
   }
 
   resumeCourse(content: any) {
@@ -163,7 +161,7 @@ export class ResourceCard implements OnInit {
     contentContextMap['batchId'] = content.batchId;
 
     // store the contentContextMap in shared preference and access it from SDK
-    this.preferences.putString(PreferenceKey.CONTENT_CONTEXT, JSON.stringify(contentContextMap)).toPromise().then();
+    this.preference.putString(PreferenceKey.CONTENT_CONTEXT, JSON.stringify(contentContextMap));
   }
 }
 

@@ -1,18 +1,23 @@
 import { CommonUtilService } from './../../../service/common-util.service';
-import { Component, Inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { NavController, NavParams } from 'ionic-angular';
 import { AboutAppPage } from '../about-app/about-app';
 import { TermsofservicePage } from '../termsofservice/termsofservice';
 import { PrivacypolicyPage } from '../privacypolicy/privacypolicy';
 import { AppVersion } from '@ionic-native/app-version';
 import { SocialSharing } from '@ionic-native/social-sharing';
-import { AppGlobalService, TelemetryGeneratorService, UtilityService, AppHeaderService } from '@app/service';
-import { Environment, ImpressionType, InteractSubtype, InteractType, PageId } from '../../../service/telemetry-constants';
 import {
-  ContentRequest, ContentService, DeviceInfo, GetAllProfileRequest, ProfileService, SharedPreferences
-} from 'sunbird-sdk';
-import { AudienceFilter, ContentFilterConfig } from '@app/app';
-import { FormAndFrameworkUtilService } from '@app/pages/profile/formandframeworkutil.service';
+  DeviceInfoService,
+  BuildParamService,
+  ImpressionType,
+  PageId,
+  Environment,
+  TelemetryService,
+  SharedPreferences,
+  InteractType,
+  InteractSubtype
+} from 'sunbird';
+import { generateImpressionTelemetry, generateInteractTelemetry } from '../../../app/telemetryutil';
 
 const KEY_SUNBIRD_CONFIG_FILE_PATH = 'sunbird_config_file_path';
 
@@ -25,43 +30,28 @@ export class AboutUsPage {
   deviceId: string;
   version: string;
   fileUrl: string;
-  headerConfig = {
-    showHeader: false,
-    showBurgerMenu: false,
-    actionButtons: []
-  };
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
-    @Inject('CONTENT_SERVICE') private contentService: ContentService,
     public navCtrl: NavController,
     public navParams: NavParams,
-    @Inject('DEVICE_INFO') private deviceInfo: DeviceInfo,
+    private deviceInfoService: DeviceInfoService,
+    private buildParamService: BuildParamService,
     private appVersion: AppVersion,
+    private preference: SharedPreferences,
     private socialSharing: SocialSharing,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private commonUtilService: CommonUtilService,
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
-    private utilityService: UtilityService,
-    private appGlobalService: AppGlobalService,
-    private headerService: AppHeaderService,
-    private formAndFrameworkUtilService: FormAndFrameworkUtilService,
-  ) {
-  }
-
-  ionViewWillEnter() {
-    this.headerConfig = this.headerService.getDefaultPageConfig();
-    this.headerConfig.actionButtons = [];
-    this.headerConfig.showHeader = false;
-    this.headerConfig.showBurgerMenu = false;
-    this.headerService.updatePageConfig(this.headerConfig);
-  }
+    private telemetryService: TelemetryService,
+    private commonUtilService: CommonUtilService
+  ) { }
 
   ionViewDidLoad() {
     this.version = 'app version will be shown here';
 
-    this.deviceId = this.deviceInfo.getDeviceID();
-
+    this.deviceInfoService.getDeviceID()
+      .then((res: any) => {
+        this.deviceId = res;
+      })
+      .catch((err: any) => {
+      });
     this.appVersion.getAppName()
       .then((appName: any) => {
         return appName;
@@ -72,47 +62,33 @@ export class AboutUsPage {
   }
 
   ionViewDidLeave() {
-    (<any>window).supportfile.removeFile(() => {
+    (<any>window).supportfile.removeFile((result) => {
+      console.log('File deleted -' + JSON.parse(result));
     }, (error) => {
       console.error('error', error);
     });
   }
 
-  async shareInformation() {
+  shareInformation() {
     this.generateInteractTelemetry(InteractType.TOUCH, InteractSubtype.SUPPORT_CLICKED);
-    const allUserProfileRequest: GetAllProfileRequest = {
-      local: true,
-      server: true
-    };
-    const contentTypes = await this.formAndFrameworkUtilService.getSupportedContentFilterConfig(
-      ContentFilterConfig.NAME_DOWNLOADS);
-    const contentRequest: ContentRequest = {
-      contentTypes: contentTypes,
-      audience: AudienceFilter.GUEST_TEACHER
-    };
-    const getUserCount = await this.profileService.getAllProfiles(allUserProfileRequest).map((profile) => profile.length).toPromise();
-    const getLocalContentCount = await this.contentService.getContents(contentRequest)
-      .map((contentCount) => contentCount.length).toPromise();
-
-    (<any>window).supportfile.shareSunbirdConfigurations(getUserCount, getLocalContentCount, (result) => {
+    (<any>window).supportfile.shareSunbirdConfigurations((result) => {
       const loader = this.commonUtilService.getLoader();
       loader.present();
-      this.preferences.putString(KEY_SUNBIRD_CONFIG_FILE_PATH, result).toPromise()
-        .then((res) => {
-          this.preferences.getString(KEY_SUNBIRD_CONFIG_FILE_PATH).toPromise()
-            .then(val => {
-              loader.dismiss();
-              if (Boolean(val)) {
-                this.fileUrl = 'file://' + val;
+      this.preference.putString(KEY_SUNBIRD_CONFIG_FILE_PATH, JSON.parse(result));
+      this.preference.getString(KEY_SUNBIRD_CONFIG_FILE_PATH)
+        .then(val => {
+          loader.dismiss();
 
-                // Share via email
-                this.socialSharing.share('', '', this.fileUrl).then(() => {
-                }).catch(error => {
-                  console.error('Sharing Data is not possible', error);
-                });
-              }
+          if (Boolean(val)) {
+            this.fileUrl = 'file://' + val;
 
+            // Share via email
+            this.socialSharing.share('', '', this.fileUrl).then(() => {
+            }).catch(error => {
+              console.error('Sharing Data is not possible', error);
             });
+          }
+
         });
     }, (error) => {
       console.error('ERROR - ' + error);
@@ -132,27 +108,27 @@ export class AboutUsPage {
   }
 
   generateInteractTelemetry(interactionType, interactSubtype) {
-    this.telemetryGeneratorService.generateInteractTelemetry(
+    this.telemetryService.interact(generateInteractTelemetry(
       interactionType, interactSubtype,
       PageId.SETTINGS,
       Environment.SETTINGS, null,
       undefined,
       undefined
-    );
+    ));
   }
 
   generateImpressionEvent() {
-    this.telemetryGeneratorService.generateImpressionTelemetry(
+    this.telemetryService.impression(generateImpressionTelemetry(
       ImpressionType.VIEW, '',
       PageId.SETTINGS_ABOUT_US,
       Environment.SETTINGS, '', '', '',
       undefined,
       undefined
-    );
+    ));
   }
 
   getVersionName(appName): any {
-    this.utilityService.getBuildConfigValue('VERSION_NAME')
+    this.buildParamService.getBuildConfigParam('VERSION_NAME')
       .then(response => {
         this.getVersionCode(appName, response);
         return response;
@@ -163,7 +139,7 @@ export class AboutUsPage {
   }
 
   getVersionCode(appName, versionName): any {
-    this.utilityService.getBuildConfigValue('VERSION_CODE')
+    this.buildParamService.getBuildConfigParam('VERSION_CODE')
       .then(response => {
         this.version = appName + ' v' + versionName + '.' + response;
         return response;

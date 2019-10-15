@@ -1,25 +1,26 @@
-import { AndroidPermissionsService } from '@app/service/android-permissions/android-permissions.service';
-import { FileTransfer } from '@ionic-native/file-transfer';
+import {FileTransfer} from '@ionic-native/file-transfer';
 import {
   AuthService,
+  BuildParamService,
+  ContainerService,
   ContentService,
   CourseService,
+  DeviceInfoService,
+  FileUtil,
   FrameworkService,
+  OAuthService,
   PageAssembleService,
   ProfileService,
-  SummarizerService,
+  ReportService,
   SharedPreferences,
+  ShareUtil,
   TelemetryService,
-  GenerateOtpRequest,
-  GroupService,
-  DownloadService,
-  EventsBusService,
-  NotificationService,
-  PlayerService,
-  StorageService,
-  SearchHistoryService
-} from 'sunbird-sdk';
-import { CanvasPlayerService } from '../pages/player/canvas-player.service';
+  UserProfileService,
+  UpdateUserInfoRequest,
+  UserExistRequest,
+  GenerateOTPRequest,
+  GroupService} from 'sunbird';
+
 import {
   App,
   Events,
@@ -31,25 +32,11 @@ import {
   ViewController,
   IonicApp,
   AlertController,
-  ToastController,
-  Navbar,
-  Tabs,
-  MenuController
+  ToastController
 } from 'ionic-angular';
 
-import { NgZone, ChangeDetectorRef } from '@angular/core';
-import {
-  AppGlobalService,
-  AppRatingService,
-  ActivePageService,
-  CommonUtilService,
-  CourseUtilService,
-  NotificationService as NotificationMock,
-  TelemetryGeneratorService,
-  SplashscreenImportActionHandlerDelegate,
-  SplashcreenTelemetryActionHandlerDelegate,
-  SplaschreenDeeplinkActionHandlerDelegate
-} from '@app/service';
+import { NgZone } from '@angular/core';
+import { AppGlobalService, CommonUtilService, CourseUtilService, TelemetryGeneratorService } from '@app/service';
 import { TranslateService } from '@ngx-translate/core';
 import { SocialSharing } from '@ionic-native/social-sharing';
 import { AppVersion } from '@ionic-native/app-version';
@@ -63,20 +50,6 @@ import { LogoutHandlerService } from '@app/service/handlers/logout-handler.servi
 import { DomSanitizer } from '@angular/platform-browser';
 import { ImageLoader } from 'ionic-image-loader';
 import { Network } from '@ionic-native/network';
-import { AppHeaderService } from '@app/service';
-import { ContainerService } from "@app/service/container.services";
-import { UtilityService } from "@app/service";
-import { FileSizePipe } from '../pipes/file-size/file-size';
-import { ScreenOrientation } from '@ionic-native/screen-orientation';
-import { StatusBar } from '@ionic-native/status-bar';
-import { ProfileSwitchHandler } from '../service/user-groups/profile-switch-handler';
-import { ContentShareHandler } from '../service/content/content-share-handler';
-import { ContentPlayerHandler } from '../service/content/player/content-player-handler';
-import { ChildContentHandler } from '../service/content/child-content-handler';
-import { ContentDeleteHandler } from '../service/content/content-delete-handler';
-import { RatingHandler } from '../service/rating/rating-handler';
-import { ComingSoonMessageService } from '../src/service';
-
 export type Mockify<T> = {
   [P in keyof T]: jest.Mock<{}>;
 };
@@ -97,17 +70,14 @@ export const courseServiceMock = createSpyObj<CourseService>([
   'getCourseBatches',
   'getBatchDetails',
   'getContentState',
-  'unenrollCourse',
-  'subscribe'
+  'unenrolCourse'
 ]);
 
 export const navCtrlMock = createSpyObj<NavController>([
   'pop',
   'push',
   'setRoot',
-  'popTo',
-  'canGoBack',
-  'getActive'
+  'popTo'
 ]);
 
 export const navParamsMock = createSpyObj<NavParams>([
@@ -118,11 +88,10 @@ export const zoneMock = createSpyObj<NgZone>([
   'run'
 ]);
 
-export const oAuthServiceMock = createSpyObj<AuthService>([
-  'setSession',
-  'getSession',
-  'resignSession',
-  'refreshSession'
+export const oAuthServiceMock = createSpyObj<OAuthService>([
+  'doOAuthStepOne',
+  'doOAuthStepTwo',
+  'doLogOut'
 ]);
 
 export const containerServiceMock = createSpyObj<ContainerService>([
@@ -130,7 +99,7 @@ export const containerServiceMock = createSpyObj<ContainerService>([
   'addTab'
 ]);
 
-export const userProfileServiceMock = createSpyObj<ProfileService>([
+export const userProfileServiceMock = createSpyObj<UserProfileService>([
   'getUserProfileDetails',
   'getTenantInfo',
   'searchLocation',
@@ -148,10 +117,8 @@ export const profileServiceMock = createSpyObj<ProfileService>([
   'getProfile',
   'getAllUserProfile',
   'getAllProfile',
-  'getAllProfiles',
   'exportProfile',
-  'updateProfile',
-  'getActiveSessionProfile'
+  'updateProfile'
 ]);
 
 export const authServiceMock = createSpyObj<AuthService>([
@@ -160,7 +127,6 @@ export const authServiceMock = createSpyObj<AuthService>([
 ]);
 
 export const commonUtilServiceMock = createSpyObj<CommonUtilService>([
-  'networkAvailability',
   'getAppDirection',
   'translateMessage',
   'showMessage',
@@ -169,10 +135,7 @@ export const commonUtilServiceMock = createSpyObj<CommonUtilService>([
   'getTranslatedValue',
   'showContentComingSoonAlert',
   'toLocaleUpperCase',
-  'showExitPopUp',
-  'arrayToString',
-  'isRTL',
-  'fileSizeInMB'
+  'showExitPopUp'
 ]);
 
 export const eventsMock = createSpyObj<Events>([
@@ -190,15 +153,7 @@ export const contentServiceMock = createSpyObj<ContentService>([
   'searchContent',
   'getChildContents',
   'sendFeedback',
-  'deleteContent',
-  'getAllLocalContents',
-  'setContentMarker',
-  'getContents',
-  'getContentSpaceUsageSummary',
-  'clearContentDeleteQueue',
-  'enqueueContentDelete',
-  'getContentDeleteQueue',
-  'getContentDetails'
+  'deleteContent'
 ]);
 
 export const popoverCtrlMock = createSpyObj<PopoverController>([
@@ -207,15 +162,14 @@ export const popoverCtrlMock = createSpyObj<PopoverController>([
   'onDidDismiss'
 ]);
 
-export const fileUtilMock = createSpyObj<File>([
+export const fileUtilMock = createSpyObj<FileUtil>([
   'internalStoragePath'
 ]);
 
 export const platformMock = createSpyObj<Platform>([
   'registerBackButtonAction',
   'exitApp',
-  'resume',
-  'ready'
+  'resume'
 ]);
 
 export const translateServiceMock = createSpyObj<TranslateService>([
@@ -230,22 +184,16 @@ export const socialSharingMock = createSpyObj<SocialSharing>([
   'use'
 ]);
 
-export const shareUtilMock = createSpyObj<UtilityService>([
+export const shareUtilMock = createSpyObj<ShareUtil>([
   'exportApk',
   'exportTelemetry',
   'exportEcar'
 ]);
 
-export const buildParamServiceMock = createSpyObj<UtilityService>([
-  'getBuildConfigValue',
-  'getDeviceAPILevel',
-  'checkAppAvailability',
+export const buildParamServiceMock = createSpyObj<BuildParamService>([
   'getBuildConfigParam'
 ]);
-export const headerServiceMock = createSpyObj<AppHeaderService>([
-  'showHeaderWithBackButton',
-  'hideHeader'
-]);
+
 export const appGlobalServiceMock = createSpyObj<AppGlobalService>([
   'isUserLoggedIn',
   'getGuestUserInfo',
@@ -262,9 +210,7 @@ export const appGlobalServiceMock = createSpyObj<AppGlobalService>([
   'getAverageTime',
   'getUserId',
   'getGuestUserInfo',
-  'getEnrolledCourseList',
-  'getSelectedBoardMediumGrade',
-  'setIsPermissionAsked'
+  'getEnrolledCourseList'
 ]);
 
 export const telemetryGeneratorServiceMock = createSpyObj<TelemetryGeneratorService>([
@@ -278,11 +224,7 @@ export const telemetryGeneratorServiceMock = createSpyObj<TelemetryGeneratorServ
   'generateBackClickedTelemetry',
   'generateLogEvent',
   'generateExtraInfoTelemetry',
-  'readLessorReadMore',
-  'isCollection',
-  'generateInterruptTelemetry',
-  'generateStartSheenAnimationTelemetry',
-  'generateEndSheenAnimationTelemetry'
+  'readLessorReadMore'
 ]);
 
 export const courseUtilServiceMock = createSpyObj<CourseUtilService>([
@@ -293,8 +235,7 @@ export const courseUtilServiceMock = createSpyObj<CourseUtilService>([
 ]);
 
 export const appVersionMock = createSpyObj<AppVersion>([
-  'getAppName',
-  'getPackageName'
+  'getAppName'
 ]);
 
 export const pageAssembleServiceMock = createSpyObj<PageAssembleService>([
@@ -325,9 +266,7 @@ export const formAndFrameworkUtilServiceMock = createSpyObj<FormAndFrameworkUtil
   'getCategoryData',
   'getCourseFrameworkId',
   'getRootOrganizations',
-  'getCustodianOrgId',
-  'getConsumptionFaqsUrl',
-  'getSupportedContentFilterConfig'
+  'getCustodianOrgId'
 ]);
 
 export const loadingControllerMock = createSpyObj<LoadingController>([
@@ -335,7 +274,7 @@ export const loadingControllerMock = createSpyObj<LoadingController>([
   'present'
 ]);
 
-export const reportServiceMock = createSpyObj<SummarizerService>([
+export const reportServiceMock = createSpyObj<ReportService>([
   'getListOfReports',
   'getImportContentRequestBody',
   'getDetailReport',
@@ -350,9 +289,7 @@ export const transferMock = createSpyObj<FileTransfer>([
 
 export const fileMock = createSpyObj<File>([
   'writeFile',
-  'createDir',
-  'dataDirectory',
-  'readAsText'
+  'dataDirectory'
 ]);
 
 export const datePipeMock = createSpyObj<DatePipe>([
@@ -364,19 +301,16 @@ export const loadingMock = createSpyObj<LoadingController>([
   'dismiss'
 ]);
 
-export const deviceInfoServiceMock = createSpyObj<UtilityService>([
+export const deviceInfoServiceMock = createSpyObj<DeviceInfoService>([
   'getDeviceID',
   'getDownloadDirectoryPath',
   'getDeviceAPILevel',
   'checkAppAvailability',
-  'getDeviceID',
-  'getAvailableInternalMemorySize'
+  'getDeviceID'
 ]);
 
 export const viewControllerMock = createSpyObj<ViewController>([
-  'dismiss',
-  'onDidDismiss',
-  'getActive'
+  'dismiss'
 ]);
 
 
@@ -390,8 +324,13 @@ export const telemetryServiceMock = createSpyObj<TelemetryService>([
   'impression',
   'interact',
   'getTelemetryStat',
-  'sync',
-  'generateInteractTelemetry'
+  'sync'
+]);
+
+
+export const supportfileMock = createSpyObj<any>([
+  'removeFile',
+  'shareSunbirdConfigurations'
 ]);
 
 export const formBuilderMock = createSpyObj<FormBuilder>([
@@ -406,9 +345,6 @@ export const ionicAppMock = createSpyObj<IonicApp>([]);
 
 export const appMock = createSpyObj<App>([
   'group',
-  'getActiveNavs',
-  'getActive',
-  'getRootNavs'
 ]);
 
 export const tncUpdateHandlerServiceMock = createSpyObj<TncUpdateHandlerService>([
@@ -438,8 +374,7 @@ export const groupServiceMock = createSpyObj<GroupService>([
   'addUpdateProfilesToGroup',
   'updateGroup',
   'addUpdateProfilesToGroup',
-  'getAllGroups',
-  'getActiveSessionGroup'
+  'getAllGroup'
 ]);
 
 export const alertControllerMock = createSpyObj<AlertController>([
@@ -453,149 +388,15 @@ export const imageLoaderMock = createSpyObj<ImageLoader>([
 
 ]);
 
-export const updateUserInfoRequestMock = createSpyObj<ProfileService>([
+export const updateUserInfoRequestMock = createSpyObj<UpdateUserInfoRequest>([
+
+]);
+export const userExistRequestMock = createSpyObj<UserExistRequest>([
 
 ]);
 
-export const generateOTPRequestMock = createSpyObj<GenerateOtpRequest>([
+export const generateOTPRequestMock = createSpyObj<GenerateOTPRequest>([
 
 ]);
 
 export const networkMock = createSpyObj<Network>([]);
-
-export const appHeaderServiceMock = createSpyObj<AppHeaderService>([
-  'getDefaultPageConfig',
-  'updatePageConfig',
-  'unsubscribe',
-  'showHeaderWithHomeButton',
-  'showHeaderWithBackButton',
-  'hideHeader'
-]);
-
-export const utilityServiceMock = createSpyObj<UtilityService>([
-  'openPlayStore',
-  'getUtmInfo',
-  'clearUtmInfo',
-  'getDeviceAPILevel',
-  'checkAppAvailability',
-  'getBuildConfigParam',
-  'getBuildConfigValue'
-]);
-export const appRatingServiceMock = createSpyObj<AppRatingService>([
-  'setInitialDate',
-  'checkInitialDate',
-  'setEndStoreRate',
-  'createFolder',
-  'checkReadFile'
-]);
-export const downloadServiceMock = createSpyObj<DownloadService>([
-  'getActiveDownloadRequests',
-  'cancel',
-  'cancelAll'
-]);
-export const eventBusServiceMock = createSpyObj<EventsBusService>([
-  'events',
-  'getContentDownloadProgress',
-  'unsubscribe'
-]);
-export const playerServiceMock = createSpyObj<PlayerService>([
-  'getPlayerConfig'
-]);
-export const canvasPlayerServiceMock = createSpyObj<CanvasPlayerService>([
-  'handleAction',
-  'xmlToJSon',
-  'readJSON'
-]);
-export const fileSizePipeMock = createSpyObj<FileSizePipe>([
-
-]);
-
-export const permissionServiceMock = createSpyObj<AndroidPermissionsService>([
-  'checkPermissions',
-  'requestPermissions'
-]);
-
-export const notificationServiceMock = createSpyObj<NotificationService>([
-  'addNotification',
-  'updateNotification',
-  'getAllNotifications',
-  'deleteNotification'
-]);
-
-export const navbarMock = createSpyObj<Navbar>([
-  'backButtonClick'
-]);
-export const splashcreenTelemetryActionHandlerDelegateMock = createSpyObj<SplashcreenTelemetryActionHandlerDelegate>([
-  ''
-]);
-export const splashscreenImportActionHandlerDelegateMock = createSpyObj<SplashscreenImportActionHandlerDelegate>([
-
-]);
-export const splaschreenDeeplinkActionHandlerDelegateMock = createSpyObj<SplaschreenDeeplinkActionHandlerDelegate>([
-
-]);
-export const notificationMock = createSpyObj<NotificationMock>([
-  'setupLocalNotification'
-]);
-export const activePageServiceMock = createSpyObj<ActivePageService>([
-  'computePageId'
-]);
-
-export const screenOrientationMock = createSpyObj<ScreenOrientation>([
-  'lock',
-  'unlock'
-]);
-
-export const statusBarMock = createSpyObj<StatusBar>([
-  'hide',
-  'show',
-  'styleBlackTranslucent'
-]);
-
-export const tabsMock = createSpyObj<Tabs>([
-
-]);
-
-export const menuControllerMock = createSpyObj<MenuController>([
-
-]);
-
-export const changeDetectionRefMock = createSpyObj<ChangeDetectorRef>([
-  'detectChanges'
-]);
-
-export const storageServiceMock = createSpyObj<StorageService>([
-]);
-
-export const profileSwitchHandlerMock = createSpyObj<ProfileSwitchHandler>([
- 'switchUser'
-]);
-
-export const contentShareHandlerMock = createSpyObj<ContentShareHandler>([
-  'shareContent'
- ]);
-
- export const ratingHandlerMock = createSpyObj<RatingHandler>([
-  'showRatingPopup'
- ]);
-
- export const contentPlayerHandlerMock = createSpyObj<ContentPlayerHandler>([
-  'launchContentPlayer'
- ]);
-
- export const childContentHandlerMock = createSpyObj<ChildContentHandler>([
-  'setChildContents'
- ]);
-
- export const contentDeleteHandlerMock = createSpyObj<ContentDeleteHandler>([
-  'showContentDeletePopup'
- ]);
-
- export const searchHistoryServiceMock = createSpyObj<SearchHistoryService>([
-  'addEntry',
-  'getEntries'
- ]);
-
- export const comingSoonMessageServiceMock = createSpyObj<ComingSoonMessageService>([
-   'getComingSoonMessage'
- ]);

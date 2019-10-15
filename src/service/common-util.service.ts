@@ -1,4 +1,4 @@
-import { Injectable, NgZone, OnDestroy, Inject } from '@angular/core';
+import { Injectable, NgZone, OnDestroy } from '@angular/core';
 import {
     ToastController,
     ToastOptions,
@@ -9,14 +9,11 @@ import {
     PopoverController,
     Platform,
     Alert,
-    AlertController,
-    App,
-    NavControllerBase,
-    ViewController
+    AlertController
 } from 'ionic-angular';
 import { TranslateService } from '@ngx-translate/core';
 import * as _ from 'lodash';
-import { SharedPreferences } from 'sunbird-sdk';
+import { SharedPreferences } from 'sunbird';
 import { Network } from '@ionic-native/network';
 
 import { PreferenceKey } from '../app/app.constant';
@@ -25,44 +22,31 @@ import { appLanguages } from './../app/app.constant';
 import { QRScannerAlert } from './../pages/qrscanner/qrscanner_alert';
 
 import { TelemetryGeneratorService } from '../service/telemetry-generator.service';
-import { InteractType, InteractSubtype, PageId, Environment } from '../service/telemetry-constants';
-import { Subject, Observable } from 'rxjs';
-import { SbGenericPopoverComponent } from '@app/component/popups/sb-generic-popup/sb-generic-popover';
-
 export interface NetworkInfo {
     isNetworkAvailable: boolean;
 }
 @Injectable()
 export class CommonUtilService implements OnDestroy {
-    public networkAvailability$: Observable<boolean>;
-
     networkInfo: NetworkInfo = {
         isNetworkAvailable: false
     };
-
     connectSubscription: any;
-
     disconnectSubscription: any;
-    private alert?: any;
-
+    private alert?: Alert;
     constructor(
         private toastCtrl: ToastController,
         private translate: TranslateService,
         private loadingCtrl: LoadingController,
+        private preferences: SharedPreferences,
         private events: Events,
         private popOverCtrl: PopoverController,
         private network: Network,
         private zone: NgZone,
         private platform: Platform,
-        private telemetryGeneratorService: TelemetryGeneratorService,
-        @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
+        private alertCtrl: AlertController,
+        private telemetryGeneratorService: TelemetryGeneratorService
     ) {
         this.listenForEvents();
-
-        this.networkAvailability$ = Observable.merge(
-            this.network.onConnect().mapTo(true),
-            this.network.onDisconnect().mapTo(false)
-        );
     }
 
     listenForEvents() {
@@ -94,17 +78,9 @@ export class CommonUtilService implements OnDestroy {
      * @param {string} messageConst - Message Constant to be translated
      * @returns {string} translatedMsg - Translated Message
      */
-    translateMessage(messageConst: string, fields?: string | any): string {
+    translateMessage(messageConst: string, field?: string): string {
         let translatedMsg = '';
-        let replaceObject: any = '';
-
-        if (typeof(fields) === 'object') {
-            replaceObject = fields;
-        } else {
-            replaceObject = { '%s': fields };
-        }
-
-        this.translate.get(messageConst, replaceObject).subscribe(
+        this.translate.get(messageConst, { '%s': field }).subscribe(
             (value: any) => {
                 translatedMsg = value;
             }
@@ -169,8 +145,8 @@ export class CommonUtilService implements OnDestroy {
 
         if (code) {
             this.translate.use(code);
-            this.preferences.putString(PreferenceKey.SELECTED_LANGUAGE_CODE, code).toPromise().then();
-            this.preferences.putString(PreferenceKey.SELECTED_LANGUAGE, name).toPromise().then();
+            this.preferences.putString(PreferenceKey.SELECTED_LANGUAGE_CODE, code);
+            this.preferences.putString(PreferenceKey.SELECTED_LANGUAGE, name);
         }
     }
 
@@ -179,16 +155,6 @@ export class CommonUtilService implements OnDestroy {
      * @param {string} source Page from alert got called
      */
     showContentComingSoonAlert(source) {
-      this.telemetryGeneratorService.generateInteractTelemetry(
-        InteractType.OTHER,
-        InteractSubtype.QR_CODE_COMINGSOON,
-        source === PageId.ONBOARDING_PROFILE_PREFERENCES ? Environment.ONBOARDING : Environment.HOME,
-        source
-      );
-        if (source !== 'permission') {
-            this.afterOnBoardQRErrorAlert('ERROR_CONTENT_NOT_FOUND', 'CONTENT_IS_BEING_ADDED');
-            return;
-        }
         let popOver: Popover;
         const self = this;
         const callback: QRAlertCallBack = {
@@ -213,34 +179,12 @@ export class CommonUtilService implements OnDestroy {
             popOver.present();
         }, 300);
     }
-    /**
-     * Show popup with Close.
-     * @param {string} heading Alert heading
-     * @param {string} message Alert message
-     */
-    afterOnBoardQRErrorAlert(heading, message) {
-
-        const qrAlert = this.popOverCtrl.create(SbGenericPopoverComponent, {
-            sbPopoverHeading: this.translateMessage(heading),
-            sbPopoverMainTitle: this.translateMessage(message),
-            actionsButtons: [
-                {
-                    btntext: this.translateMessage('OKAY'),
-                    btnClass: 'sb-btn sb-btn-sm  sb-btn-tertiary'
-                }
-            ],
-            icon: null
-        }, {
-                cssClass: 'sb-popover warning',
-            });
-        qrAlert.present();
-    }
 
     /**
      * Its check for the network availability
      * @returns {boolean} status of the network
      */
-    private handleNetworkAvailability(): boolean {
+    handleNetworkAvailability(): boolean {
         const updateNetworkAvailabilityStatus = (status: boolean) => {
             this.zone.run(() => {
                 this.networkInfo.isNetworkAvailable = status;
@@ -256,7 +200,6 @@ export class CommonUtilService implements OnDestroy {
         this.connectSubscription = this.network.onDisconnect().subscribe(() => {
             updateNetworkAvailabilityStatus(false);
         });
-
         this.disconnectSubscription = this.network.onConnect().subscribe(() => {
             updateNetworkAvailabilityStatus(true);
         });
@@ -300,7 +243,7 @@ export class CommonUtilService implements OnDestroy {
     */
     showExitPopUp(pageId: string, environment: string, isNavBack: boolean) {
         if (!this.alert) {
-            /*this.alert = this.alertCtrl.create({
+            this.alert = this.alertCtrl.create({
                 title: this.translateMessage('BACK_TO_EXIT'),
                 mode: 'wp',
                 cssClass: 'confirm-alert',
@@ -309,12 +252,7 @@ export class CommonUtilService implements OnDestroy {
                         text: this.translateMessage('YES'),
                         cssClass: 'alert-btn-cancel',
                         handler: () => {
-                            this.telemetryGeneratorService.generateInteractTelemetry(
-                                InteractType.TOUCH,
-                                InteractSubtype.YES_CLICKED,
-                                environment,
-                                pageId
-                            );
+                            this.telemetryGeneratorService.generateBackClickedTelemetry(pageId, environment, isNavBack);
                             this.platform.exitApp();
                             this.telemetryGeneratorService.generateEndTelemetry('app', '', '', environment);
                         }
@@ -323,12 +261,7 @@ export class CommonUtilService implements OnDestroy {
                         text: this.translateMessage('NO'),
                         cssClass: 'alert-btn-delete',
                         handler: () => {
-                            this.telemetryGeneratorService.generateInteractTelemetry(
-                                InteractType.TOUCH,
-                                InteractSubtype.NO_CLICKED,
-                                environment,
-                                pageId
-                            );
+                            // telemetry
                             if (this.alert) {
                                 this.alert.dismiss();
                                 this.alert = undefined;
@@ -337,75 +270,14 @@ export class CommonUtilService implements OnDestroy {
                     }
                 ]
             });
-            this.alert.present();*/
-            this.alert = this.popOverCtrl.create(SbGenericPopoverComponent, {
-                sbPopoverHeading: this.translateMessage('BACK_TO_EXIT'),
-                sbPopoverMainTitle: '',
-                actionsButtons: [
-                    {
-                        btntext: this.translateMessage('YES'),
-                        btnClass: 'sb-btn sb-btn-sm  sb-btn-outline-info'
-                    }, {
-                        btntext: this.translateMessage('NO'),
-                        btnClass: 'popover-color'
-                    }
-                ],
-                icon: null
-            }, {
-                    cssClass: 'sb-popover',
-                });
-            this.alert.onDidDismiss((leftBtnClicked: any) => {
-                if (leftBtnClicked == null) {
-                    this.telemetryGeneratorService.generateInteractTelemetry(
-                        InteractType.TOUCH,
-                        InteractSubtype.NO_CLICKED,
-                        environment,
-                        pageId
-                    );
-                    return;
-                }
-                if (!leftBtnClicked) {
-                    this.telemetryGeneratorService.generateInteractTelemetry(
-                        InteractType.TOUCH,
-                        InteractSubtype.NO_CLICKED,
-                        environment,
-                        pageId
-                    );
-                } else {
-                    this.telemetryGeneratorService.generateInteractTelemetry(
-                        InteractType.TOUCH,
-                        InteractSubtype.YES_CLICKED,
-                        environment,
-                        pageId
-                    );
-                    this.platform.exitApp();
-                    this.telemetryGeneratorService.generateEndTelemetry('app', '', '', environment);
-                }
-            });
-            this.alert.present({
-                ev: event
-            });
+            this.alert.present();
             this.telemetryGeneratorService.generateBackClickedTelemetry(pageId, environment, isNavBack);
             return;
         } else {
-            this.telemetryGeneratorService.generateBackClickedTelemetry(pageId, environment, isNavBack);
             if (this.alert) {
                 this.alert.dismiss();
                 this.alert = undefined;
             }
         }
-    }
-
-    fileSizeInMB(bytes) {
-        if (!bytes) {
-            return '0.00';
-        }
-        return (bytes / 1048576).toFixed(2);
-    }
-
-    public  deDupe<T>(array: T[], property): T[] {
-        return array.filter((obj, pos, arr) => {
-            return arr.map(mapObj => mapObj[property]).indexOf(obj[property]) === pos;
-        });
     }
 }

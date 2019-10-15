@@ -99,15 +99,22 @@ page-courses {
     display: block;
     width: 100%;
   }
-
-  .bottom-cover {
-    height: 65px;
-  }
 }
 
 ion-nav .driver-fix-stacking {
   //z-index: unset !important;
 }
+
+/* #driver-page-overlay {
+  background-color: black;
+}
+
+#driver-highlighted-element-stage {
+  width: 44px;
+  height: 44px;
+  background-color: rgb(255, 255, 255);
+  opacity: 0.5;
+} */
 
 #driver-popover-item {
   left: auto !important;
@@ -126,6 +133,9 @@ div#driver-popover-item .driver-popover-title {
 }
 .toolbar.toolbar-md.driver-fix-stacking{
   //z-index: inherit !important;
+}
+#driver-highlighted-element-stage {
+  border-radius: 50% !important;
 }
 .show-tab.driver-fix-stacking {
   //z-index: 9 !important;

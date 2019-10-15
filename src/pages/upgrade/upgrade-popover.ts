@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import { ViewController, NavParams } from 'ionic-angular';
-import { UtilityService } from '../../service/utility-service'
 @Component({
     selector: 'upgrade-popover',
     templateUrl: 'upgrade-popover.html'
@@ -9,13 +8,13 @@ import { UtilityService } from '../../service/utility-service'
 export class UpgradePopover {
 
     upgradeType: any;
+
     upgradeTitle: string;
     upgradeContent: string;
     isMandatoryUpgrade = false;
 
     constructor(private navParams: NavParams,
-        private viewCtrl: ViewController,
-        private utilityService: UtilityService) {
+        private viewCtrl: ViewController) {
         this.init();
     }
 
@@ -33,7 +32,7 @@ export class UpgradePopover {
 
     upgrade(link) {
         const appId = link.substring(link.indexOf('=') + 1, link.lenght);
-        this.utilityService.openPlayStore(appId);
+        (<any>window).genieSdkUtil.openPlayStore(appId);
         this.viewCtrl.dismiss();
     }
 

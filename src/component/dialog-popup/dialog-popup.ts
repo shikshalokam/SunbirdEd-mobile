@@ -2,7 +2,6 @@ import { Component } from '@angular/core';
 import { ViewController } from 'ionic-angular';
 import { NavParams } from 'ionic-angular';
 import { XwalkConstants } from '../../app/app.constant';
-import {UtilityService} from '@app/service';
 
 @Component({
   selector: 'dialog-popup',
@@ -15,8 +14,7 @@ export class DialogPopupComponent {
 
   constructor(
     private viewCtrl: ViewController,
-    private navParams: NavParams,
-    private utilityService: UtilityService) {
+    private navParams: NavParams) {
   }
 
   ionViewWillEnter() {
@@ -30,7 +28,7 @@ export class DialogPopupComponent {
   }
 
   redirectToPlaystore() {
-    this.utilityService.openPlayStore(XwalkConstants.APP_ID);
+    (<any>window).genieSdkUtil.openPlayStore(XwalkConstants.APP_ID);
   }
 
 }

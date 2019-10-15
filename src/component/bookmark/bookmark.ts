@@ -1,5 +1,5 @@
-import { Component, Inject } from '@angular/core';
-import { SharedPreferences } from 'sunbird-sdk';
+import { Component } from '@angular/core';
+import { SharedPreferences } from 'sunbird';
 import { PreferenceKey } from '../../app/app.constant';
 import { ViewController } from 'ionic-angular';
 
@@ -15,14 +15,12 @@ import { ViewController } from 'ionic-angular';
 })
 export class BookmarkComponent {
 
-  constructor(
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
-    public viewCtrl: ViewController) {
+  constructor(private preference: SharedPreferences, public viewCtrl: ViewController) {
 
   }
 
   updateBookmarkPreference() {
-    this.preferences.putString(PreferenceKey.IS_BOOKMARK_VIEWED, 'true').toPromise().then();
+    this.preference.putString(PreferenceKey.IS_BOOKMARK_VIEWED, 'true');
     this.viewCtrl.dismiss();
   }
 

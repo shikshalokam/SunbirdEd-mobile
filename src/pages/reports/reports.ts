@@ -1,28 +1,33 @@
-import {Component, Inject, NgZone} from '@angular/core';
-import {LoadingController, NavController, NavParams} from 'ionic-angular';
-import {ReportListPage} from './report-list/report-list';
 import {
-  GetAllProfileRequest,
-  Group,
-  GroupService,
-  ObjectType,
-  Profile,
+  Component,
+  NgZone
+} from '@angular/core';
+import {
+  NavController,
+  LoadingController,
+  NavParams
+} from 'ionic-angular';
+import { ReportListPage } from './report-list/report-list';
+import {
   ProfileService,
-  ProfileType,
-  TelemetryObject
-} from 'sunbird-sdk';
-import {TelemetryGeneratorService} from '../../service/telemetry-generator.service';
-import {Environment, ImpressionType, InteractSubtype, InteractType, PageId} from '../../service/telemetry-constants';
-import {ProfileConstants} from '../../app';
-import { AppHeaderService } from '@app/service';
-
+  GroupService,
+  ProfileRequest,
+  GroupRequest,
+  InteractSubtype,
+  InteractType,
+  PageId,
+  Environment,
+  ImpressionType,
+  TelemetryObject,
+  ObjectType
+} from 'sunbird';
+import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
 
 @Component({
   selector: 'reports-page',
   templateUrl: 'reports.html'
 })
 export class ReportsPage {
-  ProfileType = ProfileType;
   report = 'users';
   otherUsers;
   currentUser: {};
@@ -31,13 +36,12 @@ export class ReportsPage {
   private profileDetails: any;
 
   constructor(private navCtrl: NavController,
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
-    @Inject('GROUP_SERVICE') private groupService: GroupService,
+    private profileService: ProfileService,
+    private groupService: GroupService,
     private ngZone: NgZone,
     private loading: LoadingController,
     private navParams: NavParams,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private headerService: AppHeaderService
+    private telemetryGeneratorService: TelemetryGeneratorService
   ) {
     this.profileDetails = this.navParams.get('profile');
   }
@@ -46,20 +50,21 @@ export class ReportsPage {
     const that = this;
 
     return new Promise<Array<any>>((resolve, reject) => {
-      const getAllProfileRequest: GetAllProfileRequest = {
+      const profileRequest: ProfileRequest = {
         local: true
       };
-      that.profileService.getAllProfiles(getAllProfileRequest).toPromise()
-        .then((data: Profile[]) => {
-          that.profileService.getActiveSessionProfile({requiredFields: ProfileConstants.REQUIRED_FIELDS}).toPromise()
-          .then((profile: Profile) => {
+      that.profileService.getAllUserProfile(profileRequest)
+        .then((data) => {
+          let users = JSON.parse(data);
+          that.profileService.getCurrentUser().then((profile: any) => {
+            const currentUser = JSON.parse(profile);
             if (this.profileDetails) {
-              if (this.profileDetails.id === profile.uid) {
-                profile.handle = this.profileDetails.firstName;
+              if (this.profileDetails.id === currentUser.uid) {
+                currentUser.handle = this.profileDetails.firstName;
               }
             }
-            data = that.filterOutCurrentUser(data, profile);
-            resolve([profile, data]);
+            users = that.filterOutCurrentUser(users, currentUser);
+            resolve([currentUser, users]);
           }) .catch(error => {
             console.error('Error', error);
             reject(error);
@@ -77,11 +82,14 @@ export class ReportsPage {
 
     return new Promise<any>((resolve) => {
 
-      that.groupService.getAllGroups()
-        .subscribe((groups: Group[]) => {
-          if (groups) {
-            resolve(groups);
-            console.log('group details', groups);
+      const groupRequest: GroupRequest = {
+        uid: ''
+      };
+
+      that.groupService.getAllGroup(groupRequest)
+        .then((groups) => {
+          if (groups.result) {
+            resolve(groups.result);
           } else {
             resolve();
           }
@@ -90,7 +98,6 @@ export class ReportsPage {
   }
 
   ionViewDidLoad() {
-    this.headerService.hideHeader();
     this.telemetryGeneratorService.generateImpressionTelemetry(
       ImpressionType.VIEW,
       '',
@@ -130,7 +137,9 @@ export class ReportsPage {
 
   goToUserReportList(uid: string , handle: string) {
 
-    const telemetryObject = new TelemetryObject(uid, ObjectType.USER, undefined);
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = uid;
+    telemetryObject.type = ObjectType.USER;
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.USER_CLICKED,
@@ -147,7 +156,9 @@ export class ReportsPage {
   }
 
   goToGroupUserReportList(group) {
-    const telemetryObject = new TelemetryObject(group.gid, ObjectType.GROUP, undefined);
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = group.gid;
+    telemetryObject.type = ObjectType.GROUP;
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.GROUP_CLICKED,
@@ -155,12 +166,13 @@ export class ReportsPage {
       PageId.REPORTS_USER_GROUP,
       telemetryObject
     );
-    const getAllProfileRequest: GetAllProfileRequest = { local: true, groupId: group.gid };
-    this.profileService.getAllProfiles(getAllProfileRequest).toPromise()
-      .then((result: Profile[]) => {
+    const profileRequest: ProfileRequest = { local: true, groupId: group.gid };
+    this.profileService.getAllUserProfile(profileRequest)
+      .then(result => {
         const map = new Map<string, string>();
+        const users: Array<any> = JSON.parse(result);
         const uids: Array<string> = [];
-        result.forEach(user => {
+        users.forEach(user => {
           uids.push(user.uid);
           map.set(user.uid, user.handle);
         });

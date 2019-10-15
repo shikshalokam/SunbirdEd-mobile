@@ -5,13 +5,13 @@ import {
   Platform,
   ViewController
 } from 'ionic-angular';
-import { PageAssembleFilter } from 'sunbird-sdk';
+import { PageAssembleFilter } from 'sunbird';
 @Component({
   selector: 'page-filter-options',
   templateUrl: './filter.options.html'
 })
 export class PageFilterOptions {
-  pagetAssemblefilter: PageAssembleFilter = {};
+  pagetAssemblefilter = new PageAssembleFilter();
   facets: any;
   backButtonFunc = undefined;
   selected: boolean;
@@ -23,7 +23,6 @@ export class PageFilterOptions {
   topicsVal = [];
   filteredTopicArr = [];
   showTopicFilterList = false;
-  prevSelectedTopic = [];
   constructor(private navParams: NavParams,
     private viewCtrl: ViewController,
     private appGlobalService: AppGlobalService,
@@ -36,9 +35,6 @@ export class PageFilterOptions {
         for ( let i = 0; i < this.facets.values.length; i++) {
           this.topicsArr.push(Object.keys(this.facets.values[i])[0]);
           this.topicsVal.push(this.facets.values[i][ this.topicsArr[i]]);
-        }
-        if (this.facets.selected) {
-          this.prevSelectedTopic = [...this.facets.selected] ;
         }
 
     }
@@ -135,11 +131,9 @@ export class PageFilterOptions {
   }
 
   cancel() {
-    this.facets.selected = [...this.prevSelectedTopic];
     this.viewCtrl.dismiss();
   }
   apply() {
-      this.prevSelectedTopic = [...this.facets.selected];
-      this.confirm();
+    this.confirm();
   }
 }

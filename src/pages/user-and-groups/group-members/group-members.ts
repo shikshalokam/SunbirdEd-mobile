@@ -1,26 +1,30 @@
-import {Component, Inject, NgZone} from '@angular/core';
-import {IonicPage, LoadingController, NavController, NavParams} from 'ionic-angular';
 import {
-  GetAllProfileRequest,
-  Group,
+  Component,
+  NgZone
+} from '@angular/core';
+import {
+  IonicPage,
+  NavController,
+  NavParams,
+  LoadingController
+} from 'ionic-angular';
+import {
   GroupService,
+  Group,
+  ProfileRequest,
   Profile,
   ProfileService,
-  ProfilesToGroupRequest,
-  ProfileType
-} from 'sunbird-sdk';
-import {GuestEditProfilePage} from '../../profile/guest-edit.profile/guest-edit.profile';
-import {TelemetryGeneratorService} from '../../../service/telemetry-generator.service';
-import {CommonUtilService} from '../../../service/common-util.service';
-import {
-  Environment,
-  ImpressionType,
-  InteractSubtype,
+  AddUpdateProfilesRequest,
   InteractType,
-  ObjectType,
-  PageId
-} from '../../../service/telemetry-constants';
-import { AppHeaderService } from '@app/service';
+  InteractSubtype,
+  Environment,
+  PageId,
+  ImpressionType,
+  ObjectType
+} from 'sunbird';
+import { GuestEditProfilePage } from '../../profile/guest-edit.profile/guest-edit.profile';
+import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
+import { CommonUtilService } from '../../../service/common-util.service';
 
 @IonicPage()
 @Component({
@@ -28,7 +32,7 @@ import { AppHeaderService } from '@app/service';
   templateUrl: 'group-members.html',
 })
 export class GroupMembersPage {
-  ProfileType = ProfileType;
+
   group: Group;
   userList: Array<Profile> = [];
   userSelectionMap: Map<string, boolean> = new Map();
@@ -38,13 +42,12 @@ export class GroupMembersPage {
   constructor(
     private navCtrl: NavController,
     private navParams: NavParams,
-    @Inject('GROUP_SERVICE') private groupService: GroupService,
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
+    private groupService: GroupService,
+    private profileService: ProfileService,
     private zone: NgZone,
     private loadingCtrl: LoadingController,
     private commonUtilService: CommonUtilService,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private headerService: AppHeaderService
+    private telemetryGeneratorService: TelemetryGeneratorService
   ) {
     this.group = this.navParams.get('group');
   }
@@ -59,45 +62,46 @@ export class GroupMembersPage {
 
   ionViewWillEnter() {
     this.loading = true; // present only loader, untill users are fetched from service
-    this.headerService.hideHeader();
     this.getAllProfile();
   }
 
   // method below fetches the last created user
   getLastCreatedProfile() {
     return new Promise((resolve, reject) => {
-      const req: GetAllProfileRequest = {
-        local: true
+      const req = {
+        local: true,
+        latestCreatedProfile: true
       };
-      this.profileService.getAllProfiles(req)
-        .map((profiles) => profiles.filter((profile) => !!profile.handle))
-        .toPromise().then((lastCreatedProfile: any) => {
-        this.lastCreatedProfileData = lastCreatedProfile;
-        resolve(lastCreatedProfile);
-      }).catch(() => {
+      this.profileService.getProfile(req).then((lastCreatedProfile: any) => {
+        console.log('lastCreatedProfile: ', lastCreatedProfile);
+        this.lastCreatedProfileData = JSON.parse(lastCreatedProfile);
+        resolve(JSON.parse(lastCreatedProfile));
+      }).catch(error => {
         reject(null);
+        console.log('error in fetching last created profile data' + error);
       });
     });
   }
 
   getAllProfile() {
-    const profileRequest: GetAllProfileRequest = {
+    const profileRequest: ProfileRequest = {
       local: true
     };
 
     this.zone.run(() => {
-      this.profileService.getAllProfiles(profileRequest)
-        .map((profiles) => profiles.filter((profile) => !!profile.handle))
-        .toPromise().then((profiles) => {
+      this.profileService.getAllUserProfile(profileRequest).then((profiles) => {
         const loader = this.getLoader();
         loader.present();
         this.zone.run(() => {
           if (profiles && profiles.length) {
-            this.userList = profiles;
+            this.userList = JSON.parse(profiles);
             loader.dismiss();
             this.loading = false;
           }
+          console.log('UserList', profiles);
         });
+      }).catch((error) => {
+        console.log('Something went wrong while fetching user list', error);
       });
     });
   }
@@ -153,20 +157,21 @@ export class GroupMembersPage {
       }
     });
     this.groupService.createGroup(this.group)
-      .toPromise().then(res => {
-      this.telemetryGeneratorService.generateInteractTelemetry(
-        InteractType.OTHER,
-        InteractSubtype.CREATE_GROUP_SUCCESS,
-        Environment.USER,
-        PageId.CREATE_GROUP
-      );
-      const req: ProfilesToGroupRequest = {
-        groupId: res.gid,
-        uidList: selectedUids
-      };
-      return this.groupService.addProfilesToGroup(req).toPromise();
-    })
+      .then(res => {
+        this.telemetryGeneratorService.generateInteractTelemetry(
+          InteractType.OTHER,
+          InteractSubtype.CREATE_GROUP_SUCCESS,
+          Environment.USER,
+          PageId.CREATE_GROUP
+        );
+        const req: AddUpdateProfilesRequest = {
+          groupId: res.result.gid,
+          uidList: selectedUids
+        };
+        return this.groupService.addUpdateProfilesToGroup(req);
+      })
       .then(success => {
+        console.log(success);
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('GROUP_CREATE_SUCCESS'));
         this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 3));
@@ -174,13 +179,14 @@ export class GroupMembersPage {
       .catch(error => {
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
+        console.log('Error : ' + error);
         loader.dismiss();
       });
   }
 
   /**
-   * Returns Loader Object
-   */
+ * Returns Loader Object
+ */
   getLoader(): any {
     return this.loadingCtrl.create({
       duration: 30000,
@@ -192,11 +198,11 @@ export class GroupMembersPage {
     if (data.grade && data.grade.length > 0) {
       const gradeName = [];
       data.grade.forEach(code => {
-        if (data['gradeValue'] && data['gradeValue'][code]) {
-          gradeName.push(data['gradeValue'][code]);
+        if (data.gradeValueMap && data.gradeValueMap[code]) {
+          gradeName.push(data.gradeValueMap[code]);
         }
       });
-      console.log('gradevalue is ', data['gradeValue']);
+
       if (gradeName.length === 0) {
         return data.grade.join(',');
       }

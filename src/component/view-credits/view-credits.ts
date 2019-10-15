@@ -1,12 +1,20 @@
-import {Component, NgZone} from '@angular/core';
-import {NavParams, Platform, ViewController} from 'ionic-angular';
-import {TelemetryObject} from 'sunbird-sdk';
-import {ProfileConstants} from '../../app/app.constant';
-import {AppGlobalService} from '../../service/app-global.service';
-import {TelemetryGeneratorService} from '../../service/telemetry-generator.service';
-import {Environment, InteractType} from '../../service/telemetry-constants';
-import { AppVersion } from '@ionic-native/app-version';
-import { ContentUtil } from '@app/util/content-util';
+import {
+  Component,
+  NgZone
+} from '@angular/core';
+import {
+  NavParams,
+  ViewController,
+  Platform
+} from 'ionic-angular';
+import {
+  Environment,
+  InteractType,
+  TelemetryObject
+} from 'sunbird';
+import { ProfileConstants } from '../../app/app.constant';
+import { AppGlobalService } from '../../service/app-global.service';
+import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
 
 @Component({
   selector: 'view-credits',
@@ -20,17 +28,14 @@ export class ViewCreditsComponent {
   correlation: any;
   private pageId = '';
   private popupType: string;
-  appName: any;
 
   /**
    * Default function of class ViewCreditsComponent
    *
    * @param navParams
    * @param viewCtrl
-   * @param platform
-   * @param ngZone
-   * @param telemetrygeneratorService
-   * @param appGlobalService
+   * @param authService
+   * @param contentService
    */
   constructor(
     private navParams: NavParams,
@@ -38,8 +43,7 @@ export class ViewCreditsComponent {
     private platform: Platform,
     private ngZone: NgZone,
     private telemetrygeneratorService: TelemetryGeneratorService,
-    private appGlobalService: AppGlobalService,
-    private appVersion: AppVersion
+    private appGlobalService: AppGlobalService
   ) {
     this.getUserId();
     this.backButtonFunc = this.platform.registerBackButtonAction(() => {
@@ -55,17 +59,14 @@ export class ViewCreditsComponent {
    * Ionic life cycle hook
    */
   ionViewDidLoad(): void {
-    this.appVersion.getAppName()
-      .then((appName: any) => {
-        this.appName = appName;
-    });
-
     this.content = this.navParams.get('content');
     this.pageId = this.navParams.get('pageId');
     this.rollUp = this.navParams.get('rollUp');
     this.correlation = this.navParams.get('correlation');
-    const telemetryObject = new TelemetryObject(this.content.identifier, this.content.contentType, this.content.pkgVersion);
-
+    const telemetryObject: TelemetryObject = new TelemetryObject();
+    telemetryObject.id = this.content.identifier;
+    telemetryObject.type = this.content.contentType;
+    telemetryObject.version = this.content.pkgVersion;
     this.telemetrygeneratorService.generateInteractTelemetry(InteractType.TOUCH,
       'credits-clicked',
       Environment.HOME,
@@ -82,9 +83,21 @@ export class ViewCreditsComponent {
     else if firstprperty is not there and secondprperty is there, then return secondprperty value
     else do the merger of firstprperty and secondprperty value and return merged value
   */
- mergeProperties(mergeProp) {
-  return ContentUtil.mergeProperties(this.content, mergeProp);
-}
+  mergeProperties(firstProp, secondProp) {
+    if (this.content[firstProp] && !this.content[secondProp]) {
+      return this.content[firstProp];
+    } else if (!this.content[firstProp] && this.content[secondProp]) {
+      return this.content[secondProp];
+    } else {
+      let first: any;
+      let second: any;
+      first = this.content[firstProp].split(', ');
+      second = this.content[secondProp].split(', ');
+      first = second.concat(first);
+      first = Array.from(new Set(first));
+      return first.join(', ');
+    }
+  }
 
   /**
    * Get user id

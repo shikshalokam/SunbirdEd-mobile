@@ -1,6 +1,3 @@
-import { SearchCardComponent } from './search-card/search-card';
-import { DetailCardComponent } from './detail-card/detail-card';
-import { NewCourseCardComponent } from './new-course-card/new-course-card';
 import { ContentRatingAlertComponent } from './content-rating-alert/content-rating-alert';
 import { TranslateModule } from '@ngx-translate/core';
 import { PipesModule } from './../pipes/pipes.module';
@@ -9,12 +6,17 @@ import { NgModule } from '@angular/core';
 import { CourseCard } from './card/course/course-card';
 import { ResourceCard } from './card/resource/resource-card';
 import { IncompleteProfileCard } from './card/incomplete-profile/incomplete-profile-card';
+import { HomeAnnouncementCard } from './card/home/home-announcement-card';
 import { IonicPageModule, IonicModule } from 'ionic-angular';
 import { Ionic2RatingModule } from 'ionic2-rating';
 import { IonicImageLoader } from 'ionic-image-loader';
 import { SignInCardComponent } from './sign-in-card/sign-in-card';
+import { OnboardingCardComponent } from './onboarding-card/onboarding-card';
+import { OnboardingAlert } from './onboarding-alert/onboarding-alert';
+import { OnboardingService } from './onboarding-card/onboarding.service';
 import { PBHorizontal } from './pbhorizontal/pb-horizontal';
 import { ConfirmAlertComponent } from './confirm-alert/confirm-alert';
+import { ReportIssuesComponent } from './report-issues/report-issues';
 import { FormAndFrameworkUtilService } from '../pages/profile/formandframeworkutil.service';
 import { AssessmentDetailsComponent } from './assessment-details/assessment-details';
 import { NgxDatatableModule } from '@swimlane/ngx-datatable';
@@ -26,30 +28,20 @@ import { BookmarkComponent } from './bookmark/bookmark';
 import { UnenrollAlertComponent } from './unenroll-alert/unenroll-alert';
 import { EditContactVerifyPopupComponent } from './edit-contact-verify-popup/edit-contact-verify-popup';
 import { EditContactDetailsPopupComponent } from './edit-contact-details-popup/edit-contact-details-popup';
-import { ViewAllCardComponent } from './view-all-card/view-all-card';
-import { TextbookCardComponent } from './textbook-card/textbook-card';
-import { CollectionChildComponent } from './collection-child/collection-child';
-import { ApplicationHeaderComponent } from './application-header/application-header';
-import { SbPopoverComponent } from './popups/sb-popover/sb-popover';
-import { SbDownloadPopupComponent } from './popups/sb-download-popup/sb-download-popup';
-import { SbGenericPopoverComponent } from './popups/sb-generic-popup/sb-generic-popover';
-import { SideMenuComponent } from './side-menu/side-menu';
-import { DirectivesModule } from '@app/directives/directives.module';
-import { AppRatingAlertComponent } from './app-rating-alert/app-rating-alert';
-import { SbNoNetworkPopupComponent } from './popups/sb-no-network-popup/sb-no-network-popup';
-import { NotificationItemComponent } from './notification-item/notification-item';
-import { SbInsufficientStoragePopupComponent } from '@app/component/popups/sb-insufficient-storage-popup/sb-insufficient-storage-popup';
-import { SkeletonItemComponent } from './skeleton-item/skeleton-item';
 
 @NgModule({
     declarations: [
         CourseCard,
         IncompleteProfileCard,
+        HomeAnnouncementCard,
         ViewMoreCardComponent,
         SignInCardComponent,
+        OnboardingCardComponent,
+        OnboardingAlert,
         PBHorizontal,
         ConfirmAlertComponent,
         // ContentActionsComponent,
+        ReportIssuesComponent,
         ContentRatingAlertComponent,
         AssessmentDetailsComponent,
         ViewCreditsComponent,
@@ -59,23 +51,7 @@ import { SkeletonItemComponent } from './skeleton-item/skeleton-item';
         UnenrollAlertComponent,
         EditContactDetailsPopupComponent,
         EditContactVerifyPopupComponent,
-        ResourceCard,
-        NewCourseCardComponent,
-        ViewAllCardComponent,
-        DetailCardComponent,
-        SearchCardComponent,
-        TextbookCardComponent,
-        CollectionChildComponent,
-        ApplicationHeaderComponent,
-        SbPopoverComponent,
-        SbDownloadPopupComponent,
-        SbGenericPopoverComponent,
-        SideMenuComponent,
-        AppRatingAlertComponent,
-        SbNoNetworkPopupComponent,
-        NotificationItemComponent,
-        SbInsufficientStoragePopupComponent,
-        SkeletonItemComponent
+        ResourceCard
     ],
     imports: [
         IonicPageModule.forChild(CourseCard),
@@ -86,16 +62,19 @@ import { SkeletonItemComponent } from './skeleton-item/skeleton-item';
         BrowserAnimationsModule,
         NgxDatatableModule,
         IonicModule,
-        IonicPageModule.forChild(ResourceCard),
-        DirectivesModule
+        IonicPageModule.forChild(ResourceCard)
     ],
     exports: [
         CourseCard,
         IncompleteProfileCard,
+        HomeAnnouncementCard,
         ViewMoreCardComponent,
         SignInCardComponent,
+        OnboardingCardComponent,
+        OnboardingAlert,
         PBHorizontal,
         ConfirmAlertComponent,
+        ReportIssuesComponent,
         ContentRatingAlertComponent,
         AssessmentDetailsComponent,
         ViewCreditsComponent,
@@ -105,41 +84,23 @@ import { SkeletonItemComponent } from './skeleton-item/skeleton-item';
         UnenrollAlertComponent,
         EditContactDetailsPopupComponent,
         EditContactVerifyPopupComponent,
-        ResourceCard,
-        NewCourseCardComponent,
-        ViewAllCardComponent,
-        DetailCardComponent,
-        SearchCardComponent,
-        TextbookCardComponent,
-        CollectionChildComponent,
-        ApplicationHeaderComponent,
-        SbPopoverComponent,
-        SbDownloadPopupComponent,
-        SbGenericPopoverComponent,
-        SideMenuComponent,
-        AppRatingAlertComponent,
-        SbNoNetworkPopupComponent,
-        NotificationItemComponent,
-        SbInsufficientStoragePopupComponent,
-        SkeletonItemComponent
+        ResourceCard
+        // ContentActionsComponent
     ],
     entryComponents: [
+        OnboardingAlert,
         ConfirmAlertComponent,
+        ReportIssuesComponent,
         ContentRatingAlertComponent,
         ViewCreditsComponent,
         DialogPopupComponent,
         UnenrollAlertComponent,
         EditContactDetailsPopupComponent,
-        EditContactVerifyPopupComponent,
-        ApplicationHeaderComponent,
-        SbPopoverComponent,
-        SbDownloadPopupComponent,
-        SbGenericPopoverComponent,
-        AppRatingAlertComponent,
-        SbNoNetworkPopupComponent,
-        SbInsufficientStoragePopupComponent
+        EditContactVerifyPopupComponent
     ],
     providers: [
+        OnboardingService,
+        FormAndFrameworkUtilService
     ]
 })
 export class ComponentsModule { }

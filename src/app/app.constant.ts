@@ -7,17 +7,9 @@ export class ContentType {
     public static readonly TEXTBOOK = 'TextBook';
     public static readonly LESSON_PLAN = 'LessonPlan';
     public static readonly COURSE = 'Course';
-    public static readonly CERTIFICATE = 'Certificate';
     public static readonly TEXTBOOK_UNIT = 'TextBookUnit';
     public static readonly LESSON_PLAN_UNIT = 'LessonPlanUnit';
     public static readonly COURSE_UNIT = 'CourseUnit';
-    public static readonly FOCUS_SPOT = 'FocusSpot';
-    public static readonly LEARNING_OUTCOME_DEFINITION = 'LearningOutcomeDefinition';
-    public static readonly PRACTICE_QUESTION_SET = 'PracticeQuestionSet';
-    public static readonly CURIOSITY_QUESTIONS = 'CuriosityQuestions';
-    public static readonly MARKING_SCHEME_RUBRIC = 'MarkingSchemeRubric';
-    public static readonly EXPLANATION_RESOURCE = 'ExplanationResource';
-    public static readonly EXPERIENTIAL_RESOURCE = 'ExperientialResource';
 
     public static readonly FOR_COURSE_TAB = [
         ContentType.COURSE
@@ -31,8 +23,7 @@ export class ContentType {
         ContentType.TEXTBOOK,
         ContentType.LESSON_PLAN
     ];
-    // TODO: not need to pass content types, by default all the content types should display
-    public static readonly FOR_DOWNLOADED_TAB = [
+    public static readonly FOR_PROFILE_TAB = [
         ContentType.STORY,
         ContentType.WORKSHEET,
         ContentType.GAME,
@@ -40,34 +31,22 @@ export class ContentType {
         ContentType.COLLECTION,
         ContentType.TEXTBOOK,
         ContentType.LESSON_PLAN,
-        ContentType.COURSE,
-        ContentType.FOCUS_SPOT,
-        ContentType.LEARNING_OUTCOME_DEFINITION,
-        ContentType.PRACTICE_QUESTION_SET,
-        ContentType.CURIOSITY_QUESTIONS,
-        ContentType.MARKING_SCHEME_RUBRIC,
-        ContentType.EXPLANATION_RESOURCE,
-        ContentType.EXPERIENTIAL_RESOURCE
+        ContentType.COURSE
     ];
     public static readonly FOR_DIAL_CODE_SEARCH = [
         ContentType.TEXTBOOK,
-        ContentType.TEXTBOOK_UNIT,
-        ContentType.COURSE
+        ContentType.TEXTBOOK_UNIT
+    ];
+    public static readonly FOR_RECENTLY_VIEWED = [
+        ContentType.STORY,
+        ContentType.WORKSHEET,
+        ContentType.GAME,
+        ContentType.RESOURCE
     ];
 }
 
 export class MimeType {
     public static readonly COLLECTION = 'application/vnd.ekstep.content-collection';
-    public static readonly VIDEO = ['video/avi', 'video/mpeg', 'video/quicktime', 'video/3gpp', 'video/mpeg', 'video/mp4',
-                                    'video/ogg', 'video/webm'];
-    public static readonly AUDIO = [ 'audio/mp3', 'audio/mp4', 'audio/mpeg', 'audio/ogg', 'audio/webm', 'audio/x-wav', 'audio/wav'];
-    public static readonly INTERACTION = ['application/vnd.ekstep.ecml-archive', 'application/vnd.ekstep.html-archive',
-                                        'application/vnd.android.package-archive', 'application/vnd.ekstep.content-archive',
-                                        'application/vnd.ekstep.plugin-archive', 'application/vnd.ekstep.h5p-archive'];
-    public static readonly ALL = ['video/mp4', 'video/x-youtube', 'video/webm', 'application/pdf', 'application/epub',
-    'application/pdf', 'application/epub', 'application/vnd.ekstep.ecml-archive', 'application/vnd.ekstep.h5p-archive',
-     'application/vnd.ekstep.html-archive'
-    ];
 }
 
 export class Search {
@@ -80,7 +59,7 @@ export class Search {
         'gradeLevel',
         'subject',
         'medium',
-        'resourceType'
+        'contentType'
     ];
 
     public static readonly FACETS_COURSE = [
@@ -94,24 +73,19 @@ export class Search {
     ];
 }
 
-export class BatchConstants {
-    public static readonly REQUIRED_FIELDS = [
-        'endDate',
-        'description',
-        'name',
-        'enrollmentType',
-        'hashTagId',
-        'startDate',
-        'courseId',
-        'status',
-        'createdBy',
-        'creatorFirstName',
-        'creatorLastName',
-        'identifier',
-        'id',
-        'enrollmentEndDate'
+export class FlagContent {
+    public static readonly FLAG_REASONS_VALUE = [
+        'Copyright Violation',
+        'Inappropriate Content',
+        'Privacy Violation',
+        'Other'
     ];
-    // createdFor ,courseAdditionalInfo, participant, updatedDate, createdDate, courseCreator, mentors
+    public static readonly FLAG_REASONS_LABLE = [
+        'OPTION_COPYRIGHT_VIOLATION',
+        'OPTION_INAPPROPRIATE_CONTENT',
+        'OPTION_PRIVACY_VIOLATION',
+        'OPTION_OTHER'
+    ];
 }
 
 export class ProfileConstants {
@@ -130,24 +104,6 @@ export class ProfileConstants {
     public static readonly CONTACT_TYPE_EMAIL = 'email';
 }
 
-export class ExploreConstants {
-  public static readonly REQUIRED_FIELDS = [
-    'name',
-    'downloadUrl',
-    'variants',
-    'mimeType',
-    'contentType',
-    'resourceType',
-    'board',
-    'medium',
-    'gradeLevel',
-    'subject',
-    'streamingUrl',
-    'framework',
-    'appIcon'
-  ]
-}
-
 export class AudienceFilter {
     public static readonly GUEST_TEACHER = ['instructor', 'learner'];
     public static readonly GUEST_STUDENT = ['learner'];
@@ -160,7 +116,6 @@ export class EventTopics {
     public static readonly UNENROL_COURSE_SUCCESS = 'UNENROL_COURSE_SUCCESS';
     public static readonly COURSE_STATUS_UPDATED_SUCCESSFULLY = 'COURSE_STATUS_UPDATED_SUCCESSFULLY';
     public static readonly REFRESH_ENROLL_COURSE_LIST = 'REFRESH_ENROLL_COURSE_LIST';
-    public static readonly PLAYER_CLOSED = 'PLAYER_CLOSED';
 }
 
 export class ShareUrl {
@@ -169,14 +124,10 @@ export class ShareUrl {
 }
 
 export class MenuOverflow {
-    public static readonly MENU_GUEST = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS'];
-    public static readonly MENU_LOGIN = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS', 'LOGOUT'];
-    public static readonly DOWNLOAD_FILTERS = ['CONTENT_SIZE', 'LAST_VIEWED'];
-}
-
-export class SideMenu {
-    public static readonly MENU_GUEST = ['USERS_AND_GROUPS', 'REPORTS', 'LANGUAGE', 'SETTINGS'];
-    public static readonly MENU_LOGIN = ['USERS_AND_GROUPS', 'REPORTS', 'LANGUAGE', 'SETTINGS', 'LOGOUT'];
+    // public static readonly MENU_GUEST = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS'];
+    // public static readonly MENU_LOGIN = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS', 'LOGOUT'];
+    public static readonly MENU_GUEST = ['SETTINGS'];
+    public static readonly MENU_LOGIN = ['SETTINGS', 'LOGOUT'];
 }
 
 export class FormConstant {
@@ -185,24 +136,13 @@ export class FormConstant {
 }
 
 export class PreferenceKey {
-    public static readonly SELECTED_LANGUAGE_CODE = 'sunbirdselected_language_code';
-    public static readonly SELECTED_LANGUAGE = 'sunbirdselected_language';
-    public static readonly SELECTED_USER_TYPE = 'sunbirdselected_user_type';
-    public static readonly COURSE_IDENTIFIER = 'sunbirdcourse_identifier';
-    public static readonly IS_ONBOARDING_COMPLETED = 'sunbirdis_onboarding_settings_completed';
-    public static readonly IS_BOOKMARK_VIEWED = 'sunbirdis_bookmark_viewed';
-    public static readonly CONTENT_CONTEXT = 'sunbirdcontent_context';
-    public static readonly GUEST_USER_ID_BEFORE_LOGIN = 'sunbirdGUEST_USER_ID_BEFORE_LOGIN';
-    public static readonly KEY_SUNBIRD_SUPPORT_FILE_PATH = 'sunbirdsunbird_support_file_path';
-    public static readonly KEY_DATA_SYNC_TYPE = 'sunbirdsync_config';
-    public static readonly KEY_DATA_SYNC_TIME = 'sunbirddata_sync_time';
-    public static readonly APP_LOGO = 'app_logo';
-    public static readonly APP_NAME = 'app_name';
-    public static readonly APP_RATING_DATE = 'app_rating_date';
-    public static readonly APP_RATE_LATER_CLICKED = 'app_rate_later_clicked';
-    public static readonly APP_RATING_POPUP_APPEARED = 'app_rating_popup_appeared';
-    public static readonly APP_PERMISSION_ASKED = 'app_permission_asked';
-    public static readonly DEPLOYMENT_KEY = 'deployment_key';
+    public static readonly SELECTED_LANGUAGE_CODE = 'selected_language_code';
+    public static readonly SELECTED_LANGUAGE = 'selected_language';
+    public static readonly SELECTED_USER_TYPE = 'selected_user_type';
+    public static readonly COURSE_IDENTIFIER = 'course_identifier';
+    public static readonly IS_ONBOARDING_COMPLETED = 'is_onboarding_settings_completed';
+    public static readonly IS_BOOKMARK_VIEWED = 'is_bookmark_viewed';
+    public static readonly CONTENT_CONTEXT = 'content_context';
 }
 
 export class GenericAppConfig {
@@ -221,8 +161,6 @@ export class GenericAppConfig {
     public static readonly DISPLAY_ONBOARDING_CATEGORY_PAGE = 'DISPLAY_ONBOARDING_CATEGORY_PAGE';
     public static readonly OPEN_RAPDISCOVERY_ENABLED = 'OPEN_RAPDISCOVERY_ENABLED';
     public static readonly SUPPORT_EMAIL = 'SUPPORT_EMAIL';
-    public static readonly VERSION_NAME = 'VERSION_NAME';
-    public static readonly VERSION_CODE = 'VERSION_CODE';
 }
 
 export const appLanguages = [
@@ -325,42 +263,4 @@ export class FrameworkCategory {
         FrameworkCategory.GRADE_LEVEL,
         FrameworkCategory.SUBJECT
     ];
-}
-
-export class SystemSettingsIds {
-    public static readonly CUSTODIAN_ORG_ID = 'custodianOrgId';
-    public static readonly COURSE_FRAMEWORK_ID = 'courseFrameworkId';
-    public static readonly CONTENT_COMING_SOON_MSG = 'contentComingSoonMsg';
-    public static readonly CONSUMPTION_FAQS = 'consumptionFaqs';
-}
-
-export class StoreRating {
-    public static readonly DATE_DIFF = 2;
-    public static readonly APP_MIN_RATE = 4;
-    public static readonly FOLDER_NAME = 'sunbird-app-rating';
-    public static readonly FILE_NAME = 'app-rating.doc';
-    public static readonly FILE_TEXT = 'APP-Rating';
-    public static readonly RETURN_CLOSE = 'close';
-    public static readonly RETURN_HELP = 'help';
-    public static readonly DEVICE_FOLDER_PATH = cordova.file.dataDirectory;
-}
-export class ContentConstants {
-    public static readonly DEFAULT_LICENSE = 'CC BY 4.0';
-    public static readonly COMING_SOON_MSG = 'comingSoonMsg';
-}
-
-export class ContentFilterConfig {
-    public static readonly NAME_LIBRARY = 'library';
-    public static readonly NAME_COURSE = 'course';
-    public static readonly NAME_DOWNLOADS = 'downloads';
-    public static readonly NAME_DIALCODE = 'dialcode';
-    public static readonly CODE_CONTENT_TYPE = 'contentType';
-}
-
-export class ActionType {
-    public static readonly CODE_PUSH = 'codePush';
-    public static readonly COURSE_UPDATE = 'courseUpdate';
-    public static readonly CONTENT_UPDATE = 'contentUpdate';
-    public static readonly BOOK_UPDATE = 'bookUpdate';
-    public static readonly UPDATE_APP = 'updateApp';
 }

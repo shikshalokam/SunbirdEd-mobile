@@ -6,7 +6,6 @@ import {
   contentServiceMock,
   courseServiceMock,
   courseUtilServiceMock,
-  datePipeMock,
   eventsMock,
   fileUtilMock,
   navCtrlMock,
@@ -18,51 +17,49 @@ import {
   socialSharingMock,
   telemetryGeneratorServiceMock,
   userProfileServiceMock,
-  zoneMock,
-  profileServiceMock,
-  eventBusServiceMock,
-  utilityServiceMock,
-  headerServiceMock,
-  appVersionMock,
-  contentShareHandlerMock
+  zoneMock
 } from '../../__tests__/mocks';
-import {EnrolledCourseDetailsPage} from './enrolled-course-details';
-import {mockRes} from './enrolled-course-details.spec.data';
-import {Environment, InteractSubtype, InteractType, Mode, PageId} from '@app/service/telemetry-constants';
-import { ProfileType, Batch} from 'sunbird-sdk';
-import {CollectionDetailsPage} from '../collection-details/collection-details';
-import {ContentDetailsPage} from '../content-details/content-details';
-import {CourseBatchesPage} from '../course-batches/course-batches';
-import { BatchConstants } from '../../app';
-
+import { EnrolledCourseDetailsPage } from './enrolled-course-details';
+import { mockRes } from './enrolled-course-details.spec.data';
+import {
+  Environment,
+  InteractSubtype,
+  InteractType,
+  Mode,
+  PageId,
+  ProfileType
+} from 'sunbird';
+import { CollectionDetailsPage } from '../collection-details/collection-details';
+import { ContentDetailsPage } from '../content-details/content-details';
+import { CourseBatchesPage } from '../course-batches/course-batches';
+import { datePipeMock } from '../../__tests__/mocks';
 
 describe('EnrolledCourseDetailsPage Component', () => {
   let enrolled: EnrolledCourseDetailsPage;
   beforeEach((() => {
     appGlobalServiceMock.getGuestUserInfo.mockResolvedValue(true);
     enrolled = new EnrolledCourseDetailsPage(
-      profileServiceMock as any,
-      contentServiceMock as any,
-      eventBusServiceMock as any,
-      courseServiceMock as any,
-      sharedPreferencesMock as any,
       navCtrlMock as any,
       navParamsMock as any,
+      alertCtrlMock as any,
+      contentServiceMock as any,
       zoneMock as any,
       eventsMock as any,
+      fileUtilMock as any,
       popoverCtrlMock as any,
+      userProfileServiceMock as any,
       courseServiceMock as any,
+      buildParamServiceMock as any,
+      shareUtilMock as any,
+      socialSharingMock as any,
+      sharedPreferencesMock as any,
+      courseUtilServiceMock as any,
       platformMock as any,
       appGlobalServiceMock as any,
       telemetryGeneratorServiceMock as any,
       commonUtilServiceMock as any,
-      datePipeMock as any,
-      utilityServiceMock as any,
-      headerServiceMock as any,
-      contentShareHandlerMock as any,
-      appVersionMock as any
+      datePipeMock as any
     );
-
 
     jest.resetAllMocks();
   }));
@@ -72,7 +69,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
   });
 
   it('#subscribeUtilityEvents should return the base url', (done) => {
-    utilityServiceMock.getBuildConfigValue.mockResolvedValue(Promise.resolve('SAMPLE_BASE_URL'));
+    buildParamServiceMock.getBuildConfigParam.mockResolvedValue(Promise.resolve('SAMPLE_BASE_URL'));
     enrolled.subscribeUtilityEvents();
     setTimeout(() => {
       expect(enrolled.baseUrl).toBe('SAMPLE_BASE_URL');
@@ -81,7 +78,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
   });
 
   it('#subscribeUtilityEvents should handle error condition', (done) => {
-    utilityServiceMock.getBuildConfigValue.mockRejectedValue(true);
+    buildParamServiceMock.getBuildConfigParam.mockRejectedValue(true);
     enrolled.subscribeUtilityEvents();
     setTimeout(() => {
       expect(enrolled.baseUrl).toBe('');
@@ -90,15 +87,14 @@ describe('EnrolledCourseDetailsPage Component', () => {
   });
 
   it('#subscribeUtilityEvents should receive the enroll success event', () => {
-    // buildParamServiceMock.getBuildConfigValue.mockRejectedValue(true);
-    utilityServiceMock.getBuildConfigValue.mockRejectedValue(true);
+    buildParamServiceMock.getBuildConfigParam.mockRejectedValue(true);
     enrolled.subscribeUtilityEvents();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, mockRes.enrollCourseEvent);
     expect(enrolled.batchId).toBe('1234');
   });
 
-  xit('#subscribeUtilityEvents should handle device Back button', () => {
-    utilityServiceMock.getBuildConfigValue.mockRejectedValue(true);
+  it('#subscribeUtilityEvents should handle device Back button', () => {
+    buildParamServiceMock.getBuildConfigParam.mockRejectedValue(true);
     platformMock.registerBackButtonAction.mockImplementation((success) => {
       return success();
     });
@@ -112,8 +108,8 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.backButtonFunc).toBeUndefined();
   });
 
-  xit('#subscribeUtilityEvents should generate QRscan session End event', () => {
-    utilityServiceMock.getBuildConfigValue.mockResolvedValue(true);
+  it('#subscribeUtilityEvents should generate QRscan session End event', () => {
+    buildParamServiceMock.getBuildConfigParam.mockResolvedValue(true);
     platformMock.registerBackButtonAction.mockImplementation((success) => {
       return success();
     });
@@ -127,7 +123,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.course = mockRes.sampleCourse;
     enrolled.source = PageId.COURSES;
     enrolled.subscribeUtilityEvents();
-    expect(enrolled.generateEndEvent).toHaveBeenCalledWith('SAMPLE_ID', 'SAMPLE_TYPE');
+    expect(enrolled.generateEndEvent).toHaveBeenCalledWith('SAMPLE_ID', 'SAMPLE_TYPE', 'SAMPLE_VERSION');
     const telemetryObject: any = {};
     telemetryObject.id = 'SAMPLE_ID';
     telemetryObject.type = 'SAMPLE_TYPE';
@@ -226,7 +222,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.handleUnenrollment).toHaveBeenCalled();
   });
 
-  xit('#handleUnenrollment should call unenrollCourse()', () => {
+  it('#handleUnenrollment should call unenrolCourse()', () => {
     const loader = {
       present: jest.fn(),
       dismiss: jest.fn()
@@ -234,13 +230,13 @@ describe('EnrolledCourseDetailsPage Component', () => {
     commonUtilServiceMock.getLoader.mockReturnValue(loader);
     enrolled.course = mockRes.sampleCourse;
     enrolled.courseCardData = mockRes.enrollCourseEvent;
-    enrolled.batchDetails = mockRes.Batch;
-    courseServiceMock.unenrollCourse.mockResolvedValue({});
+    enrolled.batchDetails = mockRes.batchDetailsResponse;
+    courseServiceMock.unenrolCourse.mockResolvedValue({});
     enrolled.handleUnenrollment(true);
-    expect(courseServiceMock.unenrollCourse).toHaveBeenCalled();
+    expect(courseServiceMock.unenrolCourse).toHaveBeenCalled();
   });
 
-  xit('#handleUnenrollment should call showToast() with COURSE_UNENROLLED', (done) => {
+  it('#handleUnenrollment should call showToast() with COURSE_UNENROLLED', (done) => {
     const loader = {
       present: jest.fn(),
       dismiss: jest.fn()
@@ -248,8 +244,8 @@ describe('EnrolledCourseDetailsPage Component', () => {
     commonUtilServiceMock.getLoader.mockReturnValue(loader);
     enrolled.course = mockRes.sampleCourse;
     enrolled.courseCardData = mockRes.enrollCourseEvent;
-    enrolled.batchDetails = mockRes.Batch;
-    courseServiceMock.unenrollCourse.mockResolvedValue({});
+    enrolled.batchDetails = mockRes.batchDetailsResponse;
+    courseServiceMock.unenrolCourse.mockResolvedValue({});
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0]();
       expect(commonUtilServiceMock.translateMessage('COURSE_UNENROLLED'));
@@ -259,7 +255,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.handleUnenrollment(true);
   });
 
-  xit('#handleUnenrollment should call showToast() with ERROR_NO_INTERNET_MESSAGE', (done) => {
+  it('#handleUnenrollment should call showToast() with ERROR_NO_INTERNET_MESSAGE', (done) => {
     const loader = {
       present: jest.fn(),
       dismiss: jest.fn()
@@ -267,8 +263,8 @@ describe('EnrolledCourseDetailsPage Component', () => {
     commonUtilServiceMock.getLoader.mockReturnValue(loader);
     enrolled.course = mockRes.sampleCourse;
     enrolled.courseCardData = mockRes.enrollCourseEvent;
-    enrolled.batchDetails = mockRes.Batch;
-    courseServiceMock.unenrollCourse.mockRejectedValue(JSON.stringify(mockRes.connectionErrorcontentDetialResponse));
+    enrolled.batchDetails = mockRes.batchDetailsResponse;
+    courseServiceMock.unenrolCourse.mockRejectedValue(JSON.stringify(mockRes.connectionErrorcontentDetialResponse));
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0].call();
       expect(commonUtilServiceMock.translateMessage).toHaveBeenCalledWith('ERROR_NO_INTERNET_MESSAGE');
@@ -278,13 +274,13 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.handleUnenrollment(true);
   });
 
-  xit('#setContentDetails should extract successsfully if getContentDetails API gives success response', (done) => {
+  it('#setContentDetails should extract successsfully if getContentDetails API gives success response', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     spyOn(enrolled, 'extractApiResponse');
     const data = JSON.stringify((mockRes.contentDetailsResponse));
-    contentServiceMock.getContentDetails.mockResolvedValue(data);
+    contentServiceMock.getContentDetail.mockResolvedValue(data);
     enrolled.setContentDetails('SAMPLE_ID');
-    expect(contentServiceMock.getContentDetails).toHaveBeenCalled();
+    expect(contentServiceMock.getContentDetail).toHaveBeenCalled();
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0].call();
       expect(enrolled.extractApiResponse).toHaveBeenCalled();
@@ -292,13 +288,13 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#setContentDetails should show error toast if getContentDetails API gives CONNECTION_ERROR response', (done) => {
+  it('#setContentDetails should show error toast if getContentDetails API gives CONNECTION_ERROR response', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     spyOn(enrolled, 'extractApiResponse');
     const data = JSON.stringify((mockRes.connectionErrorcontentDetialResponse));
-    contentServiceMock.getContentDetails.mockRejectedValue(data);
+    contentServiceMock.getContentDetail.mockRejectedValue(data);
     enrolled.setContentDetails('SAMPLE_ID');
-    expect(contentServiceMock.getContentDetails).toHaveBeenCalled();
+    expect(contentServiceMock.getContentDetail).toHaveBeenCalled();
     setTimeout(() => {
       expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_NO_INTERNET_MESSAGE');
       expect(navCtrlMock.pop).toHaveBeenCalled();
@@ -306,13 +302,13 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#setContentDetails should show error toast if getContentDetails API gives SERVER_ERROR response', (done) => {
+  it('#setContentDetails should show error toast if getContentDetails API gives SERVER_ERROR response', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     spyOn(enrolled, 'extractApiResponse');
     const data = JSON.stringify((mockRes.serverErrorcontentDetialResponse));
-    contentServiceMock.getContentDetails.mockRejectedValue(data);
+    contentServiceMock.getContentDetail.mockRejectedValue(data);
     enrolled.setContentDetails('SAMPLE_ID');
-    expect(contentServiceMock.getContentDetails).toHaveBeenCalled();
+    expect(contentServiceMock.getContentDetail).toHaveBeenCalled();
     setTimeout(() => {
       expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_FETCHING_DATA');
       expect(navCtrlMock.pop).toHaveBeenCalled();
@@ -320,7 +316,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#extractApiResponse should call all methods', () => {
+  it('#extractApiResponse should call all methods', () => {
     enrolled.course = mockRes.sampleCourse;
     const response = mockRes.contentDetailsResponse;
     response.result.contentData.status = '0';
@@ -334,13 +330,13 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.extractApiResponse(response);
     expect(enrolled.generateImpressionEvent).toBeCalled();
     expect(enrolled.generateStartEvent).toBeCalled();
-    expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('COURSE_NOT_AVAILABLE');
+    expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_CONTENT_NOT_AVAILABLE');
     expect(navCtrlMock.pop).toBeCalled();
     expect(enrolled.setCourseStructure).toBeCalled();
     expect(enrolled.setChildContents).toBeCalled();
   });
 
-  xit('#getBatchDetails should call getBatchDetails() of courseService', (done) => {
+  it('#getBatchDetails should call getBatchDetails() of courseService', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     const data = JSON.stringify((mockRes.batchDetailsResponse));
     courseServiceMock.getBatchDetails.mockResolvedValue(data);
@@ -355,7 +351,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#getBatchDetails should not call getBatchCreatorName()', () => {
+  it('#getBatchDetails should not call getBatchCreatorName()', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     courseServiceMock.getBatchDetails.mockRejectedValue(true);
     enrolled.getBatchDetails();
@@ -363,23 +359,21 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.getBatchCreatorName).not.toHaveBeenCalled();
   });
 
-  xit('#getBatchCreatorName should populate Creator firsname and last name', () => {
+  it('#getBatchCreatorName should populate Creator firsname and last name', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
-    // enrolled.batchDetails = { 'createdBy': 'SAMPLE_ID' };
-    enrolled.batchDetails = mockRes.Batch;
+    enrolled.batchDetails = { 'createdBy': 'SAMPLE_ID' };
     const data = JSON.stringify(mockRes.creatorDetails);
     enrolled.getBatchCreatorName();
-    profileServiceMock.getServerProfilesDetails.mock.calls[0][1].call(enrolled, data);
+    userProfileServiceMock.getUserProfileDetails.mock.calls[0][1].call(enrolled, data);
     expect(enrolled.batchDetails.creatorFirstName).toBe('John');
     expect(enrolled.batchDetails.creatorLastName).toBe('');
   });
 
-  xit('#getBatchCreatorName should handle error scenario from API', () => {
+  it('#getBatchCreatorName should handle error scenario from API', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
-    // enrolled.batchDetails = { 'createdBy': 'SAMPLE_ID' };
-    enrolled.batchDetails = mockRes.Batch;
+    enrolled.batchDetails = { 'createdBy': 'SAMPLE_ID' };
     enrolled.getBatchCreatorName();
-    profileServiceMock.getServerProfilesDetails.mock.calls[0][2].call();
+    userProfileServiceMock.getUserProfileDetails.mock.calls[0][2].call();
     expect(enrolled.batchDetails.creatorFirstName).toBeUndefined();
     expect(enrolled.batchDetails.creatorLastName).toBeUndefined();
   });
@@ -391,7 +385,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.course.contentTypesCount).toBe(1);
   });
 
-  xit('#importContent should show error if nothing is added in queuedIdentifiers ', (done) => {
+  it('#importContent should show error if nothing is added in queuedIdentifiers ', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     spyOn(commonUtilServiceMock, 'showToast');
@@ -407,7 +401,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#importContent should populate queuedIdentifier for successfull API calls', (done) => {
+  it('#importContent should populate queuedIdentifier for successfull API calls', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
 
@@ -424,7 +418,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
   });
 
 
-  xit('#importContent should restore the download state for error condition from importContent', (done) => {
+  it('#importContent should restore the download state for error condition from importContent', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     spyOn(enrolled, 'generateImpressionEvent');
@@ -439,7 +433,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#importContent should show error toast if failure response from importContent API', (done) => {
+  it('#importContent should show error toast if failure response from importContent API', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     spyOn(commonUtilServiceMock, 'showToast');
@@ -456,10 +450,10 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#downloadAllContent should invoke importContent API', () => {
+  it('#downloadAllContent should invoke importContent API', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
-    commonUtilServiceMock.networkInfo = { isNetworkAvailable: true } as any;
+    commonUtilServiceMock.networkInfo = { isNetworkAvailable: true };
     const data = JSON.stringify((mockRes.enqueuedOthersImportContentResponse));
     contentServiceMock.importContent.mockResolvedValue(data);
     enrolled.downloadAllContent();
@@ -469,14 +463,14 @@ describe('EnrolledCourseDetailsPage Component', () => {
   it('#downloadAllContent should show error response if internet is not available', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
-    commonUtilServiceMock.networkInfo = { isNetworkAvailable: false } as any;
+    commonUtilServiceMock.networkInfo = { isNetworkAvailable: false };
     const data = JSON.stringify((mockRes.enqueuedOthersImportContentResponse));
     contentServiceMock.importContent.mockResolvedValue(data);
     enrolled.downloadAllContent();
     expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_NO_INTERNET_MESSAGE');
   });
 
-  xit('#setChildContents should dismiss the children loader', (done) => {
+  it('#setChildContents should dismiss the children loader', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     const data = JSON.stringify((mockRes.getChildContentAPIResponse));
@@ -490,7 +484,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#setChildContents should handle error scenario', (done) => {
+  it('#setChildContents should handle error scenario', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     const data = JSON.stringify((mockRes.getChildContentAPIResponse));
@@ -526,7 +520,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     enrolled.identifier = 'SAMPLE_ID';
-    const content = { 'mimeType': 'application/vnd.ekstep.content-collection', 'identifier': 'do_23323' };
+    const content = { 'mimeType': 'application/vnd.ekstep.content-collection' };
     const contentState = {
       batchId: '1234',
       courseId: 'SAMPLE_ID'
@@ -562,7 +556,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     });
   });
 
-  xit('#cancelDownload should cancel the download', (done) => {
+  it('#cancelDownload should cancel the download', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     const data = JSON.stringify({});
@@ -577,7 +571,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#cancelDownload should handle error scenario from API', (done) => {
+  it('#cancelDownload should handle error scenario from API', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = {};
     const data = JSON.stringify({});
@@ -599,8 +593,8 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(navCtrlMock.push).toHaveBeenCalled();
   });
 
-  xit('#ionViewWillEnter should invoke setContentDetails', () => {
-    enrolled.batchDetails = mockRes.Batch;
+  it('#ionViewWillEnter should invoke setContentDetails', () => {
+    enrolled.batchDetails = { 'createdBy': 'SAMPLE_ID' };
     enrolled.batchId = '1234';
     navParamsMock.get.mockReturnValue(mockRes.enrollCourseEvent);
     spyOn(enrolled, 'setContentDetails');
@@ -608,10 +602,10 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.setContentDetails).toHaveBeenCalled();
   });
 
-  xit('#subscribeSdkEvent should update the download progress when download progress event comes', (done) => {
+  it('#subscribeGenieEvent should update the download progress when download progress event comes', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     const data = JSON.stringify(mockRes.downloadProgressEventSample1);
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0].call();
@@ -620,10 +614,10 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#subscribeSdkEvent should update the progress to 0 if API gives response -1', (done) => {
+  it('#subscribeGenieEvent should update the progress to 0 if API gives response -1', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     const data = JSON.stringify(mockRes.downloadProgressEventSample2);
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0].call();
@@ -632,24 +626,24 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#subscribeSdkEvent should call getBaatchDetails() if download progress is 100', () => {
+  it('#subscribeGenieEvent should call getBaatchDetails() if download progress is 100', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     const data = JSON.stringify(mockRes.downloadProgressEventSample3);
     spyOn(enrolled, 'getBatchDetails');
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     courseServiceMock.getBatchDetails.mockResolvedValue(true);
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     zoneMock.run.mock.calls[0][0].call();
     expect(enrolled.getBatchDetails).toBeCalled();
   });
 
-  xit('#subscribeSdkEvent should  mark download as complete', (done) => {
+  it('#subscribeGenieEvent should  mark download as complete', (done) => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = { 'isAvailableLocally': true };
     const data = JSON.stringify(mockRes.importCompleteEventSample);
     enrolled.queuedIdentifiers = ['SAMPLE_ID'];
     enrolled.isDownloadStarted = true;
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     setTimeout(() => {
       zoneMock.run.mock.calls[0][0].call();
@@ -659,20 +653,20 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#subscribeSdkEvent should  load all child contents when download is complete', () => {
+  it('#subscribeGenieEvent should  load all child contents when download is complete', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = { 'isAvailableLocally': true };
     const data = JSON.stringify(mockRes.importCompleteEventSample);
     enrolled.queuedIdentifiers = ['SAMPLE_ID'];
     enrolled.isDownloadStarted = false;
     spyOn(enrolled, 'setChildContents');
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     zoneMock.run.mock.calls[0][0].call();
     expect(enrolled.setChildContents).toHaveBeenCalled();
   });
 
-  xit('#subscribeSdkEvent should  update the course if update event is available ', () => {
+  it('#subscribeGenieEvent should  update the course if update event is available ', () => {
     enrolled.courseCardData = mockRes.enrollCourseEvent;
     enrolled.course = { 'isAvailableLocally': true };
     const data = JSON.stringify(mockRes.updateEventSample);
@@ -680,7 +674,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     enrolled.isDownloadStarted = false;
     enrolled.identifier = 'SAMPLE_ID';
     spyOn(enrolled, 'importContent');
-    enrolled.subscribeSdkEvent();
+    enrolled.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(enrolled, data);
     zoneMock.run.mock.calls[0][0].call();
     zoneMock.run.mock.calls[1][0].call();
@@ -688,8 +682,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.importContent).toHaveBeenCalledWith(['SAMPLE_ID'], false);
   });
 
-
-  xit('#ionViewWillLeave should unsubscribe event', () => {
+  it('#ionViewWillLeave should unsubscribe event', () => {
     enrolled.ionViewWillLeave();
     expect(eventsMock.unsubscribe).toHaveBeenCalledWith('genie.event');
   });
@@ -702,14 +695,14 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(enrolled.navigateToChildrenDetailsPage).toHaveBeenCalled();
   });
 
-  xit('#navigateToBatchListPage should navigate to CourseBatches page if network is available', (done) => {
+  it('#navigateToBatchListPage should navigate to CourseBatches page if network is available', (done) => {
     enrolled.identifier = 'SAMPLE_ID';
     enrolled.guestUser = false;
     const loader = {
       present: jest.fn(),
       dismiss: jest.fn()
     };
-    commonUtilServiceMock.networkInfo = { isNetworkAvailable: true } as any;
+    commonUtilServiceMock.networkInfo = { isNetworkAvailable: true };
     const data = JSON.stringify(mockRes.courseBatchesRequest);
     commonUtilServiceMock.getLoader.mockReturnValue(loader);
     courseServiceMock.getCourseBatches.mockResolvedValue(data);
@@ -721,7 +714,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     }, 200);
   });
 
-  xit('#share should invoke  export ecar API if course is locally available', () => {
+  it('#share should invoke  export ecar API if course is locally available', () => {
     enrolled.course = { 'contentType': 'Course', 'isAvailableLocally': true, 'identifier': 'SAMPLE_ID' };
     const loader = {
       present: jest.fn(),
@@ -742,7 +735,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     );
   });
 
-  xit('#share should show warning toast if exportEcar gives failure response ', () => {
+  it('#share should show warning toast if exportEcar gives failure response ', () => {
     enrolled.course = { 'contentType': 'Course', 'isAvailableLocally': true, 'identifier': 'SAMPLE_ID' };
     const loader = {
       present: jest.fn(),
@@ -755,7 +748,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('SHARE_CONTENT_FAILED');
   });
 
-  xit('#share should share successfully if content is not locally available ', () => {
+  it('#share should share successfully if content is not locally available ', () => {
     enrolled.course = { 'contentType': 'Course', 'isAvailableLocally': false, 'identifier': 'SAMPLE_ID' };
     const loader = {
       present: jest.fn(),
@@ -764,7 +757,7 @@ describe('EnrolledCourseDetailsPage Component', () => {
     commonUtilServiceMock.getLoader.mockReturnValue(loader);
     // spyOn(social, 'share').and.callThrough();
     enrolled.share();
-    expect(contentShareHandlerMock.share).toHaveBeenCalled();
+    expect(socialSharingMock.share).toHaveBeenCalled();
   });
 
   it('#handleNavBackButton should handle nav back button click', () => {
@@ -778,12 +771,12 @@ describe('EnrolledCourseDetailsPage Component', () => {
     expect(navCtrlMock.pop).toHaveBeenCalled();
   });
 
-  xit('#viewCredits should open view credits screen', () => {
+  it('#viewCredits should open view credits screen', () => {
     enrolled.viewCredits();
     expect(courseUtilServiceMock.showCredits).toHaveBeenCalled();
   });
 
-  xit('#generateShareInteractEvents should call generateInteractTelemetry()', () => {
+  it('#generateShareInteractEvents should call generateInteractTelemetry()', () => {
     enrolled.generateShareInteractEvents({}, {}, {});
     expect(telemetryGeneratorServiceMock.generateInteractTelemetry).toBeCalled();
   });

@@ -1,16 +1,18 @@
-import {CommonUtilService} from './../../../service/common-util.service';
-import {Component, Inject, NgZone} from '@angular/core';
-import {LoadingController, NavParams, NavController} from 'ionic-angular';
-import {GroupReportAlert} from '../group-report-alert/group-report-alert';
-import {TranslateService} from '@ngx-translate/core';
-import {TelemetryGeneratorService} from '../../../service/telemetry-generator.service';
-import {AppGlobalService, UtilityService, AppHeaderService} from '@app/service';
-import {UserReportPage} from '../user-report/user-report';
-import {File} from '@ionic-native/file';
-import {FileTransfer, FileTransferObject} from '@ionic-native/file-transfer';
-import {DatePipe} from '@angular/common';
-import {DeviceInfo, Profile, ReportSummary, SummarizerService, SummaryRequest} from 'sunbird-sdk';
-import {Environment, InteractSubtype, InteractType, PageId} from '../../../service/telemetry-constants';
+import { CommonUtilService } from './../../../service/common-util.service';
+import { NavController } from 'ionic-angular/navigation/nav-controller';
+import { Component, NgZone } from '@angular/core';
+import { NavParams, LoadingController } from 'ionic-angular';
+import {
+    ReportService, ReportSummary, PageId, Environment, InteractType, InteractSubtype, DeviceInfoService, Profile
+} from 'sunbird';
+import { GroupReportAlert } from '../group-report-alert/group-report-alert';
+import { TranslateService } from '@ngx-translate/core';
+import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
+import { AppGlobalService } from '../../../service/app-global.service';
+import { UserReportPage } from '../user-report/user-report';
+import { File } from '@ionic-native/file';
+import { FileTransfer, FileTransferObject } from '@ionic-native/file-transfer';
+import { DatePipe } from '@angular/common';
 
 
 @Component({
@@ -45,7 +47,7 @@ export class GroupReportListPage {
         prop: 'index'
     }, {
         name: this.translateMessage('MARKS'),
-        prop: 'maxScore'
+        prop: 'max_score'
     }, {
         name: this.translateMessage('ACCURACY'),
         prop: 'accuracy'
@@ -65,22 +67,19 @@ export class GroupReportListPage {
         private loading: LoadingController,
         private zone: NgZone,
         private transfer: FileTransfer,
-        @Inject('SUMMARIZER_SERVICE') public summarizerService: SummarizerService,
+        private reportService: ReportService,
         private translate: TranslateService,
         private telemetryGeneratorService: TelemetryGeneratorService,
         private appGlobalService: AppGlobalService,
-        private utilityService: UtilityService,
         private file: File,
         private datePipe: DatePipe,
-        @Inject('DEVICE_INFO') private deviceInfo: DeviceInfo,
+        private deviceInfoService: DeviceInfoService,
         private navCtrl: NavController,
-        private commonUtilService: CommonUtilService,
-        private headerService: AppHeaderService) {
+        private commonUtilService: CommonUtilService) {
         this.downloadDirectory = this.file.dataDirectory;
-        this.utilityService.getDownloadDirectoryPath()
+        this.deviceInfoService.getDownloadDirectoryPath()
             .then((response: any) => {
                 this.downloadDirectory = response;
-                console.log('download path', this.downloadDirectory);
             })
             .catch();
     }
@@ -89,10 +88,15 @@ export class GroupReportListPage {
         this.fetchAssessment(this.reportType, false);
     }
     ionViewDidLoad() {
-        this.deviceId =  this.deviceInfo.getDeviceID();
+        this.deviceInfoService.getDeviceID()
+            .then((res: any) => {
+                this.deviceId = res;
+            })
+            .catch((err: any) => {
+                console.error('Error', err);
+            });
         this.profile = this.appGlobalService.getCurrentUser();
         this.groupinfo = this.navParams.get('group');
-        this.headerService.hideHeader();
     }
     fetchAssessment(event: string, fromUserList: boolean) {
         const subType = (event === 'users') ? InteractSubtype.REPORTS_BY_USER_CLICKED : InteractSubtype.REPORTS_BY_QUESTION_CLICKED;
@@ -111,20 +115,20 @@ export class GroupReportListPage {
         const that = this;
         const uids = this.navParams.get('uids');
         const users = this.navParams.get('users');
-        const summaryRequest: SummaryRequest = {
-            qId: '',
+        const params = {
             uids: uids,
             contentId: this.reportSummary.contentId,
-            hierarchyData: null
+            hierarchyData: null,
+            qId: ''
         };
         if (fromUserList) {
-            summaryRequest.uids = [this.reportSummary.uid];
+            params.uids = [this.reportSummary.uid];
         }
         if (event === 'users' && !this.fromUserAssessment) {
             this.reportType = event;
             loader.present();
-            this.summarizerService.getReportsByUser(summaryRequest).toPromise()
-            .then((data: any) => {
+            this.reportService.getReportsByUser(params).then((data: any) => {
+                data = JSON.parse(data);
                 this.groupReport = data;
                 let averageScore: any = 0;
                 let averageTime = 0;
@@ -133,7 +137,7 @@ export class GroupReportListPage {
                     averageScore += report.score;
                     report.totalTimespent = that.formatTime(report.totalTimespent);
                     report.name = this.reportSummary.name;
-                    that.summarizerService.getLearnerAssessmentDetails(summaryRequest).toPromise()
+                    that.reportService.getDetailReport([report.uid], report.contentId)
                         .then(reportsMap => {
                             const data1 = reportsMap.get(report.uid);
                             const rows = data1.reportDetailsList.map(row => {
@@ -147,7 +151,7 @@ export class GroupReportListPage {
                                     'qtitle': row.qtitle,
                                     'qid': row.qid,
                                     'name': report.userName,
-                                    'timestamp': report.createdAt,
+                                    'timestamp': report.createdAt
                                 };
                             });
                             report.assessmentData = rows;
@@ -167,8 +171,7 @@ export class GroupReportListPage {
                     totalScore: averageScore,
                     uiTotalTime: that.formatTime(averageTime),
                     fromGroup: true,
-                    fromUser: false,
-                    questionsScore: this.reportSummary.totalQuestionsScore
+                    fromUser: false
                 };
                 that.zone.run(() => {
                     loader.dismiss();
@@ -176,22 +179,24 @@ export class GroupReportListPage {
                 });
 
             })
-              .catch(() => {
+                .catch((error: any) => {
+                    const data = JSON.parse(error);
+                    console.log('Error received', data);
                     loader.dismiss();
                 });
         } else
             if (event === 'questions') {
                 this.reportType = event;
                 loader.present();
-                this.summarizerService.getReportByQuestions(summaryRequest).toPromise()
-                .then((data: any) => {
+                this.reportService.getReportsByQuestion(params).then((data: any) => {
+                    data = JSON.parse(data);
                     this.response = data;
                     let averageTime = 0;
                     let averageScore: any = 0;
                     data.forEach((question) => {
                         question.index = 'Q' + (('00' + question.qindex).slice(-3));
                         averageTime += question.time_spent;
-                        averageScore += question.maxScore;
+                        averageScore += question.score;
                         question.accuracy = (question.correct_users_count || '0') + '/' + question.occurenceCount;
                         question.users = users;
                         question.uids = uids;
@@ -212,7 +217,9 @@ export class GroupReportListPage {
                         that.fromQuestionAssessment = details;
                     });
                 })
-                  .catch(() => {
+                    .catch((error: any) => {
+                        const data = JSON.parse(error);
+                        console.log('Error received', data);
                         loader.dismiss();
                     });
             }
@@ -330,12 +337,6 @@ export class GroupReportListPage {
         return csv;
     }
     importcsv() {
-    this.telemetryGeneratorService.generateInteractTelemetry(
-        InteractType.TOUCH,
-        InteractSubtype.DOWNLOAD_REPORT_CLICKED,
-        Environment.USER,
-        PageId.REPORTS_GROUP_ASSESMENT_DETAILS, undefined,
-        );
         this.exptime = new Date().getTime();
         const csv: any = this.convertToCSV();
         const combinefilename = this.deviceId + '_' + this.groupinfo.gid + '_' + this.reportSummary.contentId + '_' + this.exptime + '.csv';

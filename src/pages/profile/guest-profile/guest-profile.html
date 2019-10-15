@@ -1,5 +1,19 @@
-<ion-content overflow-scroll="true" class="main-container avoid-bottom-tabs-space">
+<ion-header>
+  <ion-navbar>
+    <ion-title>{{ 'PROFILE_LW' | translate }}</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only (click)="showOverflowMenu($event)">
+        <ion-icon name="more" float-end></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content>
   <ion-refresher (ionRefresh)="refreshProfileData($event)"></ion-refresher>
+  <div *ngIf="showWarning" class="offline-message">
+    <span>{{'NEED_INTERNET_TO_CHANGE' | translate}} </span>
+  </div>
   <div text-center class="padding-top-10 padding-bottom-10">
     <p class="profile-name">
       <span class="user">{{profile?.handle}}</span>
@@ -9,8 +23,8 @@
     <p class="change-role" (click)="goToRoles()" text-uppercase>
       {{'CHANGE_ROLE' | translate }}
     </p>
-    <p *ngIf="profile?.profileType === ProfileType.TEACHER" class="user-type">{{'USER_TYPE_1' | translate }}</p>
-    <p *ngIf="profile?.profileType === ProfileType.STUDENT" class="user-type">{{'USER_TYPE_2' | translate }}</p>
+    <p *ngIf="profile?.profileType === 'TEACHER'" class="user-type">{{'USER_TYPE_1' | translate }}</p>
+    <p *ngIf="profile?.profileType === 'STUDENT'" class="user-type">{{'USER_TYPE_2' | translate }}</p>
   </div>
 
   <ion-list *ngIf="appGlobalService?.DISPLAY_FRAMEWORK_CATEGORIES_IN_PROFILE">
@@ -38,7 +52,7 @@
         </ion-col>
         <ion-col class="font-size-14rem page-content" col-6 text-end>
           <div *ngIf="profile?.syllabus?.length && profile?.board?.length">
-            <div class="ellipsis text-align">{{boards}} &lrm;</div>
+            <div class="ellipsis text-align">{{boards}}</div>
             <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
           </div>
           <div *ngIf="!profile.syllabus?.length || !profile?.board?.length" (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
@@ -90,7 +104,6 @@
     </ion-item>
   </ion-list>
   <div *ngIf="showSignInCard" class="signin-card-bg">
-    <sign-in-card [source]="'profile'" (valueChange)="buttonClick($event)"></sign-in-card>
+    <sign-in-card (valueChange)="buttonClick($event)"></sign-in-card>
   </div>
-  <div class="bottom-cover"></div>
 </ion-content>

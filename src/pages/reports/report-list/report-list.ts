@@ -1,13 +1,11 @@
-import { Component, Inject, NgZone } from '@angular/core';
-import { LoadingController, NavController, NavParams } from 'ionic-angular';
+import { Component, NgZone } from '@angular/core';
+import { NavController, NavParams, LoadingController } from 'ionic-angular';
 import { GroupReportListPage } from '../group-report-list/group-report-list';
-import { LearnerAssessmentSummary, ReportSummary, SummarizerService, SummaryRequest, TelemetryObject } from 'sunbird-sdk';
+import { ReportService, ReportSummary, ContentService, SummarizerContentFilterCriteria, ImpressionType, Environment,
+    PageId, InteractType, InteractSubtype, ObjectType, TelemetryObject } from 'sunbird';
 import { UserReportPage } from '../user-report/user-report';
+import { ContentType } from '../../../app/app.constant';
 import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
-import {
-    Environment, ImpressionType, InteractSubtype, InteractType, ObjectType, PageId
-} from '../../../service/telemetry-constants';
-import { AppHeaderService } from '@app/service';
 
 @Component({
     selector: 'group-list-page',
@@ -19,24 +17,21 @@ export class ReportListPage {
     isFromGroups: boolean;
     uids: Array<string>;
     listOfUsers;
-    listOfReports: Array<LearnerAssessmentSummary> = [];
+    listOfReports: Array<ReportSummary> = [];
     groupinfo: any;
     handle: string;
-    assessment: {};
-    reportSummary: ReportSummary;
 
     constructor(private navCtrl: NavController,
         private navParams: NavParams,
         private loading: LoadingController,
-        @Inject('SUMMARIZER_SERVICE') public summarizerService: SummarizerService,
+        public reportService: ReportService,
         public ngZone: NgZone,
-        private telemetryGeneratorService: TelemetryGeneratorService,
-        private headerService: AppHeaderService) {
+        private contentService: ContentService,
+        private telemetryGeneratorService: TelemetryGeneratorService) {
 
     }
 
     ionViewDidLoad() {
-        this.headerService.hideHeader();
         this.telemetryGeneratorService.generateImpressionTelemetry(
             ImpressionType.VIEW, '',
             PageId.REPORTS_ASSESMENT_CONTENT_LIST,
@@ -53,24 +48,32 @@ export class ReportListPage {
         });
         loader.present();
 
-        const summaryRequest: SummaryRequest = {
-            qId: '',
+
+        const requestParams: SummarizerContentFilterCriteria = {
+            contentTypes: ContentType.FOR_LIBRARY_TAB,
             uids: this.uids,
-            contentId: '',
-            hierarchyData: null,
+            attachContentAccess: true,
+            attachFeedback: true
         };
-        this.summarizerService.getSummary(summaryRequest).toPromise()
-            .then((list: LearnerAssessmentSummary[]) => {
-                this.ngZone.run(() => {
-                    loader.dismiss();
-                    this.listOfReports = list;
-                });
+        this.contentService.getLocalContents(requestParams)
+            .then(contentList => {
+                this.reportService.getListOfReports(this.uids)
+                    .then(list => {
+                        this.ngZone.run(() => {
+                            loader.dismiss();
+                            this.listOfReports = list;
+                        });
+                    })
+                    .catch(err => {
+                        loader.dismiss();
+                    });
             })
             .catch(err => {
-                console.log('getsummary error :', err);
                 loader.dismiss();
             });
+
     }
+
 
     formatTime(time: number): string {
         const mm = Math.floor(time / 60);
@@ -80,7 +83,9 @@ export class ReportListPage {
     }
 
     goToGroupReportsList(report: ReportSummary) {
-        const telemetryObject = new TelemetryObject(report.contentId, ObjectType.CONTENT, undefined);
+        const telemetryObject: TelemetryObject = new TelemetryObject();
+        telemetryObject.id = report.contentId;
+        telemetryObject.type = ObjectType.CONTENT;
 
         this.telemetryGeneratorService.generateInteractTelemetry(
             InteractType.TOUCH,

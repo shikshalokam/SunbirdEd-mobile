@@ -1,4 +1,4 @@
-import {CollectionDetailsEtbPage} from '@app/pages/collection-details-etb/collection-details-etb';
+import { CollectionDetailsEtbPage } from '@app/pages/collection-details-etb/collection-details-etb';
 import {
   appGlobalServiceMock,
   buildParamServiceMock,
@@ -15,68 +15,38 @@ import {
   socialSharingMock,
   telemetryGeneratorServiceMock,
   translateServiceMock,
-  zoneMock,
-  comingSoonMessageServiceMock
+  zoneMock
 } from '@app/__tests__/mocks';
-import {mockRes} from '@app/pages/collection-details-etb/collection-details-etb.spec.data';
-import {ShareUrl} from '@app/app';
-import {EnrolledCourseDetailsPage} from '@app/pages/enrolled-course-details';
-import {ContentDetailsPage} from '@app/pages/content-details/content-details';
+import { mockRes } from '@app/pages/collection-details-etb/collection-details-etb.spec.data';
+import { ShareUrl } from '@app/app';
+import { EnrolledCourseDetailsPage } from '@app/pages/enrolled-course-details';
+import { ContentDetailsPage } from '@app/pages/content-details/content-details';
 import 'jest';
-import { utilityServiceMock,
-   viewControllerMock,
-   toastControllerMock,
-   fileSizePipeMock,
-   headerServiceMock,
-   contentShareHandlerMock,
-   eventBusServiceMock,
-   profileServiceMock,
-   storageServiceMock} from '../../__tests__/mocks';
 
 describe('CollectionDetailsPage Component', () => {
   let collectionDetailsPage: CollectionDetailsEtbPage;
 
   beforeEach(() => {
     appGlobalServiceMock.isUserLoggedIn.mockReturnValue(true);
-    // buildParamServiceMock.getBuildConfigParam.mockResolvedValue('SOME_URL');
+    buildParamServiceMock.getBuildConfigParam.mockResolvedValue('SOME_URL');
 
-    collectionDetailsPage = new CollectionDetailsEtbPage(
-      contentServiceMock as any,
-      eventBusServiceMock as any,
-      profileServiceMock as any,
-      storageServiceMock as any,
-      navCtrlMock as any,
-      navParamsMock as any,
-      zoneMock as any,
-      eventsMock as any,
-      popoverCtrlMock as any,
-      platformMock as any,
-      translateServiceMock as any,
-      socialSharingMock as any,
-      appGlobalServiceMock as any,
-      commonUtilServiceMock as any,
-      telemetryGeneratorServiceMock as any,
-      courseUtilServiceMock as any,
-      utilityServiceMock as any,
-      viewControllerMock as any,
-      toastControllerMock as any,
-      fileSizePipeMock as any,
-      headerServiceMock as any,
-      comingSoonMessageServiceMock as any,
-      contentShareHandlerMock as any
-      );
+    collectionDetailsPage = new CollectionDetailsEtbPage(navCtrlMock as any, navParamsMock as any,
+      contentServiceMock as any, zoneMock as any, eventsMock as any, popoverCtrlMock as any, fileUtilMock as any,
+      platformMock as any, translateServiceMock as any, socialSharingMock as any, shareUtilMock as any,
+      buildParamServiceMock as any, appGlobalServiceMock as any, commonUtilServiceMock as any,
+      telemetryGeneratorServiceMock as any, courseUtilServiceMock as any);
 
     jest.resetAllMocks();
   });
 
   it('should create a valid instance of CollectionDetailsPage', () => {
-    expect(collectionDetailsPage).toBeTruthy();
+    expect(collectionDetailsPage).not.toBeFalsy();
   });
 
-  it.only('should set content details', () => {
+  it('should set content details', () => {
     // arrange
     spyOn(collectionDetailsPage, 'resetVariables').and.stub();
-    spyOn(collectionDetailsPage, 'subscribeSdkEvent').and.stub();
+    spyOn(collectionDetailsPage, 'subscribeGenieEvent').and.stub();
     spyOn(collectionDetailsPage, 'setContentDetails').and.stub();
 
     navParamsMock.get.mockImplementation((p: string) => {
@@ -95,7 +65,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.setContentDetails).toHaveBeenCalledWith('SOME_IDENTIFIER', true);
   });
 
-  it.only('should extract content details api response: when content locally available', (done) => {
+  it('should extract content details api response: when content locally available', (done) => {
     // arrange
     spyOn(collectionDetailsPage, 'importContent').and.stub();
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
@@ -199,7 +169,7 @@ describe('CollectionDetailsPage Component', () => {
     collectionDetailsPage.cardData = { hierarchyInfo: undefined };
 
     // act
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
 
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.importContentDownloadProgressResponse));
@@ -625,7 +595,7 @@ describe('CollectionDetailsPage Component', () => {
   });
 
   it('should update the download progress when download progress event ' +
-    'comes when subscribeSdkEvent()', () => {
+    'comes when subscribeGenieEvent()', () => {
       // arrange
       collectionDetailsPage.cardData = collectionDetailsPage.contentDetail = {
         'contentType': 'Collection',
@@ -633,7 +603,7 @@ describe('CollectionDetailsPage Component', () => {
       };
 
       // act
-    collectionDetailsPage.subscribeSdkEvent();
+      collectionDetailsPage.subscribeGenieEvent();
       eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
         JSON.stringify(mockRes.downloadProgressEventSample1));
 
@@ -643,7 +613,7 @@ describe('CollectionDetailsPage Component', () => {
       expect(collectionDetailsPage.downloadProgress).toBe(10);
     });
 
-  it('should update the progress to 0 if API gives response -1 when subscribeSdkEvent()', () => {
+  it('should update the progress to 0 if API gives response -1 when subscribeGenieEvent()', () => {
     // arrange
     collectionDetailsPage.cardData = collectionDetailsPage.contentDetail = {
       'contentType': 'Collection',
@@ -651,7 +621,7 @@ describe('CollectionDetailsPage Component', () => {
     };
 
     // act
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.downloadProgressEventSample2));
 
@@ -661,7 +631,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.downloadProgress).toBe(0);
   });
 
-  it('subscribeSdkEvent() should  dismiss overlay if download progress is 100', () => {
+  it('subscribeGenieEvent() should  dismiss overlay if download progress is 100', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -674,7 +644,7 @@ describe('CollectionDetailsPage Component', () => {
     // act
     collectionDetailsPage.isDownloadStarted = true;
     collectionDetailsPage.queuedIdentifiers = ['SAMPLE_ID'];
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.importCompleteEventSample));
 
@@ -685,7 +655,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.isDownloadCompleted).toBe(true);
   });
 
-  it('#subscribeSdkEvent should  load all child contents when download is complete', () => {
+  it('#subscribeGenieEvent should  load all child contents when download is complete', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -698,7 +668,7 @@ describe('CollectionDetailsPage Component', () => {
     // act
     collectionDetailsPage.isDownloadStarted = true;
     collectionDetailsPage.queuedIdentifiers = ['SAMPLE_ID'];
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.importCompleteEventSample));
 
@@ -710,7 +680,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.updateSavedResources).toHaveBeenCalled();
   });
 
-  it('subscribeSdkEvent() should  update the course if update event is available ', () => {
+  it('subscribeGenieEvent() should  update the course if update event is available ', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -726,7 +696,7 @@ describe('CollectionDetailsPage Component', () => {
     collectionDetailsPage.isDownloadStarted = false;
     collectionDetailsPage.identifier = 'SAMPLE_ID';
     collectionDetailsPage.parentContent = { 'identifier': 'PARENT_ID' };
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.updateEventSample));
 
@@ -738,7 +708,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.importContent).toHaveBeenCalledWith(['PARENT_ID'], false);
   });
 
-  it('subscribeSdkEvent() should  invoke setContentDetails if  update event is available ', () => {
+  it('subscribeGenieEvent() should  invoke setContentDetails if  update event is available ', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -754,7 +724,7 @@ describe('CollectionDetailsPage Component', () => {
     collectionDetailsPage.queuedIdentifiers = ['SAMPLE_ID'];
     collectionDetailsPage.isDownloadStarted = false;
     collectionDetailsPage.identifier = 'SAMPLE_ID';
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.updateEventSample));
 
@@ -765,7 +735,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.setContentDetails).toHaveBeenCalledWith('SAMPLE_ID', false);
   });
 
-  it('subscribeSdkEvent() should  invoke setContentDetials when import is complete', () => {
+  it('subscribeGenieEvent() should  invoke setContentDetials when import is complete', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -782,7 +752,7 @@ describe('CollectionDetailsPage Component', () => {
     collectionDetailsPage.queuedIdentifiers = ['SAMPLE_ID'];
     collectionDetailsPage.isDownloadStarted = false;
     collectionDetailsPage.identifier = 'SAMPLE_ID';
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.importCompleteEventSample));
 
@@ -792,7 +762,7 @@ describe('CollectionDetailsPage Component', () => {
     expect(collectionDetailsPage.setContentDetails).toHaveBeenCalledWith('SAMPLE_ID', false);
   });
 
-  it('subscribeSdkEvent() should  set child contents when import is complete', () => {
+  it('subscribeGenieEvent() should  set child contents when import is complete', () => {
     // arrange
     spyOn(collectionDetailsPage, 'setChildContents').and.stub();
     spyOn(collectionDetailsPage, 'updateSavedResources').and.stub();
@@ -807,7 +777,7 @@ describe('CollectionDetailsPage Component', () => {
     collectionDetailsPage.queuedIdentifiers = ['SAMPLE_ID'];
     collectionDetailsPage.isDownloadStarted = false;
     collectionDetailsPage.isUpdateAvailable = false;
-    collectionDetailsPage.subscribeSdkEvent();
+    collectionDetailsPage.subscribeGenieEvent();
     eventsMock.subscribe.mock.calls[0][1].call(collectionDetailsPage,
       JSON.stringify(mockRes.importCompleteEventSample));
 

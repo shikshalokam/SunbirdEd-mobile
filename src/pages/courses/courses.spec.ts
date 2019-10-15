@@ -1,11 +1,23 @@
 import { CoursesPage } from './courses';
-import { PageAssembleCriteria, PageAssembleFilter, PageId, ProfileType } from 'sunbird';
+import { Environment, ImpressionType, PageAssembleCriteria, PageAssembleFilter, PageId, ProfileType } from 'sunbird';
 import { mockRes as CourseBatchesMock } from '@app/pages/course-batches/course-batches.spec.data';
 import { mockRes as CourseMock } from '../courses/courses.spec.data';
 import {
-  appGlobalServiceMock, appVersionMock, commonUtilServiceMock, contentServiceMock, courseServiceMock,
-  courseUtilServiceMock, eventsMock, formAndFrameworkUtilServiceMock, navCtrlMock, pageAssembleServiceMock,
-  popoverCtrlMock, sharedPreferencesMock, sunbirdQRScannerMock, telemetryGeneratorServiceMock, zoneMock
+  appGlobalServiceMock,
+  appVersionMock,
+  commonUtilServiceMock,
+  contentServiceMock,
+  courseServiceMock,
+  courseUtilServiceMock,
+  eventsMock,
+  formAndFrameworkUtilServiceMock,
+  navCtrlMock,
+  pageAssembleServiceMock,
+  popoverCtrlMock,
+  sharedPreferencesMock,
+  sunbirdQRScannerMock,
+  telemetryGeneratorServiceMock,
+  zoneMock
 } from '@app/__tests__/mocks';
 import { ContentType } from '@app/app';
 import { SearchPage } from '@app/pages/search';
@@ -51,6 +63,24 @@ describe('CoursesPage', () => {
       expect(coursesPage).toBeTruthy();
       expect(coursesPage.selectedLanguage = 'SAMPLE_LANGUAGE');
       expect(coursesPage.appLabel = 'SAMPLE_APP_NAME');
+      done();
+    }, 0);
+  });
+
+  it('should should show highLighter on app start for fresh install', (done) => {
+    // arrange
+    sharedPreferencesMock.getString.mockResolvedValue('true');
+
+    // act
+    coursesPage.ionViewDidLoad();
+
+    // assert
+    setTimeout(() => {
+      expect(telemetryGeneratorServiceMock.generateImpressionTelemetry).toHaveBeenCalledWith(ImpressionType.VIEW, '',
+        PageId.COURSES,
+        Environment.HOME);
+      expect(appGlobalServiceMock.generateConfigInteractEvent).toHaveBeenCalledWith(PageId.COURSES, false);
+      expect(sharedPreferencesMock.putString).toHaveBeenCalledWith('show_app_walkthrough_screen', 'false');
       done();
     }, 0);
   });
@@ -111,7 +141,7 @@ describe('CoursesPage', () => {
   it('should invoke getEnrolledCourses when enrollcourse event is fired', () => {
     // arrange
     spyOn(coursesPage, 'getEnrolledCourses').and.stub();
-    const data = { batchId: '213123123' };
+    const data = { batchId: '213123123'};
 
     // act
     coursesPage.subscribeUtilityEvents();
@@ -318,7 +348,7 @@ describe('CoursesPage', () => {
     coursesPage.isFilterApplied = false;
 
     // act
-    coursesPage.getPopularAndLatestCourses(false, criteria);
+    coursesPage.getPopularAndLatestCourses(criteria);
 
     // assert
     expect(pageAssembleServiceMock.getPageAssemble).toHaveBeenCalledWith(criteria);
@@ -497,7 +527,7 @@ describe('CoursesPage', () => {
       // arrange
       contentServiceMock.getContentDetail.mockResolvedValue(CourseMock.sampleContentDetailsResponseNonLocal);
       spyOn(coursesPage, 'importContent').and.stub();
-      spyOn(coursesPage, 'subscribeSdkEvent').and.stub();
+      spyOn(coursesPage, 'subscribeGenieEvent').and.stub();
 
       // act
       coursesPage.getContentDetails(sampleContent);
@@ -506,7 +536,7 @@ describe('CoursesPage', () => {
       setTimeout(() => {
         expect(coursesPage.showOverlay).toBe(true);
         expect(coursesPage.importContent).toHaveBeenCalledWith(['do_sample'], false);
-        expect(coursesPage.subscribeSdkEvent).toHaveBeenCalled();
+        expect(coursesPage.subscribeGenieEvent).toHaveBeenCalled();
         done();
       }, 0);
     });
@@ -539,7 +569,7 @@ describe('CoursesPage', () => {
       // assert
       setTimeout(() => {
         zoneMock.run.mock.calls[0][0].call(coursesPage);
-        expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('COURSE_NOT_AVAILABLE');
+        expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_CONTENT_NOT_AVAILABLE');
         expect(coursesPage.showOverlay).toBe(false);
         done();
       }, 0);
@@ -556,7 +586,7 @@ describe('CoursesPage', () => {
       // assert
       setTimeout(() => {
         zoneMock.run.mock.calls[0][0].call(coursesPage);
-        expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('COURSE_NOT_AVAILABLE');
+        expect(commonUtilServiceMock.showToast).toHaveBeenCalledWith('ERROR_CONTENT_NOT_AVAILABLE');
         expect(coursesPage.showOverlay).toBe(false);
         done();
       }, 0);
@@ -564,10 +594,10 @@ describe('CoursesPage', () => {
   });
 
 
-  describe('should handle scenarios for subscribeSdkEvent()', () => {
+  describe('should handle scenarios for subscribeGenieEvent()', () => {
     it('should update the download progress on download progress', () => {
       // act
-      coursesPage.subscribeSdkEvent();
+      coursesPage.subscribeGenieEvent();
       eventsMock.subscribe.mock.calls[0][1].call(coursesPage, CourseMock.downloadProgressEventSample1);
       zoneMock.run.mock.calls[0][0].call(coursesPage);
 
@@ -578,7 +608,7 @@ describe('CoursesPage', () => {
 
     it('should update the download progress to 0 if from event its coming as -1', () => {
       // act
-      coursesPage.subscribeSdkEvent();
+      coursesPage.subscribeGenieEvent();
       eventsMock.subscribe.mock.calls[0][1].call(coursesPage, CourseMock.downloadProgressEventSample2);
       zoneMock.run.mock.calls[0][0].call(coursesPage);
 
@@ -598,7 +628,7 @@ describe('CoursesPage', () => {
       coursesPage.downloadPercentage = 100;
 
       // act
-      coursesPage.subscribeSdkEvent();
+      coursesPage.subscribeGenieEvent();
       eventsMock.subscribe.mock.calls[0][1].call(coursesPage, CourseMock.importCompleteEvent);
       zoneMock.run.mock.calls[0][0].call(coursesPage);
 

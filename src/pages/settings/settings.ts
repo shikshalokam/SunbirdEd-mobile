@@ -1,32 +1,28 @@
-import { AppGlobalService, TelemetryGeneratorService, UtilityService, AppHeaderService } from '@app/service';
+import { AppGlobalService } from '@app/service';
 import { CommonUtilService } from './../../service/common-util.service';
-import { Component, Inject } from '@angular/core';
-import { Loading, NavController, PopoverController, ToastController } from 'ionic-angular';
+import { Component } from '@angular/core';
+import { NavController, DateTime } from 'ionic-angular';
 import { DatasyncPage } from './datasync/datasync';
 import { LanguageSettingsPage } from '../language-settings/language-settings';
 import { AboutUsPage } from './about-us/about-us';
 import { SocialSharing } from '@ionic-native/social-sharing';
-import { AppVersion } from '@ionic-native/app-version';
-import { PreferenceKey } from '../../app/app.constant';
-import { Environment, ImpressionType, InteractSubtype, InteractType, PageId, } from '../../service/telemetry-constants';
-import {
-  ContentService,
-  DeviceInfo,
-  ProfileService,
-  SharedPreferences,
-  TelemetryImpressionRequest,
-  AuthService,
-  OAuthSessionProvider,
-  SdkConfig,
-  ApiService,
-  MergeServerProfilesRequest
-} from 'sunbird-sdk';
-import { PermissionPage } from '../permission/permission';
-import { Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
-import { SbPopoverComponent } from '@app/component';
+import { AppVersion } from '@ionic-native/app-version';
+import {
+  SharedPreferences,
+  InteractType,
+  InteractSubtype,
+  ShareUtil,
+  Impression,
+  ImpressionType,
+  Environment,
+  PageId,
+  DeviceInfoService,
+  TelemetryService
+} from 'sunbird';
+import { generateInteractTelemetry, generateImpressionTelemetry } from '../../app/telemetryutil';
+import { PreferenceKey } from '../../app/app.constant';
 
-declare const cordova;
 const KEY_SUNBIRD_CONFIG_FILE_PATH = 'sunbird_config_file_path';
 const SUBJECT_NAME = 'support request';
 
@@ -42,39 +38,20 @@ export class SettingsPage {
   subjectDetails: string;
   shareAppLabel: string;
   appName: any;
-
-  public isUserLoggedIn$: Observable<boolean>;
-  public isNotDefaultChannelProfile$: Observable<boolean>;
-
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
-    @Inject('CONTENT_SERVICE') private contentService: ContentService,
-    @Inject('DEVICE_INFO') private deviceInfo: DeviceInfo,
-    @Inject('SHARED_PREFERENCES') private preferences: SharedPreferences,
-    @Inject('AUTH_SERVICE') private authService: AuthService,
-    @Inject('SDK_CONFIG') private sdkConfig: SdkConfig,
-    @Inject('API_SERVICE') private apiService: ApiService,
     private navCtrl: NavController,
     private appVersion: AppVersion,
     private socialSharing: SocialSharing,
-    private commonUtilService: CommonUtilService,
-    private appGlobalService: AppGlobalService,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private utilityService: UtilityService,
-    private headerService: AppHeaderService,
-    private toastCtrl: ToastController,
     private translate: TranslateService,
-    private popoverCtrl: PopoverController
-  ) {
-    this.isUserLoggedIn$ = this.authService.getSession()
-      .map((session) => !!session) as any;
-
-    this.isNotDefaultChannelProfile$ = this.profileService.isDefaultChannelProfile()
-      .map((isDefaultChannelProfile) => !isDefaultChannelProfile) as any;
-  }
+    private deviceInfoService: DeviceInfoService,
+    private preference: SharedPreferences,
+    private telemetryService: TelemetryService,
+    private shareUtil: ShareUtil,
+    private commonUtilService: CommonUtilService,
+    private appGlobalService: AppGlobalService
+  ) { }
 
   ionViewWillEnter() {
-    this.headerService.showHeaderWithBackButton();
     this.appVersion.getAppName()
       .then((appName) => {
         this.appName = appName;
@@ -84,24 +61,32 @@ export class SettingsPage {
 
 
   ionViewDidLoad() {
-    const telemetryImpressionRequest = new TelemetryImpressionRequest();
-    telemetryImpressionRequest.type = ImpressionType.VIEW;
-    telemetryImpressionRequest.pageId = PageId.SETTINGS;
-    telemetryImpressionRequest.env = Environment.SETTINGS;
-    this.telemetryGeneratorService.generateImpressionTelemetry(
+    const impression = new Impression();
+    impression.type = ImpressionType.VIEW;
+    impression.pageId = PageId.SETTINGS;
+    impression.env = Environment.SETTINGS;
+    this.telemetryService.impression(generateImpressionTelemetry(
       ImpressionType.VIEW, '',
       PageId.SETTINGS,
       Environment.SETTINGS, '', '', '',
       undefined,
       undefined
-    );
+    ));
   }
 
   ionViewDidEnter() {
     this.chosenLanguageString = this.commonUtilService.translateMessage('CURRENT_LANGUAGE');
-    this.preferences.getString(PreferenceKey.SELECTED_LANGUAGE).toPromise()
+    this.preference.getString(PreferenceKey.SELECTED_LANGUAGE)
       .then(value => {
         this.selectedLanguage = `${this.chosenLanguageString} : ${value}`;
+      });
+  }
+
+  ionViewDidLeave() {
+    (<any>window).supportfile.removeFile(
+      result => ({}),
+      error => {
+        console.error('error' + error);
       });
   }
 
@@ -121,7 +106,33 @@ export class SettingsPage {
     this.generateInteractTelemetry(InteractType.TOUCH, InteractSubtype.ABOUT_APP_CLICKED);
     this.navCtrl.push(AboutUsPage);
   }
-
+  sendMessage() {
+    this.generateInteractTelemetry(InteractType.TOUCH, InteractSubtype.SUPPORT_CLICKED);
+    this.deviceInfoService.getDeviceID().then((res: any) => {
+      this.deviceId = res;
+    }).catch((error: any) => {
+    });
+    (<any>window).supportfile.shareSunbirdConfigurations((result) => {
+      const loader = this.commonUtilService.getLoader();
+      loader.present();
+      this.preference.putString(KEY_SUNBIRD_CONFIG_FILE_PATH, JSON.parse(result));
+      this.preference.getString(KEY_SUNBIRD_CONFIG_FILE_PATH)
+        .then(val => {
+          loader.dismiss();
+          if (Boolean(val)) {
+            this.fileUrl = 'file://' + val;
+            this.subjectDetails = this.appName + ' ' + SUBJECT_NAME + '-' + this.deviceId;
+            this.socialSharing.shareViaEmail('', this.subjectDetails, [this.appGlobalService.SUPPORT_EMAIL], null, null, this.fileUrl)
+              .catch(error => {
+                console.error(error);
+              });
+          }
+        });
+    }, (error) => {
+      console.error('ERROR - ' + error);
+    });
+  }
+  // this.appGlobalService.APP_NAME
   shareApp() {
     const loader = this.commonUtilService.getLoader();
     loader.present();
@@ -129,148 +140,22 @@ export class SettingsPage {
     this.generateInteractTelemetry(InteractType.TOUCH, InteractSubtype.SHARE_APP_CLICKED);
     this.generateInteractTelemetry(InteractType.TOUCH, InteractSubtype.SHARE_APP_INITIATED);
 
-
-    this.utilityService.exportApk()
-      .then((filepath) => {
-        this.generateInteractTelemetry(InteractType.OTHER, InteractSubtype.SHARE_APP_SUCCESS);
-        loader.dismiss();
-        this.socialSharing.share('', '', 'file://' + filepath, '');
-      }).catch((error) => {
-        loader.dismiss();
-        console.log(error);
-      });
+    this.shareUtil.exportApk(filePath => {
+      this.generateInteractTelemetry(InteractType.OTHER, InteractSubtype.SHARE_APP_SUCCESS);
+      loader.dismiss();
+      this.socialSharing.share('', '', 'file://' + filePath, '');
+    }, error => {
+      loader.dismiss();
+    });
   }
 
   generateInteractTelemetry(interactionType, interactSubtype) {
-    this.telemetryGeneratorService.generateInteractTelemetry(
+    this.telemetryService.interact(generateInteractTelemetry(
       interactionType, interactSubtype,
       PageId.SETTINGS,
       Environment.SETTINGS, null,
       undefined,
       undefined
-    );
-  }
-
-  showPermissionPage() {
-    this.navCtrl.push(PermissionPage, { changePermissionAccess: true });
-  }
-
-  async showMergeAccountConfirmationPopup() {
-    const confirm = this.popoverCtrl.create(SbPopoverComponent, {
-      isNotShowCloseIcon: false,
-      sbPopoverHeading: this.commonUtilService.translateMessage('ACCOUNT_MERGE_CONFIRMATION_HEADING'),
-      sbPopoverHtmlContent: '<div class="sb-popover-content text-left font-weight-normal padding-left-10 padding-right-10">'
-        + this.commonUtilService.translateMessage('ACCOUNT_MERGE_CONFIRMATION_CONTENT', await this.appVersion.getAppName()) + '</div>',
-      actionsButtons: [
-        {
-          btntext: this.commonUtilService.translateMessage('CANCEL'),
-          btnClass: 'popover-button-cancel',
-        },
-        {
-          btntext: this.commonUtilService.translateMessage('ACCOUNT_MERGE_CONFIRMATION_BTN_MERGE'),
-          btnClass: 'popover-button-allow',
-        }
-      ],
-      handler: (selectedButton: string) => {
-        if (selectedButton === this.commonUtilService.translateMessage('CANCEL')) {
-          confirm.dismiss();
-        } else if (selectedButton === this.commonUtilService.translateMessage('ACCOUNT_MERGE_CONFIRMATION_BTN_MERGE')) {
-          confirm.dismiss();
-          this.mergeAccount();
-        }
-      }
-    }, {
-      cssClass: 'sb-popover primary',
-    });
-
-    confirm.present();
-  }
-
-  private mergeAccount() {
-    let loader: Loading | undefined;
-
-    this.telemetryGeneratorService.generateInteractTelemetry(
-      InteractType.TOUCH,
-      InteractSubtype.MERGE_ACCOUNT_INITIATED,
-      Environment.SETTINGS,
-      PageId.SETTINGS
-    );
-
-    this.authService.getSession()
-      .map((session) => session!)
-      .mergeMap(async (mergeToProfileSession) => {
-        const mergeFromProfileSessionProvider = new OAuthSessionProvider(this.sdkConfig.apiConfig, this.apiService, 'merge');
-        const mergeFromProfileSession = await mergeFromProfileSessionProvider.provide();
-
-        return {
-          from: {
-            userId: mergeFromProfileSession.userToken,
-            accessToken: mergeFromProfileSession.access_token
-          },
-          to: {
-            userId: mergeToProfileSession.userToken,
-            accessToken: mergeToProfileSession.access_token
-          }
-        } as MergeServerProfilesRequest;
-      })
-      .do(() => {
-        loader = this.commonUtilService.getLoader();
-        loader.present();
-      })
-      .mergeMap((mergeServerProfilesRequest) => {
-        return this.profileService.mergeServerProfiles(mergeServerProfilesRequest)
-      })
-      .catch(async (e) => {
-        console.error(e);
-
-        if (e instanceof Error && e['code'] === 'IN_APP_BROWSER_EXIT_ERROR') {
-          throw e;
-        }
-
-        this.telemetryGeneratorService.generateInteractTelemetry(
-          InteractType.OTHER,
-          InteractSubtype.MERGE_ACCOUNT_FAILED,
-          Environment.SETTINGS,
-          PageId.SETTINGS
-        );
-
-        const toast = this.toastCtrl.create({
-          message: await this.translate.get('ACCOUNT_MERGE_FAILED').toPromise(),
-          duration: 2000,
-          position: 'bottom'
-        });
-        await toast.present();
-
-        throw e;
-      })
-      .do(async () => {
-        this.telemetryGeneratorService.generateInteractTelemetry(
-          InteractType.OTHER,
-          InteractSubtype.MERGE_ACCOUNT_SUCCESS,
-          Environment.SETTINGS,
-          PageId.SETTINGS
-        );
-
-        const successPopover = this.popoverCtrl.create(SbPopoverComponent, {
-          sbPopoverHeading: this.commonUtilService.translateMessage('ACCOUNT_MERGE_SUCCESS_POPOVER_HEADING'),
-          icon: null,
-          actionsButtons: [
-            {
-              btntext: this.commonUtilService.translateMessage('OKAY'),
-              btnClass: 'sb-btn sb-btn-sm  sb-btn-outline-info'
-            },
-          ],
-          sbPopoverContent: this.commonUtilService.translateMessage('ACCOUNT_MERGE_SUCCESS_POPOVER_CONTENT')
-        }, {
-          cssClass: 'sb-popover',
-        });
-        await successPopover.present();
-      })
-      .finally(() => {
-        if (loader) {
-          loader.dismiss();
-        }
-      })
-      .subscribe();
+    ));
   }
 }

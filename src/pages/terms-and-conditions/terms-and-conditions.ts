@@ -1,28 +1,26 @@
-import {Component, Inject} from '@angular/core';
-import {Loading, LoadingController, NavParams, Platform} from 'ionic-angular';
-import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.service';
-import {LogoutHandlerService} from '@app/service/handlers/logout-handler.service';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {CommonUtilService, TelemetryGeneratorService, AppHeaderService} from '@app/service';
-import {TranslateService} from '@ngx-translate/core';
-import {AppVersion} from '@ionic-native/app-version';
-import {Environment, ImpressionType, InteractSubtype, InteractType, PageId} from '../../service/telemetry-constants';
-import {ProfileService, ServerProfile} from 'sunbird-sdk';
-import {ProfileConstants} from '../../app';
+import { Component } from '@angular/core';
+import { Loading, LoadingController, NavParams, Platform } from 'ionic-angular';
+import { TncUpdateHandlerService } from '@app/service/handlers/tnc-update-handler.service';
+import { LogoutHandlerService } from '@app/service/handlers/logout-handler.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { CommonUtilService, TelemetryGeneratorService } from '@app/service';
+import { TranslateService } from '@ngx-translate/core';
+import { AppVersion } from '@ionic-native/app-version';
+import { ImpressionType, PageId, Environment, InteractType, InteractSubtype } from 'sunbird';
 
 @Component({
   selector: 'page-terms-and-conditions',
   templateUrl: 'terms-and-conditions.html',
 })
 export class TermsAndConditionsPage {
+
   public tncLatestVersionUrl: SafeUrl;
-  public termsAgreed = false;
+  public shouldAcceptanceButtonEnabled = false;
   private loading?: Loading;
   private unregisterBackButtonAction?: Function;
-  private userProfileDetails: ServerProfile;
+  private userProfileDetails;
 
   constructor(
-    @Inject('PROFILE_SERVICE') private profileService: ProfileService,
     private navParams: NavParams,
     private platform: Platform,
     private loadingCtrl: LoadingController,
@@ -32,14 +30,12 @@ export class TermsAndConditionsPage {
     private commonUtilService: CommonUtilService,
     private translateService: TranslateService,
     private appVersion: AppVersion,
-    private telemetryGeneratorService: TelemetryGeneratorService,
-    private headerService: AppHeaderService
+    private telemetryGeneratorService: TelemetryGeneratorService
   ) {
   }
 
   public async ionViewDidLoad() {
-    this.headerService.hideHeader();
-    this.userProfileDetails = (await this.profileService.getActiveSessionProfile({requiredFields: ProfileConstants.REQUIRED_FIELDS}).toPromise()).serverProfile;
+    this.userProfileDetails = this.navParams.get('userProfileDetails');
 
     this.tncLatestVersionUrl = this.sanitizer
       .bypassSecurityTrustResourceUrl(this.userProfileDetails.tncLatestVersionUrl);
@@ -55,12 +51,6 @@ export class TermsAndConditionsPage {
     await this.createAndPresentLoadingSpinner();
   }
 
-  public ionViewWillLeave() {
-    if (this.unregisterBackButtonAction) {
-      this.unregisterBackButtonAction();
-    }
-  }
-
   public onIFrameLoad() {
     this.telemetryGeneratorService.generateImpressionTelemetry(
       ImpressionType.VIEW, '',
@@ -72,9 +62,9 @@ export class TermsAndConditionsPage {
     }
   }
 
-  public onConfirmationChange(event) {
+  public onConfirmationChange(change: boolean) {
     const valuesMap = new Map();
-    valuesMap['isChecked'] = event.checked;
+    valuesMap['isChecked'] = change;
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.ACCEPTANCE_CHECKBOX_CLICKED,
@@ -83,7 +73,7 @@ export class TermsAndConditionsPage {
       undefined,
       valuesMap
     );
-    this.termsAgreed = event.checked;
+    this.shouldAcceptanceButtonEnabled = change;
   }
 
   public async onAcceptanceClick(): Promise<void> {
