@@ -363,12 +363,14 @@ export class ContentDetailsPage {
       paramsMap['IsPlayed'] = 'N';
       this.commonUtilService.showToast('TRY_BEFORE_RATING');
     }
+    //Added by sriram -- To be tested
+    const telemetryObject: TelemetryObject = { id: this.objId, type: this.objType, version: this.objVer };
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.RATING_CLICKED,
       Environment.HOME,
       PageId.CONTENT_DETAIL,
-      undefined,
+      telemetryObject,//earlier undefined
       paramsMap,
       this.objRollup,
       this.corRelationList);
