@@ -10,7 +10,7 @@ CORDOVA_COUNTER=0
 SUNBIRD_CORDOVA_COUNTER=0
 
 # Pass build branch as input
-buildBranch="$1"
+buildBranch="release-1.14.0"
 
 file="./build_config"
 while IFS="=" read -r key value; do
@@ -56,9 +56,13 @@ ionic cordova plugin add https://github.com/project-sunbird/cordova-plugin-genie
 
 rm -rf platforms
 
+#ensure that android version is kept at 8.0.0
+#heap value fixed to 4K
 NODE_OPTIONS=--max-old-space-size=4096 ionic cordova platforms add android@8.0.0
 
-NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android --prod --release --buildConfig ./buildConfig/build.json
+#for debug builds. have commented out the prod settings
+NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android
+#NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android --prod --release --buildConfig ./buildConfig/build.json
 
 
 
