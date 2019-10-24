@@ -69,12 +69,11 @@ android {
     }
 
     defaultConfig {
-        minSdkVersion 16
-        ext.buildNumber = System.getenv("TRAVIS_BUILD_NUMBER") ?: "0"
-        versionName "2.3.$ext.buildNumber"
+        minSdkVersion 21
+        ext.buildNumber = System.getenv("TRAVIS_BUILD_NUMBER") ?: "local"
+        versionName "2.0.$ext.buildNumber"
         manifestPlaceholders = [fabricKey: "${release_fabric_api_key}", fabricSecret: "${release_fabric_api_secret}"]
         resValue("string", "_app_name", "${app_name}")
-        multiDexEnabled true
 
         buildConfigField "boolean", "DISPLAY_ONBOARDING_CARDS", "${display_onboarding_cards}"
         buildConfigField "boolean", "DISPLAY_FRAMEWORK_CATEGORIES_IN_PROFILE", "${display_framework_categories_in_profile}"
@@ -115,9 +114,7 @@ android {
          dev {
             applicationId "${dev_app_id}"
             resValue("string", "deeplink_base_url", "${dev_deeplink_base_url}")
-            resValue("string", "custom_scheme_url", "${dev_custom_scheme}")
             buildConfigField 'String', 'BASE_URL', "\"${dev_base_url}\""
-            buildConfigField 'String', 'MERGE_ACCOUNT_BASE_URL', "\"${dev_merge_account_base_url}\""
             buildConfigField 'String', 'TELEMETRY_BASE_URL', "\"${dev_base_url+"/api/data/v1"}\""
             buildConfigField 'String', 'LANGUAGE_PLATFORM_BASE_URL', "\"${dev_base_url+"/api/language/v1"}\""
             buildConfigField 'String', 'TERMS_BASE_URL', "\"${dev_base_url+"/api/domain/v1"}\""
@@ -157,9 +154,7 @@ android {
             applicationId "${staging_app_id}"
             flavorDimensions "default"
             resValue("string", "deeplink_base_url", "${staging_deeplink_base_url}")
-            resValue("string", "custom_scheme_url", "${staging_custom_scheme}")
             buildConfigField 'String', 'BASE_URL', "\"${staging_base_url}\""
-            buildConfigField 'String', 'MERGE_ACCOUNT_BASE_URL', "\"${staging_merge_account_base_url}\""
             buildConfigField 'String', 'TELEMETRY_BASE_URL', "\"${staging_base_url+"/api/data/v1"}\""
             buildConfigField 'String', 'LANGUAGE_PLATFORM_BASE_URL', "\"${staging_base_url+"/api/language/v1"}\""
             buildConfigField 'String', 'TERMS_BASE_URL', "\"${staging_base_url+"/api/domain/v1"}\""
@@ -198,9 +193,7 @@ android {
             applicationId "${production_app_id}"
             flavorDimensions "default"
             resValue("string", "deeplink_base_url", "${production_deeplink_base_url}")
-            resValue("string", "custom_scheme_url", "${production_custom_scheme}")
             buildConfigField 'String', 'BASE_URL', "\"${production_base_url}\""
-            buildConfigField 'String', 'MERGE_ACCOUNT_BASE_URL', "\"${production_merge_account_base_url}\""
             buildConfigField 'String', 'TELEMETRY_BASE_URL', "\"${production_base_url+"/api/data/v1"}\""
             buildConfigField 'String', 'LANGUAGE_PLATFORM_BASE_URL', "\"${production_base_url+"/api/language/v1"}\""
             buildConfigField 'String', 'TERMS_BASE_URL', "\"${production_base_url+"/api/domain/v1"}\""
@@ -239,38 +232,26 @@ android {
     task myclean(type: Delete,overwrite: true) {
         def data
         if (System.properties['os.name'].toLowerCase().contains('windows')) {
-             data = new File( "$rootDir\\app\\src\\main\\assets\\www\\assets\\data" )
+             data = new File( "$rootDir\\app\\src\\main\\assets\\www\\sunbird\\assets\\data" )
         } else {
-             data = new File( "$rootDir/app/src/main/assets/www/assets/data" )
+             data = new File( "$rootDir/app/src/main/assets/www/sunbird/assets/data" )
         }
 
         if( data.exists() ) {
             delete data
             printf "deleted data"
         }
-
-    }
-
-    task copyDirNotificationConfig(type: Copy,overwrite: true) {
-         if (System.properties['os.name'].toLowerCase().contains('windows')){
-                from "$rootDir\\app\\data\\notificationconfig"
-                into "$rootDir\\app\\src\\main\\assets\\www\\assets\\data"
-                println "inside copydir notificationconfig windows OS"
-            } else {
-                from "$rootDir/app/data/notificationconfig"
-                into "$rootDir/app/src/main/assets/www/assets/data"
-                println "inside copydir notificationconfig linux OS"
-            }
+       
     }
 
     task copyDirDev(type: Copy,overwrite: true) {
          if (System.properties['os.name'].toLowerCase().contains('windows')){
                 from "$rootDir\\app\\data\\dev"
-                into "$rootDir\\app\\src\\main\\assets\\www\\assets\\data"
+                into "$rootDir\\app\\src\\main\\assets\\www\\sunbird\\assets\\data"
                 println "inside copydir dev windows OS"
             } else {
                 from "$rootDir/app/data/dev"
-                into "$rootDir/app/src/main/assets/www/assets/data"
+                into "$rootDir/app/src/main/assets/www/sunbird/assets/data"
                 println "inside copydir dev linux OS"
             }
     }
@@ -278,36 +259,36 @@ android {
     task copyDirStaging(type: Copy,overwrite: true) {
             if (System.properties['os.name'].toLowerCase().contains('windows')){
                 from "$rootDir\\app\\data\\staging"
-                into "$rootDir\\app\\src\\main\\assets\\www\\assets\\data"
+                into "$rootDir\\app\\src\\main\\assets\\www\\sunbird\\assets\\data"
                 println "inside copydir staging windows OS"
             } else {
                 from "$rootDir/app/data/staging"
-                into "$rootDir/app/src/main/assets/www/assets/data"
+                into "$rootDir/app/src/main/assets/www/sunbird/assets/data"
                 println "inside copydir staging linux OS"
             }
-
+       
     }
 
     task copyDirProd(type: Copy,overwrite: true) {
         if (System.properties['os.name'].toLowerCase().contains('windows')){
                 from "$rootDir\\app\\data\\prod"
-                into "$rootDir\\app\\src\\main\\assets\\www\\assets\\data"
+                into "$rootDir\\app\\src\\main\\assets\\www\\sunbird\\assets\\data"
                 println "inside copydir prod windows OS"
             } else {
                 from "$rootDir/app/data/prod"
-                into "$rootDir/app/src/main/assets/www/assets/data"
+                into "$rootDir/app/src/main/assets/www/sunbird/assets/data"
                 println "inside copydir prod linux OS"
             }
     }
 
     task prod(type: GradleBuild) {
-        tasks = ['myclean', 'copyDirProd', 'copyDirNotificationConfig']
-    }
+        tasks = ['myclean', 'copyDirProd']
+    }      
     task dev(type: GradleBuild) {
-        tasks = ['myclean', 'copyDirDev', 'copyDirNotificationConfig']
-    }
+        tasks = ['myclean', 'copyDirDev']
+    }      
     task staging(type: GradleBuild) {
-        tasks = ['myclean', 'copyDirStaging', 'copyDirNotificationConfig']
+        tasks = ['myclean', 'copyDirStaging']
     }
 
     applicationVariants.all { variant ->
@@ -346,8 +327,9 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile ("com.google.android.gms:play-services-analytics:10.+")
-    compile ("com.android.support:multidex:1.0.3")
+    compile "org.ekstep.genieservices:genie-providers:1.0.939"
+    compile "org.ekstep.genieservices:genie-integration:1.0.939"
+    compile ("com.google.android.gms:play-services-analytics:9.4.0")
     compile('com.crashlytics.sdk.android:crashlytics:2.9.4@aar') {
           transitive = true;
     }
