@@ -364,7 +364,13 @@ export class ContentDetailsPage {
       this.commonUtilService.showToast('TRY_BEFORE_RATING');
     }
     //Added by sriram -- To be tested
-    const telemetryObject: TelemetryObject = { id: this.objId, type: this.objType, version: this.objVer };
+    //const telemetryObject: TelemetryObject = { id: this.objId, type: this.objType, version: this.objVer };
+    console.log("not used: "+this.objId+" :: "+this.objType);
+    console.log("used: "+this.content.identifier+" :: "+this.content.contentType);
+	const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
+	console.log("===== start of telemetry =====");
+	console.log(telemetryObject);
+	console.log("===== end of telemetry =====");
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.RATING_CLICKED,

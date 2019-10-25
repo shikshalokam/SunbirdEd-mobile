@@ -17,12 +17,13 @@ import {
   ImpressionType,
   ImpressionSubtype,
   Log,
-  LogLevel
+  LogLevel, TelemetryObject
 } from 'sunbird';
 import { TranslateService } from '@ngx-translate/core';
 import {
   generateImpressionTelemetry,
-  generateInteractTelemetry
+  generateInteractTelemetry,
+  generateRatingSubmitTelemetry
 } from '../../app/telemetryutil';
 import { ProfileConstants } from '../../app/app.constant';
 import { AppGlobalService } from '../../service/app-global.service';
@@ -147,11 +148,15 @@ export class ContentRatingAlertComponent {
     const paramsMap = new Map();
     paramsMap['Ratings'] = this.ratingCount;
     paramsMap['Comment'] = this.comment;
-    this.telemetryService.interact(generateInteractTelemetry(
+    console.log("used: "+this.content.identifier+" :: "+this.content.contentType);
+	const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
+    this.telemetryService.interact(generateRatingSubmitTelemetry(
       InteractType.TOUCH,
       InteractSubtype.RATING_SUBMITTED,
       Environment.HOME,
-      this.pageId, paramsMap,
+      this.pageId, 
+      telemetryObject, 
+      paramsMap,
       undefined,
       undefined
     ));

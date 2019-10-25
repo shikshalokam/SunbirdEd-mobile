@@ -54,6 +54,9 @@ export class TelemetryGeneratorService {
         if (object && object.version) {
             interact.objVer = object.version;
         }
+        console.log("======= INTERACT TELEMETRY START =======");
+        console.log(interact);
+        console.log("======= INTERACT TELEMETRY END =======");
         this.telemetryService.interact(interact);
     }
 
@@ -74,6 +77,9 @@ export class TelemetryGeneratorService {
         if (corRelationList !== undefined) {
             impression.correlationData = corRelationList;
         }
+        console.log("======= IMPRESSION TELEMETRY START =======");
+        console.log(impression);
+        console.log("======= IMPRESSION TELEMETRY END =======");
         this.telemetryService.impression(impression);
     }
 

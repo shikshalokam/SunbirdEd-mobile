@@ -1,4 +1,4 @@
-import { Impression, Interact, Start, Mode, Environment, End, Rollup, CorrelationData } from 'sunbird';
+import { Impression, Interact, Start, Mode, Environment, End, Rollup, CorrelationData, TelemetryObject } from 'sunbird';
 
 export const generateImpressionTelemetry = (type, subtype, pageid, env,
     objectId, objectType, objectVersion,
@@ -21,6 +21,40 @@ export const generateImpressionTelemetry = (type, subtype, pageid, env,
         impression.correlationData = corRelationList;
     }
     return impression;
+};
+
+export const generateRatingSubmitTelemetry = (interactType, subType, env, pageId, object?: TelemetryObject,
+    values?: Map, rollup?: Rollup, corRelationList?: Array<CorrelationData>): Interact => {
+    const interact = new Interact();
+    interact.type = interactType;
+    interact.subType = subType;
+    interact.pageId = pageId;
+    interact.id = pageId;
+    interact.env = env;
+    if (values !== null) {
+        interact.valueMap = values;
+    }
+    if (rollup !== undefined) {
+        interact.rollup = rollup;
+    }
+    if (corRelationList !== undefined) {
+        interact.correlationData = corRelationList;
+    }
+    if (object && object.id) {
+		interact.objId = object.id;
+	}
+
+	if (object && object.type) {
+		interact.objType = object.type;
+	}
+
+	if (object && object.version) {
+		interact.objVer = object.version;
+	}
+	console.log("======= INTERACT TELEMETRY START =======");
+	console.log(interact);
+	console.log("======= INTERACT TELEMETRY END =======");
+    return interact;
 };
 
 export const generateInteractTelemetry = (interactType, subType, env, pageId,
