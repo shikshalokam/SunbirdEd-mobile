@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget android-versionCode="1" id="org.sunbird.app" version="dev-1.14.0.01" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget android-versionCode="30000" id="org.sunbird.app" version="3.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Bodh</name>
     <description>ShikshaLokam Bodh mobile app</description>
     <author email="bachi@shikshalokam.org" href="http://shikshalokam.org">EkStep Team</author>
@@ -117,5 +117,5 @@
     <plugin name="cordova-plugin-sunbirdsplash" spec="https://github.com/project-sunbird/cordova-plugin-sunbirdsplash.git#release-1.14.0" />
     <plugin name="cordova-plugin-openrap" spec="https://github.com/project-sunbird/cordova-plugin-openrap.git#release-1.14.0" />
     <plugin name="cordova-plugin-geniecanvas" spec="https://github.com/project-sunbird/cordova-plugin-geniecanvas.git#release-1.14.0.1" />
-    <engine name="android" spec="^8.0.0" />
+    <engine name="android" spec="8.1.0" />
 </widget>
