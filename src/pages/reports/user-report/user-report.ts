@@ -112,10 +112,13 @@ export class UserReportPage {
 
     const that = this;
 
+	console.log("===============UR PAGE==================");
     this.reportSummary = this.navParams.get('report');
+    console.log(this.reportSummary);
     this.contentName = this.reportSummary.name;
+    console.log(this.contentName);
     this.handle =  this.navParams.get('handle');
-
+    console.log(this.handle);
     that.reportService.getDetailReport([this.reportSummary.uid], this.reportSummary.contentId)
       .then(reportsMap => {
         const data = reportsMap.get(this.reportSummary.uid);
@@ -139,6 +142,8 @@ export class UserReportPage {
         that.zone.run(() => {
           loader.dismiss();
           data['showResult'] = true;
+          console.log("going to show results");
+          console.log(data);
           that.assessmentData = data;
           that.assessmentData['showPopup'] = true;
           that.assessmentData['popupCallback'] = ReportAlert;
@@ -149,8 +154,9 @@ export class UserReportPage {
       })
       .catch(err => {
         loader.dismiss();
+        console.log("in error area");
       });
-
+	  console.log("===============UR PAGE END==================");
   }
 
 
