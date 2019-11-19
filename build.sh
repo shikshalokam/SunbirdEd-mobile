@@ -61,8 +61,8 @@ rm -rf platforms
 NODE_OPTIONS=--max-old-space-size=4096 ionic cordova platforms add android@8.0.0
 
 #for debug builds. have commented out the prod settings
-NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android
-#NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android --prod --release --buildConfig ./buildConfig/build.json
+#NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android
+NODE_OPTIONS=--max-old-space-size=4096 ionic cordova build android --prod --release --buildConfig ./buildConfig/build.json
 
 
 
