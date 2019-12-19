@@ -1004,7 +1004,8 @@ export class ContentDetailsPage {
       this.shareUtil.exportEcar(this.content.identifier, path => {
         loader.dismiss();
         this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
-        this.social.share('', '', 'file://' + path, url);
+        // this.social.share('', '', 'file://' + path, url);
+        this.social.share('', '', null, url);
       }, () => {
         loader.dismiss();
         this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
