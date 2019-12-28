@@ -143,7 +143,6 @@ export class MyApp {
                         const disp_profile_page = response;
                         if (display_cat_page === 'false' && disp_profile_page === 'false') {
                           this.nav.setRoot(TabsPage);
-                          this.doDeepLinking();
                         } else {
                           this.profileService.getCurrentUser().then((profile: any) => {
                             profile = JSON.parse(profile);
@@ -154,7 +153,6 @@ export class MyApp {
                               && profile.medium && profile.medium.length) {
                               this.appGlobalService.isProfileSettingsCompleted = true;
                               this.nav.setRoot(TabsPage);
-                              this.doDeepLinking();
                             } else {
                               this.appGlobalService.isProfileSettingsCompleted = false;
                               this.preference.getString(PreferenceKey.IS_ONBOARDING_COMPLETED)
@@ -205,7 +203,6 @@ export class MyApp {
                 });
 
               that.rootPage = TabsPage;
-              this.doDeepLinking();
 
 
 
@@ -297,12 +294,10 @@ export class MyApp {
           this.nav.setRoot('ProfileSettingsPage', { hideBackButton: hideBackButton });
         } else {
           this.nav.setRoot(TabsPage);
-          this.doDeepLinking();
         }
       })
       .catch(error => {
         this.nav.setRoot(TabsPage);
-        this.doDeepLinking();
       });
   }
 
@@ -499,7 +494,6 @@ export class MyApp {
     (<any>window).splashscreen.onDeepLink(deepLinkResponse => {
 
       console.log('Deeplink : ' + deepLinkResponse);
-      this.deepLinkResponse = deepLinkResponse;
       setTimeout(() => {
         const response = deepLinkResponse;
 
@@ -523,35 +517,8 @@ export class MyApp {
         } else if (response.result) {
           this.showContentDetails(response.result);
         }
-      }, 300);
+      }, 2000);
     });
-  }
-
-  doDeepLinking() {
-    const response = this.deepLinkResponse;
-
-    if (response.type === 'dialcode') {
-      const results = response.code.split('/');
-      const dialCode = results[results.length - 1];
-      this.nav.push(SearchPage, { dialCode: dialCode });
-    } else if (response.type === 'contentDetails') {
-      const hierarchyInfo = JSON.parse(response.hierarchyInfo);
-
-      const content = {
-        identifier: response.id,
-        hierarchyInfo: hierarchyInfo
-      };
-
-      const navObj = this.app.getActiveNavs()[0];
-      if(!this.nav.isActive(ContentDetailsPage)){
-        navObj.push(ContentDetailsPage, {
-          content: content
-        });
-      }
-   
-    } else if (response.result) {
-      this.showContentDetails(response.result);
-    }
   }
 
   showContentDetails(content) {
