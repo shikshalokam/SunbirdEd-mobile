@@ -36,6 +36,7 @@ import { TelemetryGeneratorService } from '../service/telemetry-generator.servic
 import { BroadcastComponent } from '../component/broadcast/broadcast';
 import { CategoriesEditPage } from '@app/pages/categories-edit/categories-edit';
 import { TncUpdateHandlerService } from '@app/service/handlers/tnc-update-handler.service';
+// import { FcmProvider } from '@app/service/fcm';
 
 declare var chcp: any;
 
@@ -81,7 +82,8 @@ export class MyApp {
     private telemetryGeneratorService: TelemetryGeneratorService,
     private buildParamService: BuildParamService,
     public popoverCtrl: PopoverController,
-    private tncUpdateHandlerService: TncUpdateHandlerService
+    private tncUpdateHandlerService: TncUpdateHandlerService,
+    // private fcm: FcmProvider
   ) {
 
     const that = this;
@@ -180,7 +182,7 @@ export class MyApp {
         } else {
           this.profileService.getCurrentUser().then((profile: any) => {
             profile = JSON.parse(profile);
-
+            // this.fcm.initializeFCM();
             initTabs(that.containerService, LOGIN_TEACHER_TABS);
               const sessionObj = JSON.parse(session);
               this.preference.getString('SHOW_WELCOME_TOAST')
@@ -517,7 +519,7 @@ export class MyApp {
         } else if (response.result) {
           this.showContentDetails(response.result);
         }
-      }, 2000);
+      }, 5000);
     });
   }
 

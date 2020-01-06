@@ -1041,7 +1041,7 @@ export class EnrolledCourseDetailsPage {
       this.shareUtil.exportEcar(this.course.identifier, path => {
         loader.dismiss();
         this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_COURSE_SUCCESS, this.course.contentType);
-        this.social.share('', '', 'file://' + path, url);
+        this.social.share('', '', '', url);
       }, () => {
         loader.dismiss();
         this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
