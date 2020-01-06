@@ -22,6 +22,12 @@ import {CommonUtilService} from '../service/common-util.service';
 import {BroadcastComponent} from '../component/broadcast/broadcast';
 import {LogoutHandlerService} from '@app/service/handlers/logout-handler.service';
 import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.service';
+import { SlutilService } from '@app/service';
+
+// import { FCM } from '@ionic-native/fcm/ngx';
+// import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
+// import { HTTP } from '@ionic-native/http/ngx';
+// import { FcmProvider } from '../service/fcm';
 
 export const createTranslateLoader = (httpClient: HttpClient) => {
   return new TranslateHttpLoader(httpClient, './assets/i18n/', '.json');
@@ -77,7 +83,12 @@ export const createTranslateLoader = (httpClient: HttpClient) => {
     CommonUtilService,
     LogoutHandlerService,
     TncUpdateHandlerService,
-    { provide: ErrorHandler, useClass: IonicErrorHandler }
+    { provide: ErrorHandler, useClass: IonicErrorHandler },
+    SlutilService,
+    // FcmProvider,
+    // HTTP,
+    // FCM,
+    // LocalNotifications
   ],
   exports: [
     BroadcastComponent

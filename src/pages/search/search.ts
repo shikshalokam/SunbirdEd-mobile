@@ -54,6 +54,8 @@ import { CommonUtilService } from '../../service/common-util.service';
 import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
 import { QrCodeResultPage } from '../qr-code-result/qr-code-result';
 import { TranslateService } from '@ngx-translate/core';
+import { SlutilService } from '@app/service';
+
 @IonicPage()
 @Component({
   selector: 'page-search',
@@ -136,7 +138,8 @@ export class SearchPage {
     private commonUtilService: CommonUtilService,
     private telemetryGeneratorService: TelemetryGeneratorService,
     private preference: SharedPreferences,
-    private translate: TranslateService
+    private translate: TranslateService,
+    private slUtils: SlutilService
   ) {
 
     this.checkUserSession();
@@ -398,7 +401,8 @@ export class SearchPage {
         if (response.status && response.result) {
 
           this.addCorRelation(response.result.responseMessageId, 'API');
-          this.searchContentResult = response.result.contentDataList;
+          const filteredData = this.slUtils.filterOutEkStepContent(response.result.contentDataList);
+          this.searchContentResult = filteredData;
           this.updateFilterIcon();
 
           this.isEmptyResult = false;
