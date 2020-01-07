@@ -78,6 +78,9 @@ export class ContentDetailsPage {
   isChildContent = false;
   contentDetails: any;
   identifier: string;
+  expectedTimeForCompletion: string;
+  downloadTimer: number = 0;
+  previousProgressValue: number = 0;
 
   /**
    * To hold previous state data
@@ -132,7 +135,7 @@ export class ContentDetailsPage {
   unregisterBackButton: any;
   userCount = 0;
   shouldGenerateTelemetry = true;
-
+  timer;
   @ViewChild(Navbar) navBar: Navbar;
   showMessage: any;
   isUsrGrpAlrtOpen: Boolean = false;
@@ -348,8 +351,8 @@ export class ContentDetailsPage {
         comment: this.ratingComment,
         popupType: popupType
       }, {
-          cssClass: 'content-rating-alert'
-        });
+        cssClass: 'content-rating-alert'
+      });
       popUp.present({
         ev: event
       });
@@ -365,12 +368,12 @@ export class ContentDetailsPage {
     }
     //Added by sriram -- To be tested
     //const telemetryObject: TelemetryObject = { id: this.objId, type: this.objType, version: this.objVer };
-    console.log("not used: "+this.objId+" :: "+this.objType);
-    console.log("used: "+this.content.identifier+" :: "+this.content.contentType);
-	const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
-	console.log("===== start of telemetry =====");
-	console.log(telemetryObject);
-	console.log("===== end of telemetry =====");
+    console.log("not used: " + this.objId + " :: " + this.objType);
+    console.log("used: " + this.content.identifier + " :: " + this.content.contentType);
+    const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
+    console.log("===== start of telemetry =====");
+    console.log(telemetryObject);
+    console.log("===== end of telemetry =====");
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.RATING_CLICKED,
@@ -429,6 +432,7 @@ export class ContentDetailsPage {
         if (this.isDownloadStarted) {
           this.content.downloadable = false;
           this.isDownloadStarted = false;
+          this.contentDownloadTimer('stop');
         }
         if (data.error === 'CONNECTION_ERROR') {
           this.commonUtilService.showToast('ERROR_NO_INTERNET_MESSAGE');
@@ -442,90 +446,89 @@ export class ContentDetailsPage {
   }
 
   extractApiResponse(data) {
-      this.content = data.result.contentData;
-      this.content.downloadable = data.result.isAvailableLocally;
+    this.content = data.result.contentData;
+    this.content.downloadable = data.result.isAvailableLocally;
+    this.content.contentAccess = data.result.contentAccess ? data.result.contentAccess : [];
+    this.content.contentMarker = data.result.contentMarker ? data.result.contentMarker : [];
 
-      this.content.contentAccess = data.result.contentAccess ? data.result.contentAccess : [];
-      this.content.contentMarker = data.result.contentMarker ? data.result.contentMarker : [];
+    if (this.cardData && this.cardData.hierarchyInfo) {
+      data.result.hierarchyInfo = this.cardData.hierarchyInfo;
+      this.isChildContent = true;
+    }
+    if (this.content.streamingUrl) {
+      this.streamingUrl = this.content.streamingUrl;
+    }
 
-      if (this.cardData && this.cardData.hierarchyInfo) {
-        data.result.hierarchyInfo = this.cardData.hierarchyInfo;
-        this.isChildContent = true;
-      }
-      if (this.content.streamingUrl) {
-        this.streamingUrl = this.content.streamingUrl;
-      }
+    if (!this.isChildContent && this.content.contentMarker.length
+      && this.content.contentMarker[0].extraInfoMap
+      && this.content.contentMarker[0].extraInfoMap.hierarchyInfo
+      && this.content.contentMarker[0].extraInfoMap.hierarchyInfo.length) {
+      this.isChildContent = true;
+    }
 
-      if (!this.isChildContent && this.content.contentMarker.length
-        && this.content.contentMarker[0].extraInfoMap
-        && this.content.contentMarker[0].extraInfoMap.hierarchyInfo
-        && this.content.contentMarker[0].extraInfoMap.hierarchyInfo.length) {
-        this.isChildContent = true;
+    this.content.playContent = JSON.stringify(data.result);
+    if (this.content.gradeLevel && this.content.gradeLevel.length && typeof this.content.gradeLevel !== 'string') {
+      this.content.gradeLevel = this.content.gradeLevel.join(', ');
+    }
+    if (this.content.attributions && this.content.attributions.length) {
+      this.content.attributions = this.content.attributions.join(', ');
+    }
+    if (this.content.me_totalRatings) {
+      const rating = this.content.me_totalRatings.split('.');
+      if (rating && rating[0]) {
+        this.content.me_totalRatings = rating[0];
       }
+    }
+    this.objId = this.content.identifier;
+    this.objVer = this.content.pkgVersion;
 
-      this.content.playContent = JSON.stringify(data.result);
-      if (this.content.gradeLevel && this.content.gradeLevel.length && typeof this.content.gradeLevel !== 'string') {
-        this.content.gradeLevel = this.content.gradeLevel.join(', ');
-      }
-      if (this.content.attributions && this.content.attributions.length) {
-        this.content.attributions = this.content.attributions.join(', ');
-      }
-      if (this.content.me_totalRatings) {
-        const rating = this.content.me_totalRatings.split('.');
-        if (rating && rating[0]) {
-          this.content.me_totalRatings = rating[0];
-        }
-      }
-      this.objId = this.content.identifier;
-      this.objVer = this.content.pkgVersion;
+    // User Rating
+    const contentFeedback: any = data.result.contentFeedback;
+    if (contentFeedback !== undefined && contentFeedback.length !== 0) {
+      this.userRating = contentFeedback[0].rating;
+      this.ratingComment = contentFeedback[0].comments;
+    }
 
-      // User Rating
-      const contentFeedback: any = data.result.contentFeedback;
-      if (contentFeedback !== undefined && contentFeedback.length !== 0) {
-        this.userRating = contentFeedback[0].rating;
-        this.ratingComment = contentFeedback[0].comments;
-      }
-
-      // Check locally available
-      if (Boolean(data.result.isAvailableLocally)) {
-        if (data.result.isUpdateAvailable && !this.isUpdateAvail) {
-          this.isUpdateAvail = true;
-        } else {
-          this.isUpdateAvail = false;
-        }
+    // Check locally available
+    if (Boolean(data.result.isAvailableLocally)) {
+      if (data.result.isUpdateAvailable && !this.isUpdateAvail) {
+        this.isUpdateAvail = true;
       } else {
-        this.content.size = this.content.size;
+        this.isUpdateAvail = false;
       }
+    } else {
+      this.content.size = this.content.size;
+    }
 
-      if (this.content.me_totalDownloads) {
-        this.content.me_totalDownloads = this.content.me_totalDownloads.split('.')[0];
-      }
+    if (this.content.me_totalDownloads) {
+      this.content.me_totalDownloads = this.content.me_totalDownloads.split('.')[0];
+    }
 
-      if (this.navParams.get('isResumedCourse')) {
-        this.cardData.contentData = this.content;
-        this.cardData.pkgVersion = this.content.pkgVersion;
-        this.generateTelemetry();
-      }
+    if (this.navParams.get('isResumedCourse')) {
+      this.cardData.contentData = this.content;
+      this.cardData.pkgVersion = this.content.pkgVersion;
+      this.generateTelemetry();
+    }
 
-      if (this.shouldGenerateTelemetry) {
-        this.generateDetailsInteractEvent();
-        this.shouldGenerateEndTelemetry = false;
-      }
+    if (this.shouldGenerateTelemetry) {
+      this.generateDetailsInteractEvent();
+      this.shouldGenerateEndTelemetry = false;
+    }
 
-      if (this.downloadAndPlay) {
-        if (!this.content.downloadable) {
-          /**
-           * Content is not downloaded then call the following method
-           * It will download the content and play it
-           */
-          this.downloadContent();
-        } else {
-          /**
-           * If the content is already downloaded then just play it
-           */
-          this.showSwitchUserAlert(false);
-        }
+    if (this.downloadAndPlay) {
+      if (!this.content.downloadable) {
+        /**
+         * Content is not downloaded then call the following method
+         * It will download the content and play it
+         */
+        this.downloadContent();
+      } else {
+        /**
+         * If the content is already downloaded then just play it
+         */
+        this.showSwitchUserAlert(false);
       }
+    }
   }
 
   generateTelemetry() {
@@ -696,6 +699,7 @@ export class ContentDetailsPage {
         if (this.isDownloadStarted) {
           this.content.downloadable = false;
           this.isDownloadStarted = false;
+          this.contentDownloadTimer('stop');
         }
         this.commonUtilService.showToast('SOMETHING_WENT_WRONG');
       });
@@ -712,12 +716,14 @@ export class ContentDetailsPage {
         const res = data;
         if (res.type === 'downloadProgress' && res.data.downloadProgress) {
           this.downloadProgress = res.data.downloadProgress === -1 ? '0' : res.data.downloadProgress;
+          this.calculatedExpecetedTime(res.data.downloadProgress)
         }
 
         // Get child content
         if (res.data && res.data.status === 'IMPORT_COMPLETED' && res.type === 'contentImport') {
           if (this.isDownloadStarted) {
             this.isDownloadStarted = false;
+            this.contentDownloadTimer('stop');
             this.cancelDownloading = false;
             this.content.downloadable = true;
             this.setContentDetails(this.identifier, false, false);
@@ -737,7 +743,7 @@ export class ContentDetailsPage {
 
         // For streaming url available
         if (res.data && res.type === 'streamingUrlAvailable') {
-          console.log('res.data' , res.data);
+          console.log('res.data', res.data);
           this.zone.run(() => {
             if (res.data.identifier === this.identifier) {
               this.content.streamingUrl = res.data.streamingUrl;
@@ -749,6 +755,25 @@ export class ContentDetailsPage {
   }
 
   /**
+    * Expected time for download
+    */
+  calculatedExpecetedTime(progress) {
+    if (!this.expectedTimeForCompletion || ((progress - this.previousProgressValue) >= 10)) {
+      const fileSizeDowloaded = this.content.size * (progress / 100);
+      const currentTimeinSecond = this.downloadTimer / 1000;
+      const speed = fileSizeDowloaded / currentTimeinSecond;
+      const remainingContent = this.content.size * ((100 - progress) / 100);
+      const expectedTimeForCompletion = Math.floor((remainingContent / speed));
+      const min = Math.floor(expectedTimeForCompletion/60);
+      const sec = expectedTimeForCompletion - min * 60;
+      // this.expectedTimeForCompletion = Math.floor((remainingContent / speed));
+      this.expectedTimeForCompletion = min ? `${min} minute ${sec} seconds`: `${sec} seconds`;
+      this.previousProgressValue = progress;
+    }
+
+  }
+
+  /**
    * Download content
    */
   downloadContent() {
@@ -756,6 +781,7 @@ export class ContentDetailsPage {
       if (this.commonUtilService.networkInfo.isNetworkAvailable) {
         this.downloadProgress = '0';
         this.isDownloadStarted = true;
+        this.contentDownloadTimer();
         const values = new Map();
         values['network-type'] = this.network.type;
         this.importContent([this.identifier], this.isChildContent);
@@ -773,11 +799,26 @@ export class ContentDetailsPage {
     });
   }
 
+  /**
+   * Download content timer
+   */
+  contentDownloadTimer(status = 'start') {
+    if ('start') {
+      this.timer = setInterval(() => {
+        this.downloadTimer = this.downloadTimer + 100;
+      }, 100);
+    } else {
+      this.timer ? clearInterval(this.timer) : null;
+      this.downloadTimer = 0;
+    }
+  }
+
   cancelDownload() {
     this.contentService.cancelDownload(this.identifier).then(() => {
       this.zone.run(() => {
         this.telemetryGeneratorService.generateContentCancelClickedTelemetry(this.content, this.downloadProgress);
         this.isDownloadStarted = false;
+        this.contentDownloadTimer('stop');
         this.downloadProgress = '';
         if (!this.isUpdateAvail) {
           this.content.downloadable = false;
@@ -953,8 +994,8 @@ export class ContentDetailsPage {
       pageName: PageId.CONTENT_DETAIL,
       corRelationList: this.corRelationList
     }, {
-        cssClass: 'content-action'
-      });
+      cssClass: 'content-action'
+    });
     popover.present({
       ev: event
     });
@@ -979,8 +1020,8 @@ export class ContentDetailsPage {
       corRelationList: this.corRelationList,
       position: 'bottom'
     }, {
-        cssClass: 'bookmark-menu'
-      });
+      cssClass: 'bookmark-menu'
+    });
     popover.present({
       ev: event
     });
@@ -1070,8 +1111,8 @@ export class ContentDetailsPage {
       body: this.commonUtilService.translateMessage('ANDROID_NOT_SUPPORTED_DESC'),
       buttonText: this.commonUtilService.translateMessage('INSTALL_CROSSWALK')
     }, {
-        cssClass: 'popover-alert'
-      });
+      cssClass: 'popover-alert'
+    });
     popover.present();
   }
 }
