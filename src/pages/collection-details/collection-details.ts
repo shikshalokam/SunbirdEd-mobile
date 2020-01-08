@@ -764,25 +764,25 @@ export class CollectionDetailsPage {
 
   share() {
     this.generateShareInteractEvents(InteractType.TOUCH, InteractSubtype.SHARE_LIBRARY_INITIATED, this.contentDetail.contentType);
-    const loader = this.commonUtilService.getLoader();
-    loader.present();
+    // const loader = this.commonUtilService.getLoader();
+    // loader.present();
     const url = this.baseUrl + ShareUrl.COLLECTION + this.contentDetail.identifier;
-    if (this.contentDetail.isAvailableLocally) {
-      this.shareUtil.exportEcar(this.contentDetail.identifier, path => {
-        loader.dismiss();
-        this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.contentDetail.contentType);
-        // this.social.share('', '', 'file://' + path, url);
-        this.social.share('', '', '', url);
-
-      }, () => {
-        loader.dismiss();
-        this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
-      });
-    } else {
-      loader.dismiss();
-      this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.contentDetail.contentType);
-      this.social.share('', '', '', url);
-    }
+    // if (this.contentDetail.isAvailableLocally) {
+    //   this.shareUtil.exportEcar(this.contentDetail.identifier, path => {
+    //     loader.dismiss();
+    //     this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.contentDetail.contentType);
+    //     this.social.share('', '', 'file://' + path, url);
+    //   }, () => {
+    //     loader.dismiss();
+    //     this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
+    //   });
+    // } else {
+    //   loader.dismiss();
+    //   this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.contentDetail.contentType);
+    //   this.social.share('', '', '', url);
+    // }
+    this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.contentDetail.contentType);
+    this.social.share('', '', '', url);
   }
 
   /**

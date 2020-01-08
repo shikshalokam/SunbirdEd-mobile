@@ -1038,25 +1038,26 @@ export class ContentDetailsPage {
    */
   share() {
     this.generateShareInteractEvents(InteractType.TOUCH, InteractSubtype.SHARE_LIBRARY_INITIATED, this.content.contentType);
-    const loader = this.commonUtilService.getLoader();
-    loader.present();
+    // const loader = this.commonUtilService.getLoader();
+    // loader.present();
     const url = this.baseUrl + ShareUrl.CONTENT + this.content.identifier;
-    if (this.content.downloadable) {
-      this.shareUtil.exportEcar(this.content.identifier, path => {
-        loader.dismiss();
-        this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
-        // this.social.share('', '', 'file://' + path, url);
-        this.social.share('', '', null, url);
-      }, () => {
-        loader.dismiss();
-        this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
-      });
-    } else {
-      loader.dismiss();
-      this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
-      this.social.share(null, null, null, url);
-    }
-
+    // if (this.content.downloadable) {
+    //   this.shareUtil.exportEcar(this.content.identifier, path => {
+    //     loader.dismiss();
+    //     this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
+    //     this.social.share('', '', 'file://' + path, url);
+    //   }, () => {
+    //     loader.dismiss();
+    //     this.commonUtilService.showToast('SHARE_CONTENT_FAILED');
+    //   });
+    // } else {
+    //   loader.dismiss();
+    //   this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
+    //   this.social.share(null, null, null, url);
+    // }
+    // loader.dismiss();
+    this.generateShareInteractEvents(InteractType.OTHER, InteractSubtype.SHARE_LIBRARY_SUCCESS, this.content.contentType);
+    this.social.share(null, null, null, url);
   }
 
   /**
