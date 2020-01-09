@@ -37,6 +37,8 @@ import { BroadcastComponent } from '../component/broadcast/broadcast';
 import { CategoriesEditPage } from '@app/pages/categories-edit/categories-edit';
 import { TncUpdateHandlerService } from '@app/service/handlers/tnc-update-handler.service';
 // import { FcmProvider } from '@app/service/fcm';
+import { Badge } from '@ionic-native/badge';
+import { SpinnerDialog } from '@ionic-native/spinner-dialog';
 
 declare var chcp: any;
 
@@ -83,6 +85,8 @@ export class MyApp {
     private buildParamService: BuildParamService,
     public popoverCtrl: PopoverController,
     private tncUpdateHandlerService: TncUpdateHandlerService,
+    private badge: Badge,
+    private spinnerDialog: SpinnerDialog
     // private fcm: FcmProvider
   ) {
 
@@ -96,7 +100,7 @@ export class MyApp {
       this.subscribeEvents();
       this.saveDefaultSyncSetting();
       this.showAppWalkThroughScreen();
-
+      
       // check if any new app version is available
       this.checkForUpgrade();
 
@@ -496,6 +500,7 @@ export class MyApp {
     (<any>window).splashscreen.onDeepLink(deepLinkResponse => {
 
       console.log('Deeplink : ' + deepLinkResponse);
+      deepLinkResponse ? this.spinnerDialog.show('','Please wait while redirecting...') : null;
       setTimeout(() => {
         const response = deepLinkResponse;
 
@@ -519,6 +524,7 @@ export class MyApp {
         } else if (response.result) {
           this.showContentDetails(response.result);
         }
+        deepLinkResponse ? this.spinnerDialog.hide() : null;
       }, 5000);
     });
   }
