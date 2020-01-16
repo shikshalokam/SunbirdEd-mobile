@@ -367,9 +367,10 @@ export class SearchPage {
       contentTypes: this.contentType,
       facets: Search.FACETS,
       audience: this.audienceFilter,
-      mode: 'soft',
+      // mode: 'soft',
       framework: this.currentFrameworkId,
-      languageCode: this.selectedLanguageCode
+      languageCode: this.selectedLanguageCode,
+      channel:["0124487522476933120"]
     };
 
     this.isDialCodeSearch = false;
