@@ -23,8 +23,10 @@ import {BroadcastComponent} from '../component/broadcast/broadcast';
 import {LogoutHandlerService} from '@app/service/handlers/logout-handler.service';
 import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.service';
 import { SlutilService } from '@app/service';
+import { Badge } from '@ionic-native/badge';
+import { SpinnerDialog } from '@ionic-native/spinner-dialog';
 
-// import { FCM } from '@ionic-native/fcm/ngx';
+// import { FCM } from '@ionic-native/fcm';
 // import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
 // import { HTTP } from '@ionic-native/http/ngx';
 // import { FcmProvider } from '../service/fcm';
@@ -85,6 +87,8 @@ export const createTranslateLoader = (httpClient: HttpClient) => {
     TncUpdateHandlerService,
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     SlutilService,
+    Badge,
+    SpinnerDialog
     // FcmProvider,
     // HTTP,
     // FCM,
