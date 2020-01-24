@@ -55,6 +55,12 @@ import { TelemetryGeneratorService } from '../../service/telemetry-generator.ser
 import { QrCodeResultPage } from '../qr-code-result/qr-code-result';
 import { TranslateService } from '@ngx-translate/core';
 import { SlutilService } from '@app/service';
+import { AppConfig } from '../../config/appConfig';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
+declare const window;
 
 @IonicPage()
 @Component({
@@ -115,12 +121,16 @@ export class SearchPage {
 
   profile: any;
 
+  autoCompleteOptions: Array<Object>;
+
   isFirstLaunch = false;
   shouldGenerateEndTelemetry = false;
   backButtonFunc = undefined;
   isSingleContent = false;
   currentFrameworkId = '';
   selectedLanguageCode = '';
+  headers;
+  searchFieldUpdate = new Subject<string>()
 
   @ViewChild(Navbar) navBar: Navbar;
   constructor(
@@ -139,7 +149,8 @@ export class SearchPage {
     private telemetryGeneratorService: TelemetryGeneratorService,
     private preference: SharedPreferences,
     private translate: TranslateService,
-    private slUtils: SlutilService
+    private slUtils: SlutilService,
+    private http: HttpClient
   ) {
 
     this.checkUserSession();
@@ -151,6 +162,13 @@ export class SearchPage {
     this.defaultAppIcon = 'assets/imgs/ic_launcher.png';
     this.getFrameworkId();
     this.selectedLanguageCode = this.translate.currentLang;
+    // Debounce search.
+    this.searchFieldUpdate.pipe(
+      debounceTime(400),
+      distinctUntilChanged())
+      .subscribe(value => {
+        this.getAutoComplete()
+      });
   }
 
   ionViewWillEnter() {
@@ -353,10 +371,58 @@ export class SearchPage {
     });
   }
 
+  appendToQuery(option){
+    this.searchKeywords = option;
+    this.searchBar.setFocus();
+    this.getAutoComplete();
+  }
+
+  getAutoComplete() {
+    console.log("auto complete call")
+    const payload = {
+      request: {
+        filters: {
+          channel: "0124487522476933120",
+          board: null,
+          contentType: this.contentType
+        },
+        limit: 20,
+        query: this.searchKeywords,
+        sort_by: {},
+        softConstraints: {
+          badgeAssertions: 98,
+          board: 99
+        },
+        mode: "soft",
+        facets: Search.FACETS,
+        offset: 0
+      }
+    }
+    console.log("profile", this.profile);
+
+    if (this.profile && this.profile.board && this.profile.board.length) {
+      payload.request.filters.board
+      payload.request.filters.board = this.applyProfileFilter(this.profile.board, payload.request.filters.board, 'board');
+    }
+
+    const url = AppConfig.environment + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.searchAutoComplete;
+    this.http.post(url, payload).subscribe(data => {
+      this.autoCompleteOptions = data['result'].suggestions
+    }, error => {
+      this.autoCompleteOptions = [];
+    })
+    //   }
+    // )
+
+  }
+
+
+
   handleSearch() {
     if (this.searchKeywords.length < 3) {
       return;
     }
+    this.autoCompleteOptions = [];
 
     this.showLoader = true;
 
@@ -370,7 +436,7 @@ export class SearchPage {
       // mode: 'soft',
       framework: this.currentFrameworkId,
       languageCode: this.selectedLanguageCode,
-      channel:["0124487522476933120"]
+      channel: ["0124487522476933120"]
     };
 
     this.isDialCodeSearch = false;

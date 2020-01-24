@@ -1,7 +1,7 @@
 <ion-header>
   <ion-navbar>
-    <ion-input type="search" #searchInput dir="{{commonUtilService.getAppDirection()}}" placeholder="Search" [(ngModel)]="searchKeywords" (keyup.enter)="handleSearch()"
-      clearInput></ion-input>
+    <ion-input type="search" debounce #searchInput dir="{{commonUtilService.getAppDirection()}}" placeholder="Search" [(ngModel)]="searchKeywords" (keyup.enter)="handleSearch()"
+      clearInput (ngModelChange)="searchFieldUpdate.next($event)"></ion-input>
     <ion-buttons end>
       <button ion-button (click)="showFilter()" *ngIf="filterIcon">
         <img [src]="filterIcon" class="tool-icon" float-end />
@@ -126,7 +126,35 @@
 
   </ion-list>
 
-  <ion-list *ngIf="searchContentResult && searchContentResult.length">
+
+  <div >
+    <ion-list  no-lines text-wrap *ngFor="let option of autoCompleteOptions;" style="margin: 0">
+      <ion-item text-wrap style="padding-left: 8px;">
+        <!-- <ion-avatar item-start>
+          <img src="{{ defaultAppIcon }}" width="24px" height="24px">
+        </ion-avatar> -->
+        <!-- <h3>  -->
+          <ion-icon name="search" item-start style="color: #ddd;"></ion-icon>
+          {{ option }}
+          <ion-icon name="arrow-round-up" item-end style="margin-left: 5px;" (click)="appendToQuery(option)"></ion-icon>
+        <!-- </h3> -->
+        <!-- <p>
+          <span>{{ content.contentType }}</span>
+          <span *ngIf="content.size"> • {{ content.size | fileSize: 0}}</span>
+        </p> -->
+        <!-- <p>
+          <span *ngIf="content.gradeLevel && content.gradeLevel.length">
+            {{ content?.gradeLevel[0] }}
+          </span>
+          <span *ngIf="content.subject"> • {{ content?.subject}}</span>
+        </p> -->
+      </ion-item>
+      <div *ngIf="!last" class="divider" style="margin: 0 "></div>
+    </ion-list>
+
+  </div>
+
+  <ion-list *ngIf="searchContentResult && searchContentResult.length && !autoCompleteOptions.length">
     <ion-item padding-right *ngFor="let content of searchContentResult; let i = index" (click)="openContent(undefined, content,i)">
       <ion-avatar item-start>
         <!-- <img-loader src="{{ content.appIcon }}" backgroundSize="cover" width="100%" height="100%" spinner="true" fallback="./assets/imgs/ic_launcher.png"
