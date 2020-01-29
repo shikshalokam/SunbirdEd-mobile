@@ -1,6 +1,6 @@
 <ion-header>
   <ion-navbar>
-    <ion-input type="search" debounce #searchInput dir="{{commonUtilService.getAppDirection()}}" placeholder="Search" [(ngModel)]="searchKeywords" (keyup.enter)="handleSearch()"
+    <ion-input type="search" debounce #searchInput dir="{{commonUtilService.getAppDirection()}}" placeholder="Search" [(ngModel)]="searchKeywords" (keyup.enter)="searchHandler()"
       clearInput (ngModelChange)="searchFieldUpdate.next($event)"></ion-input>
     <ion-buttons end>
       <button ion-button (click)="showFilter()" *ngIf="filterIcon">
@@ -135,7 +135,7 @@
         </ion-avatar> -->
         <!-- <h3>  -->
           <ion-icon name="search" item-start style="color: #ddd;"></ion-icon>
-          {{ option }}
+          <div (click)="searchKeywords = option;searchHandler()">{{ option }}</div>
           <ion-icon name="arrow-round-up" item-end style="margin-left: 5px;" (click)="appendToQuery(option)"></ion-icon>
         <!-- </h3> -->
         <!-- <p>
