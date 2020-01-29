@@ -55,6 +55,12 @@ import { TelemetryGeneratorService } from '../../service/telemetry-generator.ser
 import { QrCodeResultPage } from '../qr-code-result/qr-code-result';
 import { TranslateService } from '@ngx-translate/core';
 import { SlutilService } from '@app/service';
+import { AppConfig } from '../../config/appConfig';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+
+declare const window;
 
 @IonicPage()
 @Component({
@@ -115,12 +121,16 @@ export class SearchPage {
 
   profile: any;
 
+  autoCompleteOptions: Array<Object>;
+
   isFirstLaunch = false;
   shouldGenerateEndTelemetry = false;
   backButtonFunc = undefined;
   isSingleContent = false;
   currentFrameworkId = '';
   selectedLanguageCode = '';
+  headers;
+  searchFieldUpdate = new Subject<string>()
 
   @ViewChild(Navbar) navBar: Navbar;
   constructor(
@@ -139,7 +149,8 @@ export class SearchPage {
     private telemetryGeneratorService: TelemetryGeneratorService,
     private preference: SharedPreferences,
     private translate: TranslateService,
-    private slUtils: SlutilService
+    private slUtils: SlutilService,
+    private http: HttpClient
   ) {
 
     this.checkUserSession();
@@ -151,6 +162,13 @@ export class SearchPage {
     this.defaultAppIcon = 'assets/imgs/ic_launcher.png';
     this.getFrameworkId();
     this.selectedLanguageCode = this.translate.currentLang;
+    // Debounce search.
+    this.searchFieldUpdate.pipe(
+      debounceTime(400),
+      distinctUntilChanged())
+      .subscribe(value => {
+        this.getAutoComplete()
+      });
   }
 
   ionViewWillEnter() {
@@ -353,10 +371,145 @@ export class SearchPage {
     });
   }
 
+  appendToQuery(option) {
+    this.searchKeywords = option;
+    this.searchBar.setFocus();
+    this.getAutoComplete();
+  }
+
+  getAutoComplete() {
+    const payload = {
+      request: {
+        filters: {
+          channel: "0124487522476933120",
+          board: null,
+          contentType: this.contentType
+        },
+        limit: 20,
+        query: this.searchKeywords,
+        sort_by: {},
+        softConstraints: {
+          badgeAssertions: 98,
+          board: 99
+        },
+        mode: "soft",
+        facets: Search.FACETS,
+        offset: 0
+      }
+    }
+
+    if (this.profile && this.profile.board && this.profile.board.length) {
+      payload.request.filters.board
+      payload.request.filters.board = this.applyProfileFilter(this.profile.board, payload.request.filters.board, 'board');
+    }
+
+    const url = AppConfig.environment + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.searchAutoComplete;
+    this.http.post(url, payload).subscribe(data => {
+      this.autoCompleteOptions = data['result'].suggestions
+    }, error => {
+      this.autoCompleteOptions = [];
+    })
+    //   }
+    // )
+
+  }
+
+  searchHandler() {
+    this.autoCompleteOptions = [];
+
+    this.showLoader = true;
+
+    (<any>window).cordova.plugins.Keyboard.close();
+    const payload = {
+      url: AppConfig.apiConstants.bodhSearch,
+      headers: {
+        // "X-Channel-Id": "0124487522476933120",
+        "ts": new Date(),
+        // "X-Org-code": "0124487522476933120",
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        "X-Source": "mobile",
+      },
+      body: {
+        request: {
+          filters: {
+            channel: "0124487522476933120",
+            board: null,
+            contentType: this.contentType
+          },
+          limit: 100,
+          query: this.searchKeywords,
+          sort_by: {},
+          softConstraints: {
+            badgeAssertions: 98,
+            board: 99
+          },
+          // mode: "soft",
+          facets: Search.FACETS,
+          offset: 0
+        }
+      }
+    }
+
+    this.isDialCodeSearch = false;
+
+    this.dialCodeContentResult = undefined;
+    this.dialCodeResult = undefined;
+
+    if (this.profile) {
+
+      if (this.profile.board && this.profile.board.length) {
+        payload.body.request['board'] = this.applyProfileFilter(this.profile.board, payload.body.request['board'], 'board');
+      }
+
+      if (this.profile.medium && this.profile.medium.length) {
+        payload.body.request['medium'] = this.applyProfileFilter(this.profile.medium, payload.body.request['medium'], 'medium');
+      }
+
+      if (this.profile.grade && this.profile.grade.length) {
+        payload.body.request['grade'] = this.applyProfileFilter(this.profile.grade, payload.body.request['grade'], 'gradeLevel');
+      }
+
+    }
+    const url = AppConfig.environment + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
+    this.http.post(url, payload).subscribe((response: any) => {
+      this.responseData = response;
+      if (response.status === 200 && response.result) {
+        this.addCorRelation(response.result.data.params.resmsgid, 'API');
+        // const filteredData = this.slUtils.filterOutEkStepContent(response.result.contentDataList);
+        this.searchContentResult = response.result.data.result.content;
+        // this.updateFilterIcon();
+        this.showFilterIcon();
+
+        this.isEmptyResult = false;
+
+
+        // this.generateLogEvent(response.result);
+        const values = new Map();
+        values['from'] = this.source;
+        values['searchCount'] = (this.searchContentResult && this.searchContentResult.length) ? this.searchContentResult.length : 0;
+        values['searchCriteria'] = payload;
+        this.telemetryGeneratorService.generateExtraInfoTelemetry(values, PageId.SEARCH);
+      } else {
+        this.isEmptyResult = true;
+      }
+      this.showEmptyMessage = (!this.searchContentResult || this.searchContentResult.length === 0) ? true : false;
+      this.showLoader = false;
+    }, error => {
+      this.showLoader = false;
+      if (!this.commonUtilService.networkInfo.isNetworkAvailable) {
+        this.commonUtilService.showToast('ERROR_OFFLINE_MODE');
+      }
+    })
+  }
+
+
+
   handleSearch() {
     if (this.searchKeywords.length < 3) {
       return;
     }
+    this.autoCompleteOptions = [];
 
     this.showLoader = true;
 
@@ -370,7 +523,7 @@ export class SearchPage {
       // mode: 'soft',
       framework: this.currentFrameworkId,
       languageCode: this.selectedLanguageCode,
-      channel:["0124487522476933120"]
+      channel: ["0124487522476933120"]
     };
 
     this.isDialCodeSearch = false;
@@ -772,6 +925,34 @@ export class SearchPage {
     }
 
     this.responseData.result.filterCriteria.facetFilters.forEach(facet => {
+      if (facet.values && facet.values.length > 0) {
+        facet.values.forEach(value => {
+          if (value.apply) {
+            isFilterApplied = true;
+          }
+        });
+      }
+    });
+
+    if (isFilterApplied) {
+      this.filterIcon = './assets/imgs/ic_action_filter_applied.png';
+    } else {
+      this.filterIcon = './assets/imgs/ic_action_filter.png';
+    }
+  }
+
+  showFilterIcon() {
+    let isFilterApplied = false;
+
+    if (this.isEmptyResult) {
+      this.filterIcon = undefined;
+    }
+
+    if (!this.responseData.result.data.results) {
+      return;
+    }
+
+    this.responseData.result.data.results.facets.forEach(facet => {
       if (facet.values && facet.values.length > 0) {
         facet.values.forEach(value => {
           if (value.apply) {
