@@ -32,7 +32,7 @@ export class ApiInterceptor implements HttpInterceptor {
       }
 
     async handle(req: HttpRequest<any>, next: HttpHandler) {
-        if(req.url.includes('kendra-service')){
+        if(req.url.includes('kendra')){
             const token = await this.getAccessToken();
             req = req.clone({
                 setHeaders: {
