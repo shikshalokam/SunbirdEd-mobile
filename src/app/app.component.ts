@@ -54,7 +54,7 @@ export class MyApp {
   sessionData;
   deepLinkResponse
 
-  readonly permissionList = ['android.permission.CAMERA',
+  readonly permissionList = [ //'android.permission.CAMERA',
     'android.permission.WRITE_EXTERNAL_STORAGE',
     'android.permission.ACCESS_FINE_LOCATION',
     'android.permission.RECORD_AUDIO'];
@@ -100,7 +100,7 @@ export class MyApp {
       this.subscribeEvents();
       this.saveDefaultSyncSetting();
       this.showAppWalkThroughScreen();
-      
+
       // check if any new app version is available
       this.checkForUpgrade();
 
