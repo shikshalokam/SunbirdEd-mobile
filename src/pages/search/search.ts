@@ -403,9 +403,9 @@ export class SearchPage {
       payload.request.filters.board = this.applyProfileFilter(this.profile.board, payload.request.filters.board, 'board');
     }
 
-    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.searchAutoComplete;
+    const url = AppConfig.environment + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.searchAutoComplete;
     this.http.post(url, payload).subscribe(data => {
-      this.autoCompleteOptions = data['result'].suggestions;
+      this.autoCompleteOptions = data['result'].suggestions
     }, error => {
       this.autoCompleteOptions = [];
     })
@@ -421,20 +421,20 @@ export class SearchPage {
 
     (<any>window).cordova.plugins.Keyboard.close();
     const payload = {
-      url: AppConfig.environment + AppConfig.apiConstants.bodhSearch,
+      url: AppConfig.apiConstants.bodhSearch,
       headers: {
-        "X-Channel-Id": "0124487522476933120",
+        // "X-Channel-Id": "0124487522476933120",
         "ts": new Date(),
-        "X-Org-code": "0124487522476933120",
-        "X-App-Id": "production.production.mobile",
+        // "X-Org-code": "0124487522476933120",
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "X-Source": "mobile"
+        "X-Source": "mobile",
       },
       body: {
         request: {
           filters: {
             channel: "0124487522476933120",
+            board: null,
             contentType: this.contentType
           },
           limit: 100,
@@ -444,6 +444,7 @@ export class SearchPage {
             badgeAssertions: 98,
             board: 99
           },
+          // mode: "soft",
           facets: Search.FACETS,
           offset: 0
         }
@@ -458,19 +459,19 @@ export class SearchPage {
     if (this.profile) {
 
       if (this.profile.board && this.profile.board.length) {
-        payload.body.request.filters['board'] = this.applyProfileFilter(this.profile.board, payload.body.request.filters['board'], 'board');
+        payload.body.request['board'] = this.applyProfileFilter(this.profile.board, payload.body.request['board'], 'board');
       }
 
       if (this.profile.medium && this.profile.medium.length) {
-        payload.body.request.filters['medium'] = this.applyProfileFilter(this.profile.medium, payload.body.request.filters['medium'], 'medium');
+        payload.body.request['medium'] = this.applyProfileFilter(this.profile.medium, payload.body.request['medium'], 'medium');
       }
 
       if (this.profile.grade && this.profile.grade.length) {
-        payload.body.request.filters['grade'] = this.applyProfileFilter(this.profile.grade, payload.body.request.filters['grade'], 'gradeLevel');
+        payload.body.request['grade'] = this.applyProfileFilter(this.profile.grade, payload.body.request['grade'], 'gradeLevel');
       }
 
     }
-    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
+    const url = AppConfig.environment + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
     this.http.post(url, payload).subscribe((response: any) => {
       this.responseData = response;
       if (response.status === 200 && response.result) {
