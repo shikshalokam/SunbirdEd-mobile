@@ -87,6 +87,8 @@ export class SearchPage {
 
   showLoader = false;
 
+  didYouMean: string;
+
   filterIcon;
 
   searchKeywords = '';
@@ -167,7 +169,11 @@ export class SearchPage {
       debounceTime(400),
       distinctUntilChanged())
       .subscribe(value => {
-        this.getAutoComplete()
+        if(this.searchKeywords && this.searchKeywords.length) {
+          this.getAutoComplete();
+        } else {
+          this.autoCompleteOptions = [];
+        }
       });
   }
 
@@ -471,12 +477,14 @@ export class SearchPage {
 
     }
     const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
+    this.didYouMean = "";
     this.http.post(url, payload).subscribe((response: any) => {
       this.responseData = response;
       if (response.status === 200 && response.result) {
         this.addCorRelation(response.result.data.params.resmsgid, 'API');
         // const filteredData = this.slUtils.filterOutEkStepContent(response.result.contentDataList);
         this.searchContentResult = response.result.data.result.content;
+        this.didYouMean = response.result.did_you_mean;
         // this.updateFilterIcon();
         this.showFilterIcon();
 
