@@ -156,5 +156,13 @@ vertical-align: top;
     z-index: 1000;
     opacity: 1 !important;
   }
+  .didYouMean {
+    margin: 20px 10px 0px 10px;
+    i{
+      font-weight: 600;
+      color: #832215;
+      font-size: 16px;
+    }
+  }
 }
 

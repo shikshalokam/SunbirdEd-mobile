@@ -39,5 +39,6 @@ UserInterfaceState.xcuserstate
 /buildConfig/sunbird.properties
 /buildConfig/secret.tar
 /src/assets/data/
+/src/config/appConfig.ts
 
 google-services.json
