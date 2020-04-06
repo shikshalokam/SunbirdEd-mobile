@@ -59,6 +59,7 @@ import { AppConfig } from '../../config/appConfig';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { distinctUntilChanged, debounceTime, map } from 'rxjs/operators';
 import { Subject } from 'rxjs';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 declare const window;
 
@@ -132,7 +133,8 @@ export class SearchPage {
   currentFrameworkId = '';
   selectedLanguageCode = '';
   headers;
-  searchFieldUpdate = new Subject<string>()
+  searchFieldUpdate = new Subject<string>();
+  createdFor: Array<string> = [];
 
   @ViewChild(Navbar) navBar: Navbar;
   constructor(
@@ -152,7 +154,8 @@ export class SearchPage {
     private preference: SharedPreferences,
     private translate: TranslateService,
     private slUtils: SlutilService,
-    private http: HttpClient
+    private http: HttpClient,
+    private storage: NativeStorage
   ) {
 
     this.checkUserSession();
@@ -169,12 +172,15 @@ export class SearchPage {
       debounceTime(400),
       distinctUntilChanged())
       .subscribe(value => {
-        if(this.searchKeywords && this.searchKeywords.length) {
+        if (this.searchKeywords && this.searchKeywords.length) {
           this.getAutoComplete();
         } else {
           this.autoCompleteOptions = [];
         }
       });
+    this.storage.getItem('subOrgIds').then(success => {
+      this.createdFor = success;
+    })
   }
 
   ionViewWillEnter() {
@@ -389,7 +395,8 @@ export class SearchPage {
         filters: {
           channel: "0124487522476933120",
           board: null,
-          contentType: this.contentType
+          contentType: this.contentType,
+          createdFor: this.createdFor
         },
         limit: 20,
         query: this.searchKeywords,
@@ -441,7 +448,8 @@ export class SearchPage {
         request: {
           filters: {
             channel: "0124487522476933120",
-            contentType: this.contentType
+            contentType: this.contentType,
+            createdFor: this.createdFor
           },
           limit: 100,
           query: this.searchKeywords,
