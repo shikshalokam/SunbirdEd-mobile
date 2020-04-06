@@ -27,6 +27,7 @@ import { ContentDetailsPage } from '../content-details/content-details';
 import { CourseUtilService } from '../../service/course-util.service';
 import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
 import { CommonUtilService } from '../../service/common-util.service';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 @IonicPage()
 @Component({
@@ -116,6 +117,8 @@ export class ViewMoreActivityPage implements OnInit {
   resumeContentData: any;
   uid: any;
   audience: any;
+  createdFor: any;
+
 
   constructor(
     private navCtrl: NavController,
@@ -126,7 +129,8 @@ export class ViewMoreActivityPage implements OnInit {
     private courseService: CourseService,
     private courseUtilService: CourseUtilService,
     private commonUtilService: CommonUtilService,
-    private telemetryGeneratorService: TelemetryGeneratorService
+    private telemetryGeneratorService: TelemetryGeneratorService,
+    private storage: NativeStorage
   ) {
     this.tabBarElement = document.querySelector('.tabbar.show-tabbar');
     this.subscribeUtilityEvents();
@@ -152,7 +156,12 @@ export class ViewMoreActivityPage implements OnInit {
       this.headerTitle = this.navParams.get('headerTitle');
       this.offset = 0;
       this.loadMoreBtn = true;
-      this.mapper();
+      this.storage.getItem('subOrgIds').then(success => {
+        this.createdFor = success;
+        this.mapper();
+      }).catch(error => {
+        this.mapper();
+      })
     }
   }
 
@@ -179,8 +188,11 @@ export class ViewMoreActivityPage implements OnInit {
   search() {
     const loader = this.commonUtilService.getLoader();
     loader.present();
-
-    this.contentService.getSearchCriteriaFromRequest(this.searchQuery)
+    let searchQuery = JSON.parse(this.searchQuery);
+    searchQuery.request.filters.createdFor = this.createdFor;
+    // this.searchQuery.request.filters.createdFor = this.createdFor;
+    searchQuery = JSON.stringify(searchQuery)
+    this.contentService.getSearchCriteriaFromRequest(searchQuery)
       .then((criteria: any) => {
         const contentSearchCriteria = JSON.parse(criteria);
         contentSearchCriteria.limit = 10;
