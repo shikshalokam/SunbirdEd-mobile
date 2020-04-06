@@ -53,6 +53,10 @@ import { updateFilterInSearchQuery } from '../../util/filter.util';
 import { FormAndFrameworkUtilService } from '../profile/formandframeworkutil.service';
 import { CommonUtilService } from '../../service/common-util.service';
 import { TelemetryGeneratorService } from '../../service/telemetry-generator.service';
+import { NativeStorage } from '@ionic-native/native-storage';
+import { AppConfig } from '../../config/appConfig';
+import { HttpClient } from '@angular/common/http';
+import { SlutilService } from '@app/service';
 
 @IonicPage()
 @Component({
@@ -114,6 +118,7 @@ export class CoursesPage implements OnInit {
   isFilterApplied = false;
   callback: QRResultCallback;
   pageFilterCallBack: PageFilterCallback;
+  createdFor: any;
 
   /**
    * Default method of class CoursesPage
@@ -139,7 +144,10 @@ export class CoursesPage implements OnInit {
     private formAndFrameworkUtilService: FormAndFrameworkUtilService,
     private commonUtilService: CommonUtilService,
     private telemetryGeneratorService: TelemetryGeneratorService,
-    private network: Network
+    private network: Network,
+    private storage: NativeStorage,
+    private http: HttpClient,
+    private slutils: SlutilService
   ) {
     this.tabBarElement = document.querySelector('.tabbar.show-tabbar');
     this.preference.getString(PreferenceKey.SELECTED_LANGUAGE_CODE)
@@ -156,14 +164,20 @@ export class CoursesPage implements OnInit {
       .then((appName: any) => {
         this.appLabel = appName;
       });
-      this.generateNetworkType();
+    this.generateNetworkType();
   }
 
   /**
  * Angular life cycle hooks
  */
   ngOnInit() {
-    this.getCourseTabData();
+    this.storage.getItem('subOrgIds').then(success => {
+      this.createdFor = success;
+      this.getCourseTabData();
+    }).catch(error => {
+      this.createdFor = [];
+      this.getCourseTabData();
+    })
   }
   ionViewDidEnter() {
     this.isVisible = true;
@@ -396,41 +410,92 @@ export class CoursesPage implements OnInit {
           pageAssembleCriteria.filters.subject, 'subject');
       }
     }
-    this.pageService.getPageAssemble(pageAssembleCriteria).then((res: any) => {
-      res = JSON.parse(res);
-      this.ngZone.run(() => {
-        const sections = JSON.parse(res.sections);
-        const newSections = [];
-        sections.forEach(element => {
-          element.display = JSON.parse(element.display);
-          if (element.display.name) {
-            if (_.has(element.display.name, this.selectedLanguage)) {
-              const langs = [];
-              _.forEach(element.display.name, (value, key) => {
-                langs[key] = value;
-              });
-              element.name = langs[this.selectedLanguage];
-            }
-          }
-          newSections.push(element);
-        });
-
-        this.popularAndLatestCourses = newSections;
-        this.pageApiLoader = !this.pageApiLoader;
-        this.generateExtraInfoTelemetry(newSections.length);
-        this.checkEmptySearchResult();
-      });
-    }).catch((error: string) => {
-      console.log('Page assmble error', error);
-      this.ngZone.run(() => {
-        this.pageApiLoader = false;
-        if (error === 'CONNECTION_ERROR') {
-          this.commonUtilService.showToast('ERROR_NO_INTERNET_MESSAGE');
-        } else if (error === 'SERVER_ERROR' || error === 'SERVER_AUTH_ERROR') {
-          this.commonUtilService.showToast('ERROR_FETCHING_DATA');
+    pageAssembleCriteria.filters['createdFor'] = this.createdFor;
+    pageAssembleCriteria.filters['compatibilityLevel'] = {
+      "min": 1,
+      "max": 4
+    }
+    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
+    const payload = {
+      url: AppConfig.environment + AppConfig.apiConstants.pageAssemble,
+      method: "POST",
+      body: {
+        request: {
+          ...pageAssembleCriteria,
+          source: 'app'
         }
+      }
+    };
+
+    this.slutils.apiMiddleWare(payload).then(successData => {
+      const sections = successData.sections;
+      const newSections = [];
+      sections.forEach(element => {
+        element.display = JSON.parse(element.display);
+        if (element.display.name) {
+          if (_.has(element.display.name, this.selectedLanguage)) {
+            const langs = [];
+            _.forEach(element.display.name, (value, key) => {
+              langs[key] = value;
+            });
+            element.name = langs[this.selectedLanguage];
+          }
+        }
+        newSections.push(element);
       });
-    });
+
+      this.popularAndLatestCourses = newSections;
+      this.pageApiLoader = !this.pageApiLoader;
+      this.generateExtraInfoTelemetry(newSections.length);
+      this.checkEmptySearchResult();
+    }).catch(error => {
+      if (error === 'CONNECTION_ERROR') {
+        this.commonUtilService.showToast('ERROR_NO_INTERNET_MESSAGE');
+      } else if (error === 'SERVER_ERROR' || error === 'SERVER_AUTH_ERROR') {
+        this.commonUtilService.showToast('ERROR_FETCHING_DATA');
+      }
+    })
+
+    // =============================== Sunbird code ============================//
+
+
+
+    // this.pageService.getPageAssemble(pageAssembleCriteria).then((res: any) => {
+
+    //   res = JSON.parse(res);
+    //   this.ngZone.run(() => {
+    //     const sections = JSON.parse(res.sections);
+    //     const newSections = [];
+    //     sections.forEach(element => {
+    //       element.display = JSON.parse(element.display);
+    //       if (element.display.name) {
+    //         if (_.has(element.display.name, this.selectedLanguage)) {
+    //           const langs = [];
+    //           _.forEach(element.display.name, (value, key) => {
+    //             langs[key] = value;
+    //           });
+    //           element.name = langs[this.selectedLanguage];
+    //         }
+    //       }
+    //       newSections.push(element);
+    //     });
+
+    //     this.popularAndLatestCourses = newSections;
+    //     this.pageApiLoader = !this.pageApiLoader;
+    //     this.generateExtraInfoTelemetry(newSections.length);
+    //     this.checkEmptySearchResult();
+    //   });
+    // }).catch((error: string) => {
+    //   console.log('Page assmble error', error);
+    //   this.ngZone.run(() => {
+    //     this.pageApiLoader = false;
+    //     if (error === 'CONNECTION_ERROR') {
+    //       this.commonUtilService.showToast('ERROR_NO_INTERNET_MESSAGE');
+    //     } else if (error === 'SERVER_ERROR' || error === 'SERVER_AUTH_ERROR') {
+    //       this.commonUtilService.showToast('ERROR_FETCHING_DATA');
+    //     }
+    //   });
+    // });
   }
 
   generateExtraInfoTelemetry(sectionsCount) {
@@ -602,7 +667,7 @@ export class CoursesPage implements OnInit {
             criteria.mode = 'soft';
             that.filterIcon = './assets/imgs/ic_action_filter.png';
           }
-
+          criteria.filters['createdFor'] = this.createdFor;
           that.getPopularAndLatestCourses(criteria);
         });
       }

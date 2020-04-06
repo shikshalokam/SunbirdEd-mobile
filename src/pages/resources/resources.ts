@@ -19,7 +19,8 @@ import {
   FrameworkService,
   CategoryRequest,
   ContentSearchCriteria,
-  TelemetryObject
+  TelemetryObject,
+  SearchType
 } from 'sunbird';
 import {
   NavController,
@@ -65,6 +66,7 @@ import {
   group,
 } from '@angular/animations';
 import { CollectionDetailsEtbPage } from '../collection-details-etb/collection-details-etb';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 @Component({
   selector: 'page-resources',
@@ -148,6 +150,8 @@ export class ResourcesPage implements OnInit, AfterViewInit {
   currentGrade: any;
   currentMedium: string;
   defaultImg: string;
+  createdFor:any;
+
   constructor(
     public navCtrl: NavController,
     private ngZone: NgZone,
@@ -164,7 +168,8 @@ export class ResourcesPage implements OnInit, AfterViewInit {
     private commonUtilService: CommonUtilService,
     private frameworkService: FrameworkService,
     private translate: TranslateService,
-    private network: Network
+    private network: Network,
+    private storage: NativeStorage
   ) {
     this.preference.getString(PreferenceKey.SELECTED_LANGUAGE_CODE)
       .then(val => {
@@ -444,7 +449,8 @@ export class ResourcesPage implements OnInit, AfterViewInit {
   }
     this.getGroupByPageReq.mode = 'hard';
     this.getGroupByPageReq.facets = Search.FACETS_ETB;
-    this.getGroupByPageReq.contentTypes = [ContentType.TEXTBOOK];
+    this.getGroupByPageReq.contentTypes = [ContentType.RESOURCE, ContentType.COLLECTION];
+    this.getGroupByPageReq.searchType = SearchType.FILTER;
     this.getGroupByPage(isAfterLanguageChange);
   }
 
@@ -453,7 +459,7 @@ export class ResourcesPage implements OnInit, AfterViewInit {
     const loader = this.commonUtilService.getLoader();
     loader.present();
     this.contentService.getGroupByPage(this.getGroupByPageReq, this.guestUser)
-      .then((response: any) => {
+      .then((response: any) => {    
         loader.dismiss();
         this.ngZone.run(() => {
           // TODO Temporary code - should be fixed at backend
@@ -592,7 +598,12 @@ export class ResourcesPage implements OnInit, AfterViewInit {
     }
 
     if (!this.pageLoadedSuccess) {
-      this.getPopularContent();
+      this.storage.getItem('subOrgIds').then(success => {
+        this.createdFor = success;
+        this.getPopularContent();
+      }).catch(error => {
+        this.getPopularContent();
+      })
     }
     this.subscribeGenieEvents();
 

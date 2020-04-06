@@ -39,6 +39,7 @@ import { ReportsPage } from '../../reports/reports';
 import { TelemetryGeneratorService } from '../../../service/telemetry-generator.service';
 import { AppGlobalService } from '../../../service/app-global.service';
 import { PreferenceKey } from '../../../app/app.constant';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 @Component({
     selector: 'menu-overflow',
@@ -63,7 +64,8 @@ export class OverflowMenuComponent {
         private appGlobalService: AppGlobalService,
         private container: ContainerService,
         private commonUtilService: CommonUtilService,
-        private events: Events
+        private events: Events,
+        private storage: NativeStorage
     ) {
         this.items = this.navParams.get('list');
         this.profile = this.navParams.get('profile') || {};
@@ -120,6 +122,7 @@ export class OverflowMenuComponent {
                     this.generateLogoutInteractTelemetry(InteractType.TOUCH,
                         InteractSubtype.LOGOUT_INITIATE, '');
                     this.oauth.doLogOut();
+                    this.storage.clear();
                     (<any>window).splashscreen.clearPrefs();
                     const profile: Profile = new Profile();
                     this.preferences.getString('GUEST_USER_ID_BEFORE_LOGIN')

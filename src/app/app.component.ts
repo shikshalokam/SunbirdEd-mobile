@@ -39,6 +39,7 @@ import { TncUpdateHandlerService } from '@app/service/handlers/tnc-update-handle
 // import { FcmProvider } from '@app/service/fcm';
 import { Badge } from '@ionic-native/badge';
 import { SpinnerDialog } from '@ionic-native/spinner-dialog';
+import { NativeStorage } from '@ionic-native/native-storage';
 
 declare var chcp: any;
 
@@ -86,7 +87,8 @@ export class MyApp {
     public popoverCtrl: PopoverController,
     private tncUpdateHandlerService: TncUpdateHandlerService,
     private badge: Badge,
-    private spinnerDialog: SpinnerDialog
+    private spinnerDialog: SpinnerDialog,
+    private storage: NativeStorage
     // private fcm: FcmProvider
   ) {
 
@@ -199,6 +201,20 @@ export class MyApp {
                       refreshUserProfileDetails: true
                     };
                     that.userProfileService.getUserProfileDetails(req, res => {
+                      const userDetails = res ? JSON.parse(res) : {};
+                      const rootOrgHashID = userDetails.rootOrg.hashTagId;
+                      let subOrgIds = [];
+                      for (const org of userDetails.organisations) {
+                        if(rootOrgHashID !== org.hashTagId){
+                          subOrgIds.push(org.hashTagId);
+                        }
+                      }
+                      this.storage.setItem("subOrgIds", subOrgIds).then(success => {
+                        console.log("success");
+                      }).catch(error => {
+                        console.log("error")
+                      })
+
                       setTimeout(() => {
                         this.commonUtilService
                           .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
@@ -288,7 +304,7 @@ export class MyApp {
       this.handleBackButton();
     });
   }
-
+  
   /**
    * It will read profile settings configuration and navigates to appropriate page
    * @param hideBackButton To hide the navigation back button in the profile settings page
@@ -489,7 +505,7 @@ export class MyApp {
       InteractType.TOUCH,
       InteractSubtype.TAB_CLICKED,
       Environment.HOME,
-      pageid.toLowerCase(),
+      pageid ? pageid.toLowerCase(): null,
       null,
       undefined,
       undefined

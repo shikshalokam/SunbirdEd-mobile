@@ -25,7 +25,7 @@ import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.
 import { SlutilService } from '@app/service';
 import { Badge } from '@ionic-native/badge';
 import { SpinnerDialog } from '@ionic-native/spinner-dialog';
-
+import { NativeStorage } from '@ionic-native/native-storage';
 // import { FCM } from '@ionic-native/fcm';
 // import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
 // import { HTTP } from '@ionic-native/http/ngx';
@@ -88,7 +88,8 @@ export const createTranslateLoader = (httpClient: HttpClient) => {
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     SlutilService,
     Badge,
-    SpinnerDialog
+    SpinnerDialog,
+    NativeStorage
     // FcmProvider,
     // HTTP,
     // FCM,
