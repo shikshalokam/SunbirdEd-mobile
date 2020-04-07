@@ -858,45 +858,46 @@ export class ContentDetailsPage {
         this.objRollup,
         this.corRelationList);
     }
-    if (!AppGlobalService.isPlayerLaunched && this.userCount > 1) {
-      const profile = this.appGlobalService.getCurrentUser();
-      const alert = this.alertCtrl.create({
-        title: this.commonUtilService.translateMessage('PLAY_AS'),
-        mode: 'wp',
-        message: profile.handle,
-        cssClass: 'confirm-alert',
-        buttons: [
-          {
-            text: this.commonUtilService.translateMessage('YES'),
-            cssClass: 'alert-btn-delete',
-            handler: () => {
-              this.playContent(isStreaming);
-            }
-          },
-          {
-            text: this.addElipsesInLongText('CHANGE_USER'),
-            cssClass: 'alert-btn-cancel',
-            handler: () => {
-              const playConfig: any = {};
-              playConfig.playContent = true;
-              playConfig.streaming = isStreaming;
-              this.navCtrl.push(UserAndGroupsPage, {
-                playConfig: playConfig
-              });
-            }
-          },
-          {
-            text: 'x',
-            role: 'cancel',
-            cssClass: 'closeButton',
-          }
-        ]
-      });
-      this.isUsrGrpAlrtOpen = true;
-      alert.present();
-    } else {
-      this.playContent(isStreaming);
-    }
+    this.playContent(isStreaming);
+    // if (!AppGlobalService.isPlayerLaunched && this.userCount > 1) {
+    //   const profile = this.appGlobalService.getCurrentUser();
+    //   const alert = this.alertCtrl.create({
+    //     title: this.commonUtilService.translateMessage('PLAY_AS'),
+    //     mode: 'wp',
+    //     message: profile.handle,
+    //     cssClass: 'confirm-alert',
+    //     buttons: [
+    //       {
+    //         text: this.commonUtilService.translateMessage('YES'),
+    //         cssClass: 'alert-btn-delete',
+    //         handler: () => {
+    //           this.playContent(isStreaming);
+    //         }
+    //       },
+    //       {
+    //         text: this.addElipsesInLongText('CHANGE_USER'),
+    //         cssClass: 'alert-btn-cancel',
+    //         handler: () => {
+    //           const playConfig: any = {};
+    //           playConfig.playContent = true;
+    //           playConfig.streaming = isStreaming;
+    //           this.navCtrl.push(UserAndGroupsPage, {
+    //             playConfig: playConfig
+    //           });
+    //         }
+    //       },
+    //       {
+    //         text: 'x',
+    //         role: 'cancel',
+    //         cssClass: 'closeButton',
+    //       }
+    //     ]
+    //   });
+    //   this.isUsrGrpAlrtOpen = true;
+    //   alert.present();
+    // } else {
+    //   this.playContent(isStreaming);
+    // }
 
   }
 
