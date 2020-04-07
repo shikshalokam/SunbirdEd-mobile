@@ -427,7 +427,7 @@ export class SearchPage {
 
   }
 
-  searchHandler() {
+  searchHandler(skipAutocorrect?:number) {
     this.autoCompleteOptions = [];
 
     this.showLoader = true;
@@ -484,7 +484,7 @@ export class SearchPage {
       }
 
     }
-    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search;
+    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search +'?skipAutoCorrect='+(skipAutocorrect ? skipAutocorrect :0);
     this.didYouMean = "";
     this.http.post(url, payload).subscribe((response: any) => {
       this.responseData = response;
