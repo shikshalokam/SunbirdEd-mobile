@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget android-versionCode="30000" id="org.sunbird.app" version="3.0" xmlns="http://www.w3.org/ns/widgets" xmlns:android="http://schemas.android.com/apk/res/android" xmlns:cdv="http://cordova.apache.org/ns/1.0">
-    <name>Bodh</name>
+    <name>Abhyasa</name>
     <description>ShikshaLokam Bodh mobile app</description>
     <author email="bachi@shikshalokam.org" href="http://shikshalokam.org">EkStep Team</author>
     <content src="sunbird/index.html" />
@@ -32,12 +32,12 @@
         <preference name="android-manifest/application/@android:allowBackup" value="false" />
         <preference name="loadUrlTimeoutValue" value="700000" />
         <allow-intent href="market:*" />
-        <icon density="ldpi" src="resources/android/icon/drawable-ldpi-icon.png" />
-        <icon density="mdpi" src="resources/android/icon/drawable-ldpi-icon.png" />
-        <icon density="hdpi" src="resources/android/icon/drawable-ldpi-icon.png" />
-        <icon density="xhdpi" src="resources/android/icon/drawable-ldpi-icon.png" />
-        <icon density="xxhdpi" src="resources/android/icon/drawable-ldpi-icon.png" />
-        <icon density="xxxhdpi" src="resources/android/icon/drawable-ldpi-icon.png" />
+        <icon density="ldpi" src="resources/android/icon/drawable-mdpi-icon.png" />
+        <icon density="mdpi" src="resources/android/icon/drawable-mdpi-icon.png" />
+        <icon density="hdpi" src="resources/android/icon/drawable-hdpi-icon.png" />
+        <icon density="xhdpi" src="resources/android/icon/drawable-xhdpi-icon.png" />
+        <icon density="xxhdpi" src="resources/android/icon/drawable-xxhdpi-icon.png" />
+        <icon density="xxxhdpi" src="resources/android/icon/drawable-xxxhdpi-icon.png" />
         <splash density="land-ldpi" src="resources/android/splash/drawable-ldpi-splash.png" />
         <splash density="land-mdpi" src="resources/android/splash/drawable-ldpi-splash.png" />
         <splash density="land-hdpi" src="resources/android/splash/drawable-hdpi-splash.png" />
