@@ -390,13 +390,16 @@ export class SearchPage {
   }
 
   getAutoComplete() {
+    const index = this.contentType ? this.contentType.indexOf(ContentType.COURSE) : -1;
+    const isACourse = (index >= 0) ? true : false;
     const payload = {
       request: {
         filters: {
           channel: "0124487522476933120",
           board: null,
           contentType: this.contentType,
-          createdFor: this.createdFor
+          createdFor: this.createdFor,
+          isACourse: isACourse
         },
         limit: 20,
         query: this.searchKeywords,
@@ -427,7 +430,7 @@ export class SearchPage {
 
   }
 
-  searchHandler(skipAutocorrect?:number) {
+  searchHandler(skipAutocorrect?: number) {
     this.autoCompleteOptions = [];
 
     this.showLoader = true;
@@ -484,7 +487,7 @@ export class SearchPage {
       }
 
     }
-    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search +'?skipAutoCorrect='+(skipAutocorrect ? skipAutocorrect :0);
+    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.search + '?skipAutoCorrect=' + (skipAutocorrect ? skipAutocorrect : 0);
     this.didYouMean = "";
     this.http.post(url, payload).subscribe((response: any) => {
       this.responseData = response;
