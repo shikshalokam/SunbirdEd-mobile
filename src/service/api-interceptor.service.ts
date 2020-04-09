@@ -23,7 +23,7 @@ export class ApiInterceptor implements HttpInterceptor {
         return new Promise((resolve, reject) =>{
           window.GenieSDK.auth.getSessionData(
             success => {
-              const accessToken = success ? JSON.parse(success).access_token : "";
+              const accessToken = (success && JSON.parse(success)) ? JSON.parse(success).access_token : "";
               resolve (accessToken)
             }
           )

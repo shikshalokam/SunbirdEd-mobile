@@ -14,7 +14,7 @@ cordova-plugin=cordova-plugin-console
 cordova-plugin=cordova-plugin-network-information
 cordova-plugin=cordova-plugin-nativestorage
 cordova-plugin=cordova-android-support-gradle-release --variable ANDROID_SUPPORT_VERSION=27.1.0
-cordova-plugin=https://github.com/Sunbird-Ed/sb-cordova-plugin-customtabs.git#release-1.14.0  --variable URL_SCHEME=org.shikshalokam.bodh --variable URL_HOST=mobile
+cordova-plugin=https://github.com/Sunbird-Ed/sb-cordova-plugin-customtabs.git#release-1.14.0  --variable URL_SCHEME=org.shikshalokam.bodh.abhyasa --variable URL_HOST=mobile
 sunbird-cordova-plugin=https://github.com/project-sunbird/cordova-plugin-genie-sdk.git
 sunbird-cordova-plugin=https://github.com/project-sunbird/cordova-plugin-imagechooser.git
 sunbird-cordova-plugin=https://github.com/project-sunbird/cordova-plugin-file-support.git

@@ -39,11 +39,11 @@
         <icon density="xxhdpi" src="resources/android/icon/drawable-xxhdpi-icon.png" />
         <icon density="xxxhdpi" src="resources/android/icon/drawable-xxxhdpi-icon.png" />
         <splash density="land-ldpi" src="resources/android/splash/drawable-ldpi-splash.png" />
-        <splash density="land-mdpi" src="resources/android/splash/drawable-ldpi-splash.png" />
+        <splash density="land-mdpi" src="resources/android/splash/drawable-mdpi-splash.png" />
         <splash density="land-hdpi" src="resources/android/splash/drawable-hdpi-splash.png" />
-        <splash density="land-xhdpi" src="resources/android/splash/drawable-hdpi-splash.png" />
-        <splash density="land-xxhdpi" src="resources/android/splash/drawable-xhdpi-splash.png" />
-        <splash density="land-xxxhdpi" src="resources/android/splash/drawable-xhdpi-splash.png" />
+        <splash density="land-xhdpi" src="resources/android/splash/drawable-xhdpi-splash.png" />
+        <splash density="land-xxhdpi" src="resources/android/splash/drawable-xxhdpi-splash.png" />
+        <splash density="land-xxxhdpi" src="resources/android/splash/drawable-xxxhdpi-splash.png" />
         <splash density="port-ldpi" src="resources/android/splash/drawable-ldpi-splash.png" />
         <splash density="port-mdpi" src="resources/android/splash/drawable-ldpi-splash.png" />
         <splash density="port-hdpi" src="resources/android/splash/drawable-hdpi-splash.png" />
@@ -108,7 +108,7 @@
         <variable name="ANDROID_SUPPORT_VERSION" value="27.1.0" />
     </plugin>
     <plugin name="sb-cordova-plugin-customtabs" spec="https://github.com/Sunbird-Ed/sb-cordova-plugin-customtabs.git#release-1.14.0">
-        <variable name="URL_SCHEME" value="org.shikshalokam.bodh" />
+        <variable name="URL_SCHEME" value="org.shikshalokam.bodh.abhyasa" />
         <variable name="URL_HOST" value="mobile" />
     </plugin>
     <plugin name="cordova-plugin-genie-sdk" spec="https://github.com/project-sunbird/cordova-plugin-genie-sdk.git#release-1.14.0" />
@@ -118,5 +118,5 @@
     <plugin name="cordova-plugin-sunbirdsplash" spec="https://github.com/project-sunbird/cordova-plugin-sunbirdsplash.git#release-1.14.0" />
     <plugin name="cordova-plugin-openrap" spec="https://github.com/project-sunbird/cordova-plugin-openrap.git#release-1.14.0" />
     <plugin name="cordova-plugin-geniecanvas" spec="https://github.com/project-sunbird/cordova-plugin-geniecanvas.git#release-1.14.0.1" />
-    <engine name="android" spec="^8.0.0" />
+    <engine name="android" spec="8.1.0" />
 </widget>

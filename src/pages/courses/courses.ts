@@ -118,7 +118,7 @@ export class CoursesPage implements OnInit {
   isFilterApplied = false;
   callback: QRResultCallback;
   pageFilterCallBack: PageFilterCallback;
-  createdFor: any;
+  createdFor: any = [];
 
   /**
    * Default method of class CoursesPage
@@ -172,7 +172,7 @@ export class CoursesPage implements OnInit {
  */
   ngOnInit() {
     this.storage.getItem('subOrgIds').then(success => {
-      this.createdFor = success;
+      this.createdFor = (success && success.length) ? success : [];
       this.getCourseTabData();
     }).catch(error => {
       this.createdFor = [];
@@ -410,7 +410,13 @@ export class CoursesPage implements OnInit {
           pageAssembleCriteria.filters.subject, 'subject');
       }
     }
-    pageAssembleCriteria.filters['createdFor'] = this.createdFor;
+    console.log("inise pageAssembleCriteria")
+    // this.createdFor.length ? pageAssembleCriteria.filters['createdFor'] = this.createdFor: null;
+    console.log("after pageAssembleCriteria")
+    if(!pageAssembleCriteria.filters ){
+      pageAssembleCriteria.filters = {};
+    }
+    this.createdFor.length ? pageAssembleCriteria.filters['createdFor'] = this.createdFor: null;
     pageAssembleCriteria.filters['compatibilityLevel'] = {
       "min": 1,
       "max": 4
@@ -667,7 +673,7 @@ export class CoursesPage implements OnInit {
             criteria.mode = 'soft';
             that.filterIcon = './assets/imgs/ic_action_filter.png';
           }
-          criteria.filters['createdFor'] = this.createdFor;
+          // this.createdFor.length ? criteria.filters['createdFor'] = this.createdFor: null;
           that.getPopularAndLatestCourses(criteria);
         });
       }

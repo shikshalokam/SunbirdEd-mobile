@@ -9,10 +9,13 @@ import {
   PermissionService,
   ProfileService,
   ProfileType,
+  Profile,
   SharedPreferences,
   TabsPage,
   TelemetryService,
-  UserProfileService
+  UserProfileService,
+  OAuthService,
+  UserSource
 } from 'sunbird';
 import { ProfileSettingsPage } from './../pages/profile-settings/profile-settings';
 import { Component, NgZone, ViewChild } from '@angular/core';
@@ -40,6 +43,9 @@ import { TncUpdateHandlerService } from '@app/service/handlers/tnc-update-handle
 import { Badge } from '@ionic-native/badge';
 import { SpinnerDialog } from '@ionic-native/spinner-dialog';
 import { NativeStorage } from '@ionic-native/native-storage';
+import { HttpClient } from '@angular/common/http';
+import { AppConfig } from '@app/config/appConfig';
+import { OnboardingPage } from '@app/pages/onboarding/onboarding';
 
 declare var chcp: any;
 
@@ -88,7 +94,10 @@ export class MyApp {
     private tncUpdateHandlerService: TncUpdateHandlerService,
     private badge: Badge,
     private spinnerDialog: SpinnerDialog,
-    private storage: NativeStorage
+    private storage: NativeStorage,
+    private http: HttpClient,
+    private alertCntrl: AlertController,
+    private oAuth: OAuthService
     // private fcm: FcmProvider
   ) {
 
@@ -190,98 +199,112 @@ export class MyApp {
             profile = JSON.parse(profile);
             // this.fcm.initializeFCM();
             initTabs(that.containerService, LOGIN_TEACHER_TABS);
-              const sessionObj = JSON.parse(session);
-              this.preference.getString('SHOW_WELCOME_TOAST')
-                .then(success => {
-                  if (success === 'true') {
-                    that.preference.putString('SHOW_WELCOME_TOAST', 'false');
-                    const req = {
-                      userId: sessionObj[ProfileConstants.USER_TOKEN],
-                      requiredFields: ProfileConstants.REQUIRED_FIELDS,
-                      refreshUserProfileDetails: true
-                    };
-                    that.userProfileService.getUserProfileDetails(req, res => {
-                      const userDetails = res ? JSON.parse(res) : {};
-                      const rootOrgHashID = userDetails.rootOrg.hashTagId;
-                      let subOrgIds = [];
-                      for (const org of userDetails.organisations) {
-                        if(rootOrgHashID !== org.hashTagId){
-                          subOrgIds.push(org.hashTagId);
-                        }
+            const sessionObj = JSON.parse(session);
+            this.preference.getString('SHOW_WELCOME_TOAST')
+              .then(success => {
+                if (success === 'true') {
+                  that.preference.putString('SHOW_WELCOME_TOAST', 'false');
+                  const req = {
+                    userId: sessionObj[ProfileConstants.USER_TOKEN],
+                    requiredFields: ProfileConstants.REQUIRED_FIELDS,
+                    refreshUserProfileDetails: true
+                  };
+                  that.userProfileService.getUserProfileDetails(req, res => {
+                    const userDetails = res ? JSON.parse(res) : {};
+                    const rootOrgHashID = userDetails.rootOrg.hashTagId;
+                    let subOrgIds = [];
+                    for (const org of userDetails.organisations) {
+                      if (rootOrgHashID !== org.hashTagId) {
+                        subOrgIds.push(org.hashTagId);
                       }
-                      this.storage.setItem("subOrgIds", subOrgIds).then(success => {
-                        console.log("success");
-                      }).catch(error => {
-                        console.log("error")
-                      })
-
-                      setTimeout(() => {
-                        this.commonUtilService
-                          .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
-                      }, 2500);
-                    }, () => {
-                    });
-                  }
-                });
-
-              that.rootPage = TabsPage;
-
-
-
-
-           /*  if (profile
-              && profile.syllabus && profile.syllabus[0]
-              && profile.board && profile.board.length
-              && profile.grade && profile.grade.length
-              && profile.medium && profile.medium.length) {
-              initTabs(that.containerService, LOGIN_TEACHER_TABS);
-              const sessionObj = JSON.parse(session);
-              this.preference.getString('SHOW_WELCOME_TOAST')
-                .then(success => {
-                  if (success === 'true') {
-                    that.preference.putString('SHOW_WELCOME_TOAST', 'false');
-                    const req = {
-                      userId: sessionObj[ProfileConstants.USER_TOKEN],
-                      requiredFields: ProfileConstants.REQUIRED_FIELDS,
-                      refreshUserProfileDetails: true
-                    };
-                    that.userProfileService.getUserProfileDetails(req, res => {
-                      setTimeout(() => {
-                        this.commonUtilService
-                          .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
-                      }, 2500);
-                    }, () => {
-                    });
-                  }
-                });
-
-              that.rootPage = TabsPage;
-            } else {
-              const sessionObj = JSON.parse(session);
-              const req = {
-                userId: sessionObj[ProfileConstants.USER_TOKEN],
-                requiredFields: ProfileConstants.REQUIRED_FIELDS,
-                refreshUserProfileDetails: true
-              };
-              that.userProfileService.getUserProfileDetails(req, res => {
-                const r = JSON.parse(res);
-                that.formAndFrameworkUtilService.updateLoggedInUser(r, profile)
-                  .then((value) => {
-                    if (value['status']) {
-                      this.nav.setRoot(TabsPage);
-                      initTabs(that.containerService, LOGIN_TEACHER_TABS);
-                      // that.rootPage = TabsPage;
-                    } else {
-                      that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true, profile: value['profile'] });
                     }
-                  }).catch(() => {
-                    that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
+
+                    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.userPrmission + '/' + JSON.parse(res).userId;
+                    console.log(res)
+
+                    this.http.get(url).subscribe(success => {
+                      if (success['result'].isAllowed) {
+                        setTimeout(() => {
+                          this.commonUtilService
+                            .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
+                        }, 2500);
+                        this.storage.setItem("subOrgIds", [success['result'].organisationId]).then(success => {
+                          console.log("success");
+                        }).catch(error => {
+                          console.log("error")
+                        })
+                      } else {
+                        this.unAutherizedAlert(success['result'].validationMessage);
+                      }
+                    }, error => {
+
+                    })
+
+
+
+                  }, () => {
                   });
-              }, err => {
-                console.log('err', err);
-                that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
+                }
               });
-             } */
+
+            that.rootPage = TabsPage;
+
+
+
+
+            /*  if (profile
+               && profile.syllabus && profile.syllabus[0]
+               && profile.board && profile.board.length
+               && profile.grade && profile.grade.length
+               && profile.medium && profile.medium.length) {
+               initTabs(that.containerService, LOGIN_TEACHER_TABS);
+               const sessionObj = JSON.parse(session);
+               this.preference.getString('SHOW_WELCOME_TOAST')
+                 .then(success => {
+                   if (success === 'true') {
+                     that.preference.putString('SHOW_WELCOME_TOAST', 'false');
+                     const req = {
+                       userId: sessionObj[ProfileConstants.USER_TOKEN],
+                       requiredFields: ProfileConstants.REQUIRED_FIELDS,
+                       refreshUserProfileDetails: true
+                     };
+                     that.userProfileService.getUserProfileDetails(req, res => {
+                       setTimeout(() => {
+                         this.commonUtilService
+                           .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
+                       }, 2500);
+                     }, () => {
+                     });
+                   }
+                 });
+ 
+               that.rootPage = TabsPage;
+             } else {
+               const sessionObj = JSON.parse(session);
+               const req = {
+                 userId: sessionObj[ProfileConstants.USER_TOKEN],
+                 requiredFields: ProfileConstants.REQUIRED_FIELDS,
+                 refreshUserProfileDetails: true
+               };
+               that.userProfileService.getUserProfileDetails(req, res => {
+                 const r = JSON.parse(res);
+                 that.formAndFrameworkUtilService.updateLoggedInUser(r, profile)
+                   .then((value) => {
+                     if (value['status']) {
+                       this.nav.setRoot(TabsPage);
+                       initTabs(that.containerService, LOGIN_TEACHER_TABS);
+                       // that.rootPage = TabsPage;
+                     } else {
+                       that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true, profile: value['profile'] });
+                     }
+                   }).catch(() => {
+                     that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
+                   });
+               }, err => {
+                 console.log('err', err);
+                 that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
+               });
+              } */
           });
 
         }
@@ -304,7 +327,66 @@ export class MyApp {
       this.handleBackButton();
     });
   }
-  
+
+
+  unAutherizedAlert(message) {
+    let alert = this.alertCntrl.create({
+      title: 'Unauthorized',
+      subTitle: message,
+      enableBackdropDismiss:false,
+      buttons: [{
+        text: 'Re-login',
+        role: 'cancel',
+        handler: () => {
+          this.oAuth.doLogOut();
+          this.storage.clear();
+          (<any>window).splashscreen.clearPrefs();
+          const profile: Profile = new Profile();
+          this.preferences.getString('GUEST_USER_ID_BEFORE_LOGIN')
+            .then(val => {
+              if (val !== '') {
+                profile.uid = val;
+              } else {
+                this.preferences.putString(PreferenceKey.SELECTED_USER_TYPE, ProfileType.TEACHER);
+              }
+
+              profile.handle = 'Guest1';
+              profile.profileType = ProfileType.TEACHER;
+              profile.source = UserSource.LOCAL;
+
+              this.events.publish(AppGlobalService.USER_INFO_UPDATED);
+              this.profileService.setCurrentProfile(true, profile).then(() => {
+                this.navigateToAptPage();
+              }).catch(() => {
+                this.navigateToAptPage();
+              });
+            });
+          console.log('Cancel clicked');
+        }
+      },]
+    });
+    alert.present();
+  }
+
+  navigateToAptPage() {
+    if (this.appGlobalService.DISPLAY_ONBOARDING_PAGE) {
+      this.app.getRootNav().setRoot(OnboardingPage);
+    } else {
+      this.preferences.getString(PreferenceKey.SELECTED_USER_TYPE)
+        .then(val => {
+          this.appGlobalService.getGuestUserInfo();
+          if (val === ProfileType.STUDENT) {
+            initTabs(this.container, GUEST_STUDENT_TABS);
+          } else if (val === ProfileType.TEACHER) {
+            initTabs(this.container, GUEST_TEACHER_TABS);
+          }
+        });
+      this.app.getRootNav().setRoot(TabsPage, {
+        loginMode: 'guest'
+      });
+    }
+  }
+
   /**
    * It will read profile settings configuration and navigates to appropriate page
    * @param hideBackButton To hide the navigation back button in the profile settings page
@@ -505,7 +587,7 @@ export class MyApp {
       InteractType.TOUCH,
       InteractSubtype.TAB_CLICKED,
       Environment.HOME,
-      pageid ? pageid.toLowerCase(): null,
+      pageid ? pageid.toLowerCase() : null,
       null,
       undefined,
       undefined
@@ -516,7 +598,7 @@ export class MyApp {
     (<any>window).splashscreen.onDeepLink(deepLinkResponse => {
 
       console.log('Deeplink : ' + deepLinkResponse);
-      deepLinkResponse ? this.spinnerDialog.show('','Please wait while redirecting...') : null;
+      deepLinkResponse ? this.spinnerDialog.show('', 'Please wait while redirecting...') : null;
       setTimeout(() => {
         const response = deepLinkResponse;
 
@@ -553,7 +635,7 @@ export class MyApp {
       });
     } else if (content.mimeType === MimeType.COLLECTION) {
       console.log('Calling collection details page');
-       this.nav.push(CollectionDetailsPage, {
+      this.nav.push(CollectionDetailsPage, {
         content: content
       });
     } else {

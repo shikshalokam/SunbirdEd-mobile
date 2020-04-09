@@ -10,6 +10,7 @@ export const AppConfig = {
         search:"v1/bodh/search/middleware",
         bodhSearch:"/api/content/v1/search?orgdetails=orgName,email&framework=NCF",
         pageAssemble:"/api/data/v1/page/assemble",
-        middleware:"v1/bodh/request/middleware"
+        middleware:"v1/bodh/request/middleware",
+        userPrmission:'v1/bodh/abhyasa/userIsAllowed'
     },
 }
