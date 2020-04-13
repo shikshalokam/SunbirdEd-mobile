@@ -5,7 +5,7 @@ import {MyApp} from './app.component';
 import {StatusBar} from '@ionic-native/status-bar';
 import {TranslateLoader, TranslateModule, TranslateService} from '@ngx-translate/core';
 import {TranslateHttpLoader} from '@ngx-translate/http-loader';
-import {HttpClient, HttpClientModule} from '@angular/common/http';
+import {HttpClient, HttpClientModule, HTTP_INTERCEPTORS} from '@angular/common/http';
 import {PluginModules} from './module.service';
 import {EventService, FrameworkModule, TabsPage} from 'sunbird';
 import {AppVersion} from '@ionic-native/app-version';
@@ -25,6 +25,7 @@ import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.
 import { SlutilService } from '@app/service';
 import { Badge } from '@ionic-native/badge';
 import { SpinnerDialog } from '@ionic-native/spinner-dialog';
+import { ApiInterceptor } from '@app/service/api-interceptor.service';
 
 // import { FCM } from '@ionic-native/fcm';
 // import { LocalNotifications } from '@ionic-native/local-notifications/ngx';
@@ -88,7 +89,9 @@ export const createTranslateLoader = (httpClient: HttpClient) => {
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     SlutilService,
     Badge,
-    SpinnerDialog
+    SpinnerDialog,
+    {provide: HTTP_INTERCEPTORS, useClass: ApiInterceptor, multi: true}
+
     // FcmProvider,
     // HTTP,
     // FCM,

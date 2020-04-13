@@ -23,6 +23,8 @@ import {
   EventTopics
 } from '../../app/app.constant';
 import { CommonUtilService } from '../../service/common-util.service';
+import { HttpClient } from '@angular/common/http';
+import { AppConfig } from '@app/config/appConfig';
 
 /**
  * Generated class for the CourseBatchesPage page.
@@ -93,8 +95,9 @@ export class CourseBatchesPage implements OnInit {
     private zone: NgZone,
     private authService: AuthService,
     private commonUtilService: CommonUtilService,
-    private events: Events
-  ) {  }
+    private events: Events,
+    private http: HttpClient
+  ) { }
 
   ngOnInit(): void {
     this.getUserId();
@@ -117,6 +120,7 @@ export class CourseBatchesPage implements OnInit {
       .then((data: any) => {
         data = JSON.parse(data);
         this.zone.run(() => {
+          this.sync(enrollCourseRequest);
           console.log('You have successfully enrolled...');
           this.commonUtilService.showToast(this.commonUtilService.translateMessage('COURSE_ENROLLED'));
           this.events.publish(EventTopics.ENROL_COURSE_SUCCESS, {
@@ -137,6 +141,25 @@ export class CourseBatchesPage implements OnInit {
           }
         });
       });
+  }
+
+  /**
+ * 
+ * call kendra sync api
+ */
+
+  sync(obj) {
+    const payload = {
+      batchId: obj.batchId,
+      userIds: [obj.userId],
+      courseId: obj.courseId
+    }
+    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.sync;
+    this.http.post(url, payload).subscribe(success => {
+
+    }, error => {
+
+    })
   }
 
   /**

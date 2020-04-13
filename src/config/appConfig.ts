@@ -7,6 +7,7 @@ export const AppConfig = {
     apiConstants: {
         searchAutoComplete: "v1/bodh/search/autocomplete",
         search:"v1/bodh/search/middleware",
-        bodhSearch:"/api/content/v1/search?orgdetails=orgName,email&framework=NCF"
+        bodhSearch:"/api/content/v1/search?orgdetails=orgName,email&framework=NCF",
+        sync:"v1/bodh/batch/enrol"
     }
 }
