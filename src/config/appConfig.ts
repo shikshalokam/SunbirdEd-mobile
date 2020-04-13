@@ -11,6 +11,7 @@ export const AppConfig = {
         bodhSearch:"/api/content/v1/search?orgdetails=orgName,email&framework=NCF",
         pageAssemble:"/api/data/v1/page/assemble",
         middleware:"v1/bodh/request/middleware",
-        userPrmission:'v1/bodh/abhyasa/userIsAllowed'
-    },
+        userPrmission:'v1/bodh/abhyasa/userIsAllowed',
+        sync:"v1/bodh/batch/enrol"
+    }
 }
