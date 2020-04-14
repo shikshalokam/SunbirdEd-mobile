@@ -49,6 +49,12 @@ export class UserTypeSelectionPage {
   eoCardBorderColor='#F7F7F7';
   slCardBorderColor='#F7F7F7';
   othrCardBorderColor='#F7F7F7';
+  sgtBorderColor = '#F7F7F7';
+  saBorderColor = '#F7F7F7';
+  schmBorderColor = '#F7F7F7';
+  meoBorderColor = '#F7F7F7';
+  deoBorderColor = '#F7F7F7';
+  soBorderColor = '#F7F7F7';
   userTypeSelected = false;
   selectedUserType: ProfileType;
   continueAs = '';
@@ -124,6 +130,26 @@ export class UserTypeSelectionPage {
     this.selectCard('USER_TYPE_1', ProfileType.TEACHER);
   }
 
+  selectSgtCard() {
+    this.selectCard('USER_TYPE_SGT', ProfileType.TEACHER);
+  }
+
+  selectSaCard() {
+    this.selectCard('USER_TYPE_SA', ProfileType.TEACHER);
+  }
+
+  selectSchmCard() {
+    this.selectCard('USER_TYPE_SCHM', ProfileType.TEACHER);
+  }
+  selectMeoCard() {
+    this.selectCard('USER_TYPE_MEO', ProfileType.TEACHER);
+  }
+  selectDeoCard() {
+    this.selectCard('USER_TYPE_DEO', ProfileType.TEACHER);
+  }
+  selectSoCard() {
+    this.selectCard('USER_TYPE_SO', ProfileType.TEACHER);
+  }
   selectStudentCard() {
     this.selectCard('USER_TYPE_2', ProfileType.STUDENT);
   }
@@ -148,6 +174,12 @@ export class UserTypeSelectionPage {
       this.slCardBorderColor = (userType === 'USER_TYPE_SL') ? selectedCardBorderColor : borderColor;
       this.eoCardBorderColor = (userType === 'USER_TYPE_EO') ? selectedCardBorderColor : borderColor;
       this.othrCardBorderColor= (userType === 'USER_TYPE_Other') ? selectedCardBorderColor : borderColor;
+      this.sgtBorderColor = (userType === 'USER_TYPE_SGT') ? selectedCardBorderColor : borderColor;
+      this.saBorderColor = (userType === 'USER_TYPE_SA') ? selectedCardBorderColor : borderColor;
+      this.schmBorderColor = (userType === 'USER_TYPE_SCHM') ? selectedCardBorderColor : borderColor;
+      this.meoBorderColor = (userType === 'USER_TYPE_MEO') ? selectedCardBorderColor : borderColor;
+      this.deoBorderColor = (userType === 'USER_TYPE_DEO') ? selectedCardBorderColor : borderColor;
+      this.soBorderColor = (userType === 'USER_TYPE_SO') ? selectedCardBorderColor : borderColor;
       this.selectedUserType = profileType;
       this.continueAs = this.commonUtilService.translateMessage(
         'CONTINUE_AS_ROLE',
