@@ -17,7 +17,9 @@
   <div text-center class="padding-top-10 padding-bottom-10">
     <p class="profile-name">
       <span class="user">{{profile?.handle}}</span>
-      <span><ion-icon class="editIcon" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon></span>
+      <span>
+        <ion-icon class="editIcon" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+      </span>
     </p>
 
     <p class="change-role" (click)="goToRoles()" text-uppercase>
@@ -40,9 +42,11 @@
         <ion-col class="font-size-14rem page-content" col-6 text-end>
           <div *ngIf="profile?.syllabus && profile?.syllabus !== ''">
             <div class="ellipsis text-align">{{syllabus}}</div>
-            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()">
+            </ion-icon>
           </div>
-          <div *ngIf="!profile?.syllabus?.length" (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
+          <div *ngIf="!profile?.syllabus?.length" (click)="editGuestProfile()" class="vertical-align">
+            {{'ADD' | translate}}</div>
         </ion-col>
       </ion-row>
 
@@ -53,9 +57,11 @@
         <ion-col class="font-size-14rem page-content" col-6 text-end>
           <div *ngIf="profile?.syllabus?.length && profile?.board?.length">
             <div class="ellipsis text-align">{{boards}}</div>
-            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()">
+            </ion-icon>
           </div>
-          <div *ngIf="!profile.syllabus?.length || !profile?.board?.length" (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
+          <div *ngIf="!profile.syllabus?.length || !profile?.board?.length" (click)="editGuestProfile()"
+            class="vertical-align">{{'ADD' | translate}}</div>
         </ion-col>
       </ion-row>
 
@@ -66,10 +72,11 @@
         <ion-col class="ellipsis font-size-14rem page-content" col-6 text-end>
           <div *ngIf="profile?.syllabus?.length && profile?.board?.length && profile?.medium?.length">
             <div class="ellipsis text-align">{{medium}}</div>
-            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()">
+            </ion-icon>
           </div>
-          <div *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length" (click)="editGuestProfile()"
-            class="vertical-align">{{'ADD' | translate}}</div>
+          <div *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length"
+            (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
         </ion-col>
       </ion-row>
 
@@ -78,11 +85,14 @@
           <div class="info-title" text-uppercase>{{'CLASS' | translate}}</div>
         </ion-col>
         <ion-col class="ellipsis font-size-14rem page-content" col-6 text-end>
-          <div *ngIf="profile?.syllabus?.length && profile?.board?.length && profile?.medium?.length && profile?.grade?.length">
+          <div
+            *ngIf="profile?.syllabus?.length && profile?.board?.length && profile?.medium?.length && profile?.grade?.length">
             <div class="ellipsis text-align">{{grade}}</div>
-            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()">
+            </ion-icon>
           </div>
-          <div *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length || !profile?.grade?.length"
+          <div
+            *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length || !profile?.grade?.length"
             (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
         </ion-col>
       </ion-row>
@@ -92,11 +102,14 @@
           <div class="info-title" text-uppercase>{{'SUBJECTS' | translate}}</div>
         </ion-col>
         <ion-col class="ellipsis font-size-14rem page-content" col-6 text-end>
-          <div *ngIf="profile?.syllabus?.length && profile?.board?.length && profile?.medium?.length && profile?.grade?.length && profile?.subject?.length">
+          <div
+            *ngIf="profile?.syllabus?.length && profile?.board?.length && profile?.medium?.length && profile?.grade?.length && profile?.subject?.length">
             <div class="ellipsis text-align">{{subjects}}</div>
-            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()"></ion-icon>
+            <ion-icon class="icon-align" float="end" name="md-create" color="primary" (click)="editGuestProfile()">
+            </ion-icon>
           </div>
-          <div *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length || !profile?.grade?.length || !profile?.subject?.length"
+          <div
+            *ngIf="!profile?.syllabus?.length || !profile?.board?.length || !profile?.medium?.length || !profile?.grade?.length || !profile?.subject?.length"
             (click)="editGuestProfile()" class="vertical-align">{{'ADD' | translate}}</div>
         </ion-col>
       </ion-row>
@@ -106,4 +119,21 @@
   <div *ngIf="showSignInCard" class="signin-card-bg">
     <sign-in-card (valueChange)="buttonClick($event)"></sign-in-card>
   </div>
+
+
 </ion-content>
+
+<ion-footer>
+  <div class="flex_box_column">
+    <div class="greenText">Abhyasa - Andhra Pradesh Self Learning App</div>
+    <div class="centerSection">
+      <img src="assets/imgs/CM.png" class="greenBorder" />
+      <img src="assets/imgs/ap_logo.png" class="centerCad" />
+      <div class="greenBorder ministerCard">
+        <img src="assets/imgs/AP_Minister5.png"  style="width: 70px;" />
+      </div>
+
+    </div>
+    <div>Department of School Education, Andhra Pradesh</div>
+  </div>
+</ion-footer>

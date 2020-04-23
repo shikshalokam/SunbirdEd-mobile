@@ -523,3 +523,44 @@ padding-top: 12px !important;
   max-width: 55vw;    
   width: auto !important;    
 }
+.flex_box_column {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  padding-bottom: 10px;
+}
+.flex_box {
+  display: flex;
+  justify-content: space-between;
+}
+.greenBorder {
+  border: 2px solid green;
+  border-radius: 90px;
+  height: 85px;
+  width: 85px;
+}
+.greenText {
+  color: green;
+}
+.centerCad {
+  margin: 0 20px;
+  width: 70px;
+  height: 70px;
+}
+.centerSection {
+  margin: 5px 0;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+.footer-md::before, .header-md::after, .tabs-md[tabsPlacement=bottom]>.tabbar::before, .tabs-md[tabsPlacement=top]>.tabbar::after{
+  background-image: none;
+}
+.ministerCard  {
+  overflow: hidden;
+  justify-content: center;
+  align-items: flex-end;
+  display: flex;
+}

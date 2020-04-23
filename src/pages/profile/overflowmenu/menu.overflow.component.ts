@@ -150,6 +150,8 @@ export class OverflowMenuComponent {
         }
     }
 
+    closeAbout() {}
+
     navigateToAptPage() {
         if (this.appGlobalService.DISPLAY_ONBOARDING_PAGE) {
             this.app.getRootNav().setRoot(OnboardingPage);

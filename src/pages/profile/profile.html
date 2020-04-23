@@ -19,7 +19,6 @@
     <div padding-horizontal text-center class="MT15" *ngIf="profile?.firstName">
         <profile-avatar [username]="profile?.firstName"></profile-avatar>
     </div>
-
     <div padding-horizontal text-center>
         <ion-spinner *ngIf="isUploading"></ion-spinner>
         <p class="profile-name">{{ profile?.firstName }} {{ profile?.lastName }}</p>
@@ -33,10 +32,12 @@
             </div>
         </div>
         <div class="" text-center>
-            <button ion-button clear *ngIf="rolesLimit < roles?.length" (click)="showMoreItems()" class="txt-capitalize">
+            <button ion-button clear *ngIf="rolesLimit < roles?.length" (click)="showMoreItems()"
+                class="txt-capitalize">
                 + {{roles?.length - 2}} {{'MORE' | translate}} <ion-icon class="ML10" name="ios-arrow-down"></ion-icon>
             </button>
-            <button ion-button clear *ngIf="rolesLimit > DEFAULT_PAGINATION_LIMIT" (click)="showLessItems()" class="txt-capitalize">
+            <button ion-button clear *ngIf="rolesLimit > DEFAULT_PAGINATION_LIMIT" (click)="showLessItems()"
+                class="txt-capitalize">
                 {{'SHOW_LESS' | translate }} <ion-icon class="ML10" name="ios-arrow-up"></ion-icon>
             </button>
         </div>
@@ -51,7 +52,8 @@
             <span *ngIf="orgDetails?.state?.name">{{orgDetails?.state?.name}}</span>
         </div>
     </div>
-   <!-- <div class="location text-center" *ngIf="isCustodianOrgId">
+
+    <!-- <div class="location text-center" *ngIf="isCustodianOrgId">
         <div>
             <span class="bolder">{{'STATE' | translate}}: </span>
             <span *ngIf="userLocation?.state && userLocation?.state?.name && userLocation?.state?.name?.length">{{userLocation.state.name}}</span>
@@ -131,16 +133,18 @@
     <div class="badges" padding-horizontal text-center *ngIf="profile?.badgeAssertions?.length > 0">
         <p class="bolder f16">{{'MY_BADGES' | translate }} ({{profile?.badgeAssertions?.length}})&lrm;</p>
         <ion-avatar item-center="" *ngFor="let batch of profile.badgeAssertions | slice : startLimit:badgesLimit;">
-             <img height="80px" width="auto" src="{{batch.badgeClassImage}}">
-           <!--  <img-loader  spinner="true"  width="auto" margin="auto" height="80px" src="{{batch.badgeClassImage}}" fallback="./assets/imgs/ic_launcher.png"
+            <img height="80px" width="auto" src="{{batch.badgeClassImage}}">
+            <!--  <img-loader  spinner="true"  width="auto" margin="auto" height="80px" src="{{batch.badgeClassImage}}" fallback="./assets/imgs/ic_launcher.png"
           fallbackAsPlaceholder="false" style="margin-left : 37%;"></img-loader> -->
         </ion-avatar>
         <div class="" text-center>
             <button ion-button round *ngIf="badgesLimit < profile?.badgeAssertions?.length" (click)="showMoreBadges()"
                 class="txt-capitalize custom-round">
-                + {{profile?.badgeAssertions?.length - 2}} {{'MORE' | translate}} <ion-icon class="ML10" name="ios-arrow-down"></ion-icon>
+                + {{profile?.badgeAssertions?.length - 2}} {{'MORE' | translate}} <ion-icon class="ML10"
+                    name="ios-arrow-down"></ion-icon>
             </button>
-            <button ion-button round *ngIf="badgesLimit > DEFAULT_PAGINATION_LIMIT" (click)="showLessBadges()" class="txt-capitalize custom-round">
+            <button ion-button round *ngIf="badgesLimit > DEFAULT_PAGINATION_LIMIT" (click)="showLessBadges()"
+                class="txt-capitalize custom-round">
                 {{'SHOW_LESS' | translate }} <ion-icon class="ML10" name="ios-arrow-up"></ion-icon>
             </button>
         </div>
@@ -153,7 +157,8 @@
         <div class="cards-container" style="padding:15px 5px; background-color: #fff; ">
             <ion-scroll scrollX="true" style="width: 100%" no-padding>
                 <div *ngIf="contentCreatedByMe  && isLoggedInUser">
-                    <ion-card *ngFor="let courseItem of contentCreatedByMe; let i=index" (click)="navigateToDetailPage(courseItem, layoutPopular, i);">
+                    <ion-card *ngFor="let courseItem of contentCreatedByMe; let i=index"
+                        (click)="navigateToDetailPage(courseItem, layoutPopular, i);">
                         <ion-card-content>
                             <ion-row class="top">
                                 <ion-col col-3 class="img-container">
@@ -168,7 +173,8 @@
                                     <div class="f11 ellipsis info" *ngIf="courseItem.subject">
                                         {{'SUBJECT'| translate}}: {{courseItem?.subject}}
                                     </div>
-                                    <div class="f11 ellipsis info" *ngIf="courseItem.gradeLevel && courseItem.gradeLevel.length">
+                                    <div class="f11 ellipsis info"
+                                        *ngIf="courseItem.gradeLevel && courseItem.gradeLevel.length">
                                         {{'CLASS' | translate}}: {{courseItem?.gradeLevel}}
                                     </div>
                                     <div class="f11 ellipsis info" *ngIf="courseItem.medium">
@@ -209,15 +215,31 @@
                 </div>
             </div>
             <div class="" text-center>
-                <button ion-button round class="txt-capitalize custom-round" *ngIf="trainingsLimit < trainingsCompleted.length"
-                    (click)="showMoreTainings()">
-                    + {{trainingsCompleted?.length - 2}} {{'MORE' | translate}} <ion-icon class="ML10" name="ios-arrow-down"></ion-icon>
+                <button ion-button round class="txt-capitalize custom-round"
+                    *ngIf="trainingsLimit < trainingsCompleted.length" (click)="showMoreTainings()">
+                    + {{trainingsCompleted?.length - 2}} {{'MORE' | translate}} <ion-icon class="ML10"
+                        name="ios-arrow-down"></ion-icon>
                 </button>
-                <button ion-button round class="txt-capitalize custom-round" *ngIf="trainingsLimit > DEFAULT_PAGINATION_LIMIT"
-                    (click)="showLessTrainings()">
+                <button ion-button round class="txt-capitalize custom-round"
+                    *ngIf="trainingsLimit > DEFAULT_PAGINATION_LIMIT" (click)="showLessTrainings()">
                     {{'SHOW_LESS' | translate }} <ion-icon class="ML10" name="ios-arrow-up"></ion-icon>
                 </button>
             </div>
         </div>
     </div>
+
 </ion-content>
+<ion-footer>
+    <div class="flex_box_column">
+      <div class="greenText">Abhyasa - Andhra Pradesh Self Learning App</div>
+      <div class="centerSection">
+        <img src="assets/imgs/CM.png" class="greenBorder" />
+        <img src="assets/imgs/ap_logo.png" class="centerCad" />
+        <div class="greenBorder ministerCard">
+          <img src="assets/imgs/AP_Minister5.png"  style="width: 70px;" />
+        </div>
+  
+      </div>
+      <div>Department of School Education, Andhra Pradesh</div>
+    </div>
+  </ion-footer>
