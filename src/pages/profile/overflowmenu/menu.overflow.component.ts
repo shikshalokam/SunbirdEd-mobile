@@ -8,7 +8,8 @@ import {
     ViewController,
     App,
     Nav,
-    Events
+    Events,
+    ModalController
 } from 'ionic-angular';
 import { SettingsPage } from '../../settings/settings';
 import {
@@ -65,7 +66,8 @@ export class OverflowMenuComponent {
         private container: ContainerService,
         private commonUtilService: CommonUtilService,
         private events: Events,
-        private storage: NativeStorage
+        private storage: NativeStorage,
+        private modalCtrl: ModalController
     ) {
         this.items = this.navParams.get('list');
         this.profile = this.navParams.get('profile') || {};
@@ -147,6 +149,12 @@ export class OverflowMenuComponent {
                 }
 
                 break;
+            case 'ABOUT':
+                // const aboutModal = this.modalCtrl.create('AboutPage');
+                // aboutModal.present();
+                this.app.getActiveNav().push('AboutPage');
+                this.nav.p
+                break    
         }
     }
 
