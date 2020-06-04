@@ -124,8 +124,9 @@ export class ShareUrl {
 }
 
 export class MenuOverflow {
-    public static readonly MENU_GUEST = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS'];
-    public static readonly MENU_LOGIN = ['USERS_AND_GROUPS', 'REPORTS', 'SETTINGS', 'LOGOUT'];
+    // 'USERS_AND_GROUPS'
+    public static readonly MENU_GUEST = [ 'REPORTS', 'SETTINGS', 'ABOUT'];
+    public static readonly MENU_LOGIN = ['REPORTS', 'SETTINGS', 'ABOUT', 'LOGOUT'];
 }
 
 export class FormConstant {

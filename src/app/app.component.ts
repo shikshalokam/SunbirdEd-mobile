@@ -211,37 +211,38 @@ export class MyApp {
                   };
                   that.userProfileService.getUserProfileDetails(req, res => {
                     const userDetails = res ? JSON.parse(res) : {};
+                    const rootOrgHashID = (userDetails && userDetails.rootOrg) ? userDetails.rootOrg.hashTagId : null;
+                    // let subOrgIds = [];
+                    // for (const org of userDetails.organisations) {
+                    //   if (org.hashTagId && rootOrgHashID !== org.hashTagId) {
+                    //     subOrgIds.push(org.hashTagId);
+                    //   }
+                    // }
+
+                    this.checkAccessAPI(res);
+
+     
+
+
+
+                  }, () => {
+                  });
+                } else {
+                  const req = {
+                    userId: sessionObj[ProfileConstants.USER_TOKEN],
+                    requiredFields: ProfileConstants.REQUIRED_FIELDS,
+                    refreshUserProfileDetails: false
+                  };
+                  that.userProfileService.getUserProfileDetails(req, res => {
+                    const userDetails = res ? JSON.parse(res) : {};
                     const rootOrgHashID = userDetails.rootOrg.hashTagId;
-                    let subOrgIds = [];
-                    for (const org of userDetails.organisations) {
-                      if (rootOrgHashID !== org.hashTagId) {
-                        subOrgIds.push(org.hashTagId);
-                      }
-                    }
-
-                    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.userPrmission + '/' + JSON.parse(res).userId;
-                    console.log(res)
-
-                    this.http.get(url).subscribe(success => {
-                      if (success['result'].isAllowed) {
-                        setTimeout(() => {
-                          this.commonUtilService
-                            .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
-                        }, 2500);
-                        this.storage.setItem("subOrgIds", [success['result'].organisationId]).then(success => {
-                          console.log("success");
-                        }).catch(error => {
-                          console.log("error")
-                        })
-                      } else {
-                        this.unAutherizedAlert(success['result'].validationMessage);
-                      }
-                    }, error => {
-
-                    })
-
-
-
+                    // let subOrgIds = [];
+                    // for (const org of userDetails.organisations) {
+                    //   if (rootOrgHashID !== org.hashTagId) {
+                    //     subOrgIds.push(org.hashTagId);
+                    //   }
+                    // }
+                    this.checkAccessAPI(res);
                   }, () => {
                   });
                 }
@@ -328,12 +329,33 @@ export class MyApp {
     });
   }
 
+  checkAccessAPI(res) {
+    const url = AppConfig.apiBaseUrl + AppConfig.baseUrls.kendraUrl + AppConfig.apiConstants.userPrmission + '/' + JSON.parse(res).userId;
+    this.http.get(url).subscribe(success => {
+      if (success['result'].isAllowed) {
+        setTimeout(() => {
+          this.commonUtilService
+            .showToast(this.commonUtilService.translateMessage('WELCOME_BACK', JSON.parse(res).firstName));
+        }, 2500);
+        this.storage.setItem("subOrgIds", [success['result'].organisationId]).then(success => {
+          console.log("success");
+        }).catch(error => {
+          console.log("error")
+        })
+      } else {
+        this.unAutherizedAlert(success['result'].validationMessage);
+      }
+    }, error => {
+
+    })
+  }
+
 
   unAutherizedAlert(message) {
     let alert = this.alertCntrl.create({
       title: 'Unauthorized',
       subTitle: message,
-      enableBackdropDismiss:false,
+      enableBackdropDismiss: false,
       buttons: [{
         text: 'Re-login',
         role: 'cancel',
