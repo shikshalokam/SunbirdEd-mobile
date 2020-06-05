@@ -185,12 +185,10 @@ export class ContentActionsComponent {
         this.events.publish('savedResources:update', {
           update: true
         });
-        console.log('delete response: ', data);
         this.showToaster(this.getMessageByConstant('MSG_RESOURCE_DELETED'));
         this.viewCtrl.dismiss('delete.success');
       }
     }).catch((error: any) => {
-      console.log('delete response: ', error);
       this.showToaster(this.getMessageByConstant('CONTENT_DELETE_FAILED'));
       this.viewCtrl.dismiss();
     });

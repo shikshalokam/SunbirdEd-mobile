@@ -310,7 +310,6 @@ export class ProfileSettingsPage {
       this.formAndFrameworkUtilService.getFrameworkDetails(this.frameworkId)
         .then(catagories => {
           this.categories = catagories;
-          console.log('this.categories', this.categories);
           const request: CategoryRequest = {
             currentCategory: this.categories[0].code,
             selectedLanguage: this.translate.currentLang,
@@ -330,7 +329,6 @@ export class ProfileSettingsPage {
         selectedLanguage: this.selectedLanguage,
         categories: FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES
       };
-      console.log('else getCategoryData', request);
       this.getCategoryData(request, currentField);
     }
   }
@@ -341,7 +339,6 @@ export class ProfileSettingsPage {
 	 * @param {boolean} showloader Flag for showing loader or not
 	 */
   resetForm(index, showloader: boolean): void {
-    console.log('resetForm index', index);
     const oldAttribute: any = {};
     const newAttribute: any = {};
     switch (index) {
@@ -542,7 +539,6 @@ export class ProfileSettingsPage {
       .catch((err: any) => {
         loader.dismiss();
         this.commonUtilService.showToast('PROFILE_UPDATE_FAILED');
-        console.log('Err', err);
       });
   }
 

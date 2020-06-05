@@ -255,7 +255,6 @@ describe.only('GroupDetailsPage', () => {
         // arrange
         const popover = { present: jest.fn() };
         const profile = JSON.stringify(userList[1]);
-        console.log(userList[1]);
         popoverCtrlMock.create.mockReturnValue(popover);
         // act
         groupDetailsPage.userList = userList;
@@ -304,7 +303,6 @@ describe.only('GroupDetailsPage', () => {
         groupDetailsPage.userList = userList;
         spyOn(groupDetailsPage, 'translateMessage').and.stub();
         alertControllerMock.create.mockReturnValue(alert);
-        console.log(userList[1].handle);
         // act
         groupDetailsPage.userDeleteGroupConfirmBox(0);
         // assert

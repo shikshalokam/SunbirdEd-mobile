@@ -229,7 +229,6 @@ export class CreateGroupPage {
     }
 
     frameworkId = frameworkId ? frameworkId : this.groupEditForm.value.syllabus;
-    console.log('framework id', frameworkId);
     this.groupEditForm.patchValue({
       class: []
     });

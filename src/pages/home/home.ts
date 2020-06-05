@@ -96,7 +96,6 @@ export class HomePage {
     // // TODO: remove this hardcodec id before pushing the code
     // this.userId = '659b011a-06ec-4107-84ad-955e16b0a48a';
     this.events.subscribe('genie.event', (response) => {
-      console.log('Result ' + response);
     });
   }
   /**
@@ -127,7 +126,6 @@ export class HomePage {
         }
       })
       .catch((error: any) => {
-        console.log('error while loading enrolled courses', error);
         this.spinner(false);
       });
   }
@@ -138,7 +136,6 @@ export class HomePage {
    * It internally calls Announcement List handler of genie sdk
    */
   getAnnouncementList(): void {
-    console.log('making api call to Announcement list');
     const option = {
       limit: 2,
       offset: 1
@@ -146,9 +143,7 @@ export class HomePage {
     this.announcementService.getAnnouncementList(option, (data: any) => {
       if (data) {
         data = JSON.parse(data);
-        console.log(data);
         this.ngZone.run(() => {
-          console.log('this announcement list', this.announcementList);
           Array.prototype.push.apply(this.announcementList, data.announcements);
           this.announcementList.forEach(announcement => {
             announcement.attachments.forEach(element => {
@@ -160,7 +155,6 @@ export class HomePage {
         });
       }
     }, (error: any) => {
-      console.log('error while loading  Announcement list', error);
       this.spinner(false);
     });
   }
@@ -176,7 +170,6 @@ export class HomePage {
    * Angular life cycle hooks
    */
   ionViewWillEnter() {
-    console.log('ng oninit component initialized...');
     this.spinner(true);
     this.getUserId();
     this.getAnnouncementList();
@@ -215,9 +208,7 @@ export class HomePage {
 
   onSyncClick() {
     this.telemetryService.sync().then((response) => {
-      console.log('Telemetry Home : ' + response);
     }).catch((error) => {
-      console.log('Telemetry Home : ' + error);
     });
     this.downloadContent();
   }
@@ -233,12 +224,9 @@ export class HomePage {
     contentImportRequest.contentImportMap = {
       'do_2123823398249594881455': contentImport
     };
-    console.log('Hello ' + JSON.stringify(contentImportRequest));
     this.contentService.importContent(contentImportRequest)
     .then((response) => {
-      console.log('Home : ' + response);
     }) .then((error) => {
-      console.log('Home : ' + error);
     });
   }
 
@@ -265,7 +253,6 @@ export class HomePage {
   getUserId(): void {
     this.authService.getSessionData((session) => {
       if (session === undefined || session == null) {
-        console.log('session expired');
       } else {
         this.getProfileCompletionDetails(session);
       }

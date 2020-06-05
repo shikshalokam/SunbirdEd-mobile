@@ -232,7 +232,6 @@ export class UserTypeSelectionPage {
         this.profile.profileType = this.selectedUserType;
         this.profileService.updateProfile(this.profile)
           .then((res: any) => {
-            console.log('tabs page');
             this.navCtrl.push(TabsPage, {
               loginMode: 'guest'
             });

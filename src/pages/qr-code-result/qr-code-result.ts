@@ -396,7 +396,6 @@ export class QrCodeResultPage {
     req.source = this.profile.source;
     req.createdAt = this.profile.createdAt;
     req.syllabus = this.profile.syllabus;
-    console.log('qrcode editProfile req', req);
     // Shorthand for above code
     // req = (({board, grade, medium, subject, uid, handle, profileType, source, createdAt, syllabus}) =>
     // ({board, grade, medium, subject, uid, handle, profileType, source, createdAt, syllabus}))(this.profile);
@@ -461,7 +460,6 @@ export class QrCodeResultPage {
 	 */
 
   setCurrentProfile(index, data) {
-    console.log('setCurrentProfile index', index);
     if (!this.profile.medium || !this.profile.medium.length) {
       this.profile.medium = [];
     }
@@ -604,8 +602,6 @@ export class QrCodeResultPage {
       this.zone.run(() => {
         data = JSON.parse(data);
         const res = data;
-        console.log('Geni Event!');
-        console.log(res);
 
         if (res.type === 'downloadProgress' && res.data.downloadProgress) {
           if (res.data.downloadProgress === -1 || res.data.downloadProgress === '-1') {
@@ -678,7 +674,6 @@ export class QrCodeResultPage {
       })
       .catch((error: any) => {
         this.zone.run(() => {
-          console.log('error while loading content details', error);
           this.isDownloadStarted = false;
           this.showLoading = false;
           const errorRes = JSON.parse(error);

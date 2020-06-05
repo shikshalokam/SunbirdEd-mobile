@@ -70,7 +70,6 @@ export class ShareUserAndGroupPage {
         });
       });
     }).catch((error) => {
-      console.log('Something went wrong while fetching user list', error);
     });
   }
 
@@ -97,16 +96,12 @@ export class ShareUserAndGroupPage {
                 const userForGroups = JSON.parse(profiles);
                 this.userGroupMap.set(group.gid, userForGroups);
               }
-              console.log('UserList', profiles);
             });
           }).catch((error) => {
-            console.log('Something went wrong while fetching user list', error);
           });
         });
 
-        console.log('GroupList', groups);
       }).catch((error) => {
-        console.log('Something went wrong while fetching data', error);
       });
     });
   }
@@ -121,7 +116,6 @@ export class ShareUserAndGroupPage {
   toggleGroupSelected(index: number) {
     const selectedGroup = this.groupList[index];
     const allUser = this.userGroupMap.get(selectedGroup.gid);
-    console.log(selectedGroup , allUser);
     if (this.selectedGroupList.indexOf(selectedGroup.gid) === -1) {
       // Add User & Group
       this.selectedGroupList.push(selectedGroup.gid);

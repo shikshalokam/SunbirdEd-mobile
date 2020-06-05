@@ -85,9 +85,7 @@ export class AnnouncementDetailComponent implements OnInit {
         this.navParams = navParams;
         this.announcementService = announcementService;
         this.zone = zone;
-        console.log('Course identifier ===> ', this.navParams.get('identifier'));
         this.announcementId = this.navParams.get('id');
-        console.log(this.announcementId);
     }
     /**
      * To get Announcement  details.
@@ -97,11 +95,9 @@ export class AnnouncementDetailComponent implements OnInit {
             announcementId: this.navParams.get('id')
         };
 
-        console.log('Making api call to get Announcement details');
         this.announcementService.getAnnouncementDetails(req).then((data: any) => {
             this.zone.run(() => {
                 data = JSON.parse(data);
-                console.log('Announcemet details response ==>', data);
                 this.announcementDetail = data ? data : [];
             });
 
@@ -112,7 +108,6 @@ export class AnnouncementDetailComponent implements OnInit {
             }
         })
             .catch((error) => {
-                console.log('error while loading content details', error);
             });
     }
 
@@ -142,11 +137,8 @@ export class AnnouncementDetailComponent implements OnInit {
          ${announcementDetail.title}\n Links:  ${announcementDetail.links}`;
         const attachmentPath: string = this.file.externalRootDirectory + 'Announcements/' + announcementDetail.id +
          '/' + announcementDetail.attachments[0].name;
-        console.log(attachmentPath);
         this.socialSharing.share(message, null, attachmentPath, null).then(() => {
-            console.log('inside .then function');
         }).catch((error) => {
-            console.log(error);
         });
     }
 
@@ -195,7 +187,6 @@ export class AnnouncementDetailComponent implements OnInit {
                     }
                 ).catch(
                     (err) => {
-                        console.log('Error in creating  Announcements directory - ' + err);
                     }
                 );
             }
@@ -220,17 +211,13 @@ export class AnnouncementDetailComponent implements OnInit {
             }
         ).catch(
             (error) => {
-                console.log('Announcement ID directory not found ');
                 this.file.createDir(announcementPath, this.announcementId, true).then(
                     (value) => {
-                        console.log('Announcement ID Directory created path - ' + value);
-
                         this.downloadAndSaveFile(url, attachmentPath, attachmentFileName);
 
                     }
                 ).catch(
                     (err) => {
-                        console.log('Error in creating Announcement ID directory - ' + err);
                     });
             }
         );
@@ -248,7 +235,6 @@ export class AnnouncementDetailComponent implements OnInit {
         this.file.checkFile(attachmentPath, attachmentFileName).then(
             (found) => {
                 if (found) {
-                    console.log('files found ' + found);
                     const path: string = attachmentPath + attachmentFileName;
                     this.attachmentService.checkExtensionAndOpenFile(path);
                 } else {
@@ -263,7 +249,6 @@ export class AnnouncementDetailComponent implements OnInit {
             }
         ).catch(
             (err) => {
-                console.log('files not found ');
                 this.showProgressBar = true;
 
                 this.attachmentService.downloadAttachment(url, attachmentPath + attachmentFileName);

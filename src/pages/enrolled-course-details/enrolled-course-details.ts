@@ -271,7 +271,6 @@ export class EnrolledCourseDetailsPage {
           this.profileType = userType;
         })
         .catch((error) => {
-          console.log('Error Occurred', error);
           this.profileType = '';
         });
     }
@@ -997,7 +996,6 @@ export class EnrolledCourseDetailsPage {
             });
           })
           .catch((error: any) => {
-            console.log('error while fetching course batches ==>', error);
           });
       } else {
         this.navCtrl.push(CourseBatchesPage);

@@ -19,7 +19,6 @@ export class AboutAppPage {
   }
 
   /*ionViewDidLoad() {
-    console.log('ionViewDidLoad AboutAppPage');
   }*/
 
 }

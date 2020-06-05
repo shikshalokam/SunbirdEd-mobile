@@ -36,10 +36,8 @@ describe('Directive: ReadMore', () => {
 
     xit('should raise selected event when clicked', () => {
         //inputEl.triggerEventHandler('click', null);
-        console.log("inputEl", inputEl);
         const readMoreElement: HTMLElement = fixture.nativeElement;
         const p = readMoreElement.querySelector('p');
-        console.log("readMoreElement", p.innerHTML);
         expect(true).toBe(true);
         expect(p.textContent).toContain('READ_LESS');
     });

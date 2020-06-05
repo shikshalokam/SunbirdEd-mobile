@@ -142,7 +142,6 @@
 //                 return { setFocus: () => ({}) };
 //             });
 //             spyOn(comp.input, 'setFocus');
-//             console.log('comp.input', comp.input);
 //             comp.ionViewDidEnter();
 //             fixture.detectChanges();
 //             // tick(100);
@@ -257,7 +256,6 @@
 //             comp.onInput(event);
 //             authServiceStub.getSessionData(success => {
 //                 expect(success).toBe(null);
-//                 console.log('AuthRes1', success);
 //                 callback();
 //             });
 //             setTimeout(() => {

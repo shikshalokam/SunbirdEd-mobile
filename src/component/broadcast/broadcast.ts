@@ -25,7 +25,6 @@ export class BroadcastComponent {
     this.imageUrl = this.navParams.get('imageurl');
     this.customButton = this.navParams.get('customButton');
     this.greetingText = this.navParams.get('greetingText');
-    console.log('image url', this.imageUrl);
   }
 
 }

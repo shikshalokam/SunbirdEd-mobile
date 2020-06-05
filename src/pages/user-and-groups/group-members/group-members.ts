@@ -73,12 +73,10 @@ export class GroupMembersPage {
         latestCreatedProfile: true
       };
       this.profileService.getProfile(req).then((lastCreatedProfile: any) => {
-        console.log('lastCreatedProfile: ', lastCreatedProfile);
         this.lastCreatedProfileData = JSON.parse(lastCreatedProfile);
         resolve(JSON.parse(lastCreatedProfile));
       }).catch(error => {
         reject(null);
-        console.log('error in fetching last created profile data' + error);
       });
     });
   }
@@ -98,10 +96,8 @@ export class GroupMembersPage {
             loader.dismiss();
             this.loading = false;
           }
-          console.log('UserList', profiles);
         });
       }).catch((error) => {
-        console.log('Something went wrong while fetching user list', error);
       });
     });
   }
@@ -117,7 +113,6 @@ export class GroupMembersPage {
   }
 
   isUserSelected(index: number) {
-    console.log('Index', index);
     return Boolean(this.userSelectionMap.get(this.userList[index].uid));
   }
 
@@ -171,7 +166,6 @@ export class GroupMembersPage {
         return this.groupService.addUpdateProfilesToGroup(req);
       })
       .then(success => {
-        console.log(success);
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('GROUP_CREATE_SUCCESS'));
         this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 3));
@@ -179,7 +173,6 @@ export class GroupMembersPage {
       .catch(error => {
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
-        console.log('Error : ' + error);
         loader.dismiss();
       });
   }

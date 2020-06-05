@@ -288,8 +288,6 @@ export class CollectionDetailsEtbPage {
     return this.shownGroup === group;
   }
   changeValue(event, text) {
-    console.log('EVENT Thrown', event);
-    console.log('Tetx Inside ChnageValue', text);
     if (!text) {
       this.isSelected = false;
     } else {
@@ -396,7 +394,6 @@ export class CollectionDetailsEtbPage {
       .then((data: any) => {
         this.zone.run(() => {
           data = JSON.parse(data);
-          // console.log('Data', data);
           loader.dismiss().then(() => {
             if (data && data.result) {
               this.extractApiResponse(data);
@@ -405,7 +402,6 @@ export class CollectionDetailsEtbPage {
         });
       })
       .catch((error: any) => {
-        console.log('error while loading content details', error);
         loader.dismiss();
         this.commonUtilService.showToast('ERROR_CONTENT_NOT_AVAILABLE');
         this.navCtrl.pop();
@@ -420,7 +416,6 @@ export class CollectionDetailsEtbPage {
     this.contentDetail.isAvailableLocally = data.result.isAvailableLocally;
     if (this.contentDetail.isAvailableLocally) {
       this.localImage = (data.result.basePath + '/' + this.contentDetail.appIcon);
-     // console.log('LocalImage', this.localImage);
     }
     this.objId = this.contentDetail.identifier;
     this.objVer = this.contentDetail.pkgVersion;
@@ -588,7 +583,6 @@ export class CollectionDetailsEtbPage {
       })
       .catch((error: any) => {
         this.zone.run(() => {
-          console.log('error while loading content details', error);
           // if (this.isDownloadStarted) {
           this.showDownloadBtn = true;
           this.isDownloadStarted = false;
@@ -621,7 +615,6 @@ export class CollectionDetailsEtbPage {
         data = JSON.parse(data);
         this.zone.run(() => {
           if (data && data.result && data.result.children) {
-          //  console.log('ChildrenData', this.childrenData);
             this.childrenData = data.result.children;
           }
 
@@ -633,7 +626,6 @@ export class CollectionDetailsEtbPage {
         });
       })
       .catch((error: string) => {
-        console.log('Error: while fetching child contents ===>>>', error);
         this.zone.run(() => {
           this.showChildrenLoader = false;
         });

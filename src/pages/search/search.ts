@@ -370,7 +370,6 @@ export class SearchPage {
         this.showLoader = false;
       });
     }).catch((error) => {
-      console.log('Error : ' + JSON.stringify(error));
       this.zone.run(() => {
         this.showLoader = false;
       });
@@ -585,7 +584,6 @@ export class SearchPage {
         this.showLoader = false;
       });
     }).catch((error) => {
-      console.log('Error : ' + JSON.parse(error));
       this.zone.run(() => {
         this.showLoader = false;
         if (!this.commonUtilService.networkInfo.isNetworkAvailable) {

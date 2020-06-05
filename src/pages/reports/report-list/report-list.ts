@@ -42,7 +42,6 @@ export class ReportListPage {
         this.uids = this.navParams.get('uids');
         this.handle = this.navParams.get('handle');
         this.groupinfo = this.navParams.get('group');
-        console.log(this.groupinfo);
         const loader = this.loading.create({
             spinner: 'crescent'
         });
@@ -57,12 +56,8 @@ export class ReportListPage {
         };
         this.contentService.getLocalContents(requestParams)
             .then(contentList => {
-				console.log(contentList);
                 this.reportService.getListOfReports(this.uids)
                     .then(list => {
-						console.log("==============LIST OF REPORTS==============");
-						console.log(list);
-						console.log("==============LIST OF REPORTS END==============");
                         this.ngZone.run(() => {
                             loader.dismiss();
                             this.listOfReports = list;
@@ -90,9 +85,6 @@ export class ReportListPage {
         const telemetryObject: TelemetryObject = new TelemetryObject();
         telemetryObject.id = report.contentId;
         telemetryObject.type = ObjectType.CONTENT;
-		console.log("in group rep list");
-		console.log(report);
-		console.log("end of group rep list");
         this.telemetryGeneratorService.generateInteractTelemetry(
             InteractType.TOUCH,
             InteractSubtype.CONTENT_CLICKED,

@@ -80,7 +80,6 @@ export class OnboardingService {
                     }
                 })
                     .catch((err: any) => {
-                        console.log('Err1', err);
                         reject(err);
                     });
             } else {
@@ -198,7 +197,6 @@ export class OnboardingService {
                 resolve(index);
             })
                 .catch((err: any) => {
-                    console.log('Err1', err);
                     reject(err);
                 });
         });

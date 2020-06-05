@@ -130,7 +130,6 @@ export class SignInCardComponent {
         })
         .catch(error => {
           loader.dismiss();
-          console.log(error);
         });
     }
   }

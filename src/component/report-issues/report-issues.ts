@@ -141,7 +141,6 @@ export class ReportIssuesComponent {
         this.commonUtilService.showToast('CONTENT_FLAGGED_MSG');
       })
         .catch((data: any) => {
-          console.log('error:', data);
           this.viewCtrl.dismiss();
           this.commonUtilService.showToast('CONTENT_FLAG_FAIL');
         });

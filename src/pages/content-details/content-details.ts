@@ -305,7 +305,6 @@ export class ContentDetailsPage {
           this.profileType = userType;
         })
         .catch((error) => {
-          console.log('Error Occurred', error);
           this.profileType = '';
         });
     }
@@ -368,12 +367,7 @@ export class ContentDetailsPage {
     }
     //Added by sriram -- To be tested
     //const telemetryObject: TelemetryObject = { id: this.objId, type: this.objType, version: this.objVer };
-    console.log("not used: " + this.objId + " :: " + this.objType);
-    console.log("used: " + this.content.identifier + " :: " + this.content.contentType);
     const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
-    console.log("===== start of telemetry =====");
-    console.log(telemetryObject);
-    console.log("===== end of telemetry =====");
     this.telemetryGeneratorService.generateInteractTelemetry(
       InteractType.TOUCH,
       InteractSubtype.RATING_CLICKED,
@@ -427,7 +421,6 @@ export class ContentDetailsPage {
       })
       .catch((error: any) => {
         const data = JSON.parse(error);
-        console.log('Error received', data);
         loader.dismiss();
         if (this.isDownloadStarted) {
           this.content.downloadable = false;
@@ -695,7 +688,6 @@ export class ContentDetailsPage {
         }
       })
       .catch((error) => {
-        console.log('error while loading content details', error);
         if (this.isDownloadStarted) {
           this.content.downloadable = false;
           this.isDownloadStarted = false;
@@ -743,7 +735,6 @@ export class ContentDetailsPage {
 
         // For streaming url available
         if (res.data && res.type === 'streamingUrlAvailable') {
-          console.log('res.data', res.data);
           this.zone.run(() => {
             if (res.data.identifier === this.identifier) {
               this.content.streamingUrl = res.data.streamingUrl;
@@ -826,7 +817,6 @@ export class ContentDetailsPage {
       });
     }).catch((error: any) => {
       this.zone.run(() => {
-        console.log('Error: download error =>>>>>', error);
       });
     });
   }
@@ -1031,7 +1021,6 @@ export class ContentDetailsPage {
   updateBookmarkPreference() {
     // this.preference.putString(PreferenceKey.IS_BOOKMARK_VIEWED, 'true');
     // this.viewCtrl.dismiss();
-    console.log('updateBookmarkPreference');
   }
 
   /**

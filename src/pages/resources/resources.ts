@@ -331,9 +331,7 @@ export class ResourcesPage implements OnInit, AfterViewInit {
 	 */
   setSavedContent() {
     // this.localResources = [];
-    console.log('in setSavedContent');
     // if(this.isOnBoardingCardCompleted || !this.guestUser){
-    // console.log('in setSavedContent isOnBoardingCardCompleted');
     this.showLoader = true;
     const requestParams: ContentFilterCriteria = {
       uid: this.profile ? this.profile.uid : undefined,
@@ -431,7 +429,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
       }
 
     }
-    console.log('pageAssembleCriteria', contentSearchCriteria);
     // swipe down to refresh should not over write current selected options
     if (contentSearchCriteria.grade) {
         this.getGroupByPageReq.grade = [contentSearchCriteria.grade[0]];
@@ -482,7 +479,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
         });
       })
       .catch(error => {
-        console.log('error while getting popular resources...', error);
         loader.dismiss();
         this.ngZone.run(() => {
           this.pageApiLoader = false;
@@ -661,7 +657,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
   }
 
   getCategoryData() {
-    console.log('this.appGlobalService.getCurrentUser()', this.appGlobalService.getCurrentUser());
     const syllabus: Array<string> = this.appGlobalService.getCurrentUser().syllabus;
     const frameworkId = (syllabus && syllabus.length > 0) ? syllabus[0] : undefined;
     const categories: Array<string> = FrameworkCategory.DEFAULT_FRAMEWORK_CATEGORIES;
@@ -683,14 +678,12 @@ export class ResourcesPage implements OnInit, AfterViewInit {
         this.arrangeMediumsByUserData(this.categoryMediums.map(a => ({...a})));
       })
       .catch(err => {
-        console.log('Something went wrong!');
       });
   }
 
 
   findWithAttr(array, attr, value) {
       for (let i = 0; i < array.length; i += 1) {
-          console.log(array[i][attr]);
           if (array[i][attr].toLowerCase() === value.toLowerCase()) {
               return i;
           }
@@ -699,7 +692,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
   }
 
   arrangeMediumsByUserData(categoryMediumsParam) {
-    console.log('categoryMediums ========', categoryMediumsParam);
     if (this.appGlobalService.getCurrentUser() &&
         this.appGlobalService.getCurrentUser().medium &&
         this.appGlobalService.getCurrentUser().medium.length) {
@@ -739,7 +731,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
           }
       })
       .catch(err => {
-        console.log('Something went wrong!');
       });
   }
   checkEmptySearchResult(isAfterLanguageChange = false) {
@@ -815,7 +806,6 @@ export class ResourcesPage implements OnInit, AfterViewInit {
     const values = new Map();
     values['sectionName'] = sectionName;
     values['positionClicked'] = index;
-    console.log('telemetryObject ', telemetryObject);
     this.telemetryGeneratorService.generateInteractTelemetry(InteractType.TOUCH,
       InteractSubtype.CONTENT_CLICKED,
       'home',

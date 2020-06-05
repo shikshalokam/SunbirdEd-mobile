@@ -70,7 +70,6 @@ export class ImagePicker {
                 });
             },
             (error: any) => {
-                console.log(error);
                 this.commonUtilService.showToast(this.commonUtilService.translateMessage('ERROR_SERVER_MESSAGE') + error);
                 this.viewCtrl.dismiss();
             }
@@ -100,7 +99,6 @@ export class ImagePicker {
                 this.updateProfilePictureEvent('', false);
             },
             (err: any) => {
-                console.log('Error', err);
                 this.viewCtrl.dismiss();
                 this.updateProfilePictureEvent('', false);
             });

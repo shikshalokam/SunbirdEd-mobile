@@ -363,7 +363,6 @@ export class CollectionDetailsPage {
         });
       })
       .catch((error: any) => {
-        console.log('error while loading content details', error);
         loader.dismiss();
         this.commonUtilService.showToast('ERROR_CONTENT_NOT_AVAILABLE');
         this.navCtrl.pop();
@@ -542,7 +541,6 @@ export class CollectionDetailsPage {
       })
       .catch((error: any) => {
         this.zone.run(() => {
-          console.log('error while loading content details', error);
           // if (this.isDownloadStarted) {
           this.showDownloadBtn = true;
           this.isDownloadStarted = false;
@@ -585,7 +583,6 @@ export class CollectionDetailsPage {
         });
       })
       .catch((error: string) => {
-        console.log('Error: while fetching child contents ===>>>', error);
         this.zone.run(() => {
           this.showChildrenLoader = false;
         });

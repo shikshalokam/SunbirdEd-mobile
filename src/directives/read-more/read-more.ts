@@ -35,7 +35,6 @@ export class ReadMoreDirective implements AfterViewInit, OnChanges {
   }
 
   ngOnChanges() {
-    console.log('On Changes Triggered', this.text);
     this.ngAfterViewInit();
   }
 

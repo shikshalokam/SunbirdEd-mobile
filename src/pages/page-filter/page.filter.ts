@@ -154,7 +154,6 @@ export class PageFilter {
           await this.getFrameworkData(frameworkId, element.code, index);
         }
       } catch (error) {
-        console.log('error: ' + error);
       }
       // Framework API doesn't return domain and content Type exclude them
       if (index === this.filters.length - 1) {
@@ -254,7 +253,6 @@ export class PageFilter {
         this.filters[index].values = res;
       })
       .catch(error => {
-        console.log(error, 'index', index);
       });
   }
 }

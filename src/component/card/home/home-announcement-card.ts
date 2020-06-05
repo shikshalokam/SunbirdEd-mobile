@@ -30,7 +30,6 @@ export class HomeAnnouncementCard {
   }
 
   onImageLoad(imgLoader: ImageLoader) {
-    console.log('Image Loader ' + imgLoader.nativeAvailable);
   }
 
   /**

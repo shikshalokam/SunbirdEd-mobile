@@ -19,7 +19,6 @@ export class EnrollmentDetailsPage {
   }
 
   ionViewDidLoad() {
-    console.log('ionViewDidLoad EnrollmentDetailsPage');
   }
 
   close(){

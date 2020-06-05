@@ -148,7 +148,6 @@ export class ContentRatingAlertComponent {
     const paramsMap = new Map();
     paramsMap['Ratings'] = this.ratingCount;
     paramsMap['Comment'] = this.comment;
-    console.log("used: "+this.content.identifier+" :: "+this.content.contentType);
 	const telemetryObject: TelemetryObject = { id: this.content.identifier, type: this.content.contentType, version: this.content.pkgVersion, rollup: undefined };
     this.telemetryService.interact(generateRatingSubmitTelemetry(
       InteractType.TOUCH,
@@ -168,13 +167,11 @@ export class ContentRatingAlertComponent {
     };
 
     this.contentService.sendFeedback(option).then((res: any) => {
-      console.log('success:', res);
       viewDismissData.message = 'rating.success';
       this.viewCtrl.dismiss(viewDismissData);
       this.commonUtilService.showToast(this.commonUtilService.translateMessage('THANK_FOR_RATING'));
     })
       .catch((data: any) => {
-        console.log('error:', data);
         viewDismissData.message = 'rating.error';
         // TODO: ask anil to show error message(s)
         this.viewCtrl.dismiss(viewDismissData);

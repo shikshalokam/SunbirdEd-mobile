@@ -129,7 +129,6 @@ export class SunbirdQRScanner {
         }
       }
     }).catch((error) => {
-      console.log('Error : ' + error);
     });
   }
 

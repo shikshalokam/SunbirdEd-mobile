@@ -78,7 +78,6 @@ export class LanguageSettingsPage {
       } else {
         const pId = this.isFromSettings ? PageId.SETTINGS_LANGUAGE : PageId.ONBOARDING_LANGUAGE_SETTING;
         const env = this.isFromSettings ? Environment.SETTINGS : Environment.ONBOARDING;
-        console.log('from others calling exit popup');
         this.commonUtilService.showExitPopUp(pId, env, false);
       }
       this.unregisterBackButton();
@@ -133,7 +132,6 @@ export class LanguageSettingsPage {
           this.defaultDeviceLang = res.value.split("-")[0];
           let lang = this.languages.find(i => i.code === this.defaultDeviceLang);
           if (lang != undefined && lang != null) {
-            console.log("Language chosen - " + lang.code)
             lang.isApplied = true;
             this.language = lang.code;
           } else {

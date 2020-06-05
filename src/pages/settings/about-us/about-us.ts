@@ -63,9 +63,7 @@ export class AboutUsPage {
 
   ionViewDidLeave() {
     (<any>window).supportfile.removeFile((result) => {
-      console.log('File deleted -' + JSON.parse(result));
     }, (error) => {
-      console.error('error', error);
     });
   }
 
@@ -134,7 +132,6 @@ export class AboutUsPage {
         return response;
       })
       .catch(error => {
-        console.log('Error--', error);
       });
   }
 
@@ -145,7 +142,6 @@ export class AboutUsPage {
         return response;
       })
       .catch(error => {
-        console.log('Error--', error);
       });
   }
 }

@@ -340,7 +340,6 @@ export class CoursesPage implements OnInit {
         }
       })
       .catch((error: any) => {
-        console.log('error while loading enrolled courses', error);
         this.spinner(false);
       });
   }
@@ -421,7 +420,6 @@ export class CoursesPage implements OnInit {
         this.checkEmptySearchResult();
       });
     }).catch((error: string) => {
-      console.log('Page assmble error', error);
       this.ngZone.run(() => {
         this.pageApiLoader = false;
         if (error === 'CONNECTION_ERROR') {
@@ -533,7 +531,6 @@ export class CoursesPage implements OnInit {
         this.getPopularAndLatestCourses();
       })
       .catch(error => {
-        console.log('Error while Fetching Data', error);
         this.getPopularAndLatestCourses();
       });
   }
@@ -676,7 +673,6 @@ export class CoursesPage implements OnInit {
         }
       })
       .catch((error: any) => {
-        console.log(error);
         this.commonUtilService.showToast('ERROR_CONTENT_NOT_AVAILABLE');
       });
   }

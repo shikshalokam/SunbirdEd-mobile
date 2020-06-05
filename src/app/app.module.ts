@@ -24,7 +24,7 @@ import {LogoutHandlerService} from '@app/service/handlers/logout-handler.service
 import {TncUpdateHandlerService} from '@app/service/handlers/tnc-update-handler.service';
 import { SlutilService } from '@app/service';
 import { Badge } from '@ionic-native/badge';
-import { SpinnerDialog } from '@ionic-native/spinner-dialog';
+// import { SpinnerDialog } from '@ionic-native/spinner-dialog';
 import { ApiInterceptor } from '@app/service/api-interceptor.service';
 
 // import { FCM } from '@ionic-native/fcm';
@@ -89,7 +89,7 @@ export const createTranslateLoader = (httpClient: HttpClient) => {
     { provide: ErrorHandler, useClass: IonicErrorHandler },
     SlutilService,
     Badge,
-    SpinnerDialog,
+    // SpinnerDialog,
     {provide: HTTP_INTERCEPTORS, useClass: ApiInterceptor, multi: true}
 
     // FcmProvider,
@@ -126,7 +126,6 @@ export class AppModule {
       }
 
     }, (error) => {
-      // console.log("Event : " + error);
     });
   }
 }

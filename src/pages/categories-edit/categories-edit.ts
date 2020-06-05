@@ -392,7 +392,6 @@ export class CategoriesEditPage {
       },
       (err: any) => {
         this.loader.dismiss();
-        console.log('Error', err);
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('PROFILE_UPDATE_FAILED'));
       });
   }

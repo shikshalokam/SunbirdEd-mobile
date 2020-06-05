@@ -153,16 +153,13 @@ export class UserAndGroupsPage {
 
   getCurrentGroup() {
     this.groupService.getCurrentGroup().then(val => {
-      console.log('Value : ' + val);
       const group = val.result;
       if (group) {
         this.zone.run(() => {
-          console.log('Value : ' + group.gid);
           this.currentGroupId = group.gid;
         });
       }
     }).catch(error => {
-      console.log('Error : ' + error);
     });
   }
 
@@ -260,7 +257,6 @@ export class UserAndGroupsPage {
           loader.dismiss();
           this.noUsersPresent = true;
           this.loadingUserList = false;
-          console.log('Something went wrong while fetching user list', error);
         });
       });
     }, 1000);
@@ -295,9 +291,7 @@ export class UserAndGroupsPage {
         } else {
           this.showEmptyGroupsMessage = true;
         }
-        console.log('GroupList', groups);
       }).catch((error) => {
-        console.log('Something went wrong while fetching data', error);
       });
     });
   }
@@ -385,7 +379,6 @@ export class UserAndGroupsPage {
       this.content.resize();
       this.selectedUserIndex = -1;
     });
-    console.log('Event', event._value);
     this.telemetryGeneratorService.generateImpressionTelemetry(
       ImpressionType.VIEW, '',
       event._value,
@@ -444,7 +437,6 @@ export class UserAndGroupsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked' + selectedUser);
           }
         },
         {
@@ -480,12 +472,10 @@ export class UserAndGroupsPage {
         latestCreatedProfile: true
       };
       this.profileService.getProfile(req).then((lastCreatedProfile: any) => {
-        console.log('lastCreatedProfile: ', lastCreatedProfile);
         this.lastCreatedProfileData = JSON.parse(lastCreatedProfile);
         resolve(JSON.parse(lastCreatedProfile));
       }).catch(error => {
         reject(null);
-        console.log('error in fetching last created profile data' + error);
       });
     });
   }
@@ -551,7 +541,6 @@ export class UserAndGroupsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked');
           }
         },
         {
@@ -592,11 +581,9 @@ export class UserAndGroupsPage {
       telemetryObject
     );
     this.groupService.deleteGroup(gid).then((success) => {
-      console.log(success);
       this.groupList.splice(index, 1);
       this.getAllGroup();
     }).catch((error) => {
-      console.log(error);
     });
   }
 
@@ -614,7 +601,6 @@ export class UserAndGroupsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked');
           }
         },
         {
@@ -646,7 +632,6 @@ export class UserAndGroupsPage {
     );
     this.profileService.deleteUser(uid)
       .then((result) => {
-        console.log('User Deleted Successfully', result);
         this.userList.splice(index, 1);
         if (this.userList.length === 0) {
           this.noUsersPresent = true;
@@ -695,10 +680,8 @@ export class UserAndGroupsPage {
   private setAsCurrentUser(selectedUser, isBeingPlayed: boolean) {
     this.groupService.setCurrentGroup(null)
       .then(val => {
-        console.log('Value : ' + val);
       })
       .catch(error => {
-        console.log('Error : ' + error);
       });
       this.profileService.setCurrentUser(selectedUser.uid) .then(() => {
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('SWITCHING_TO', selectedUser.handle),
@@ -720,7 +703,6 @@ export class UserAndGroupsPage {
       this.app.getRootNav().setRoot(TabsPage);
     }, 1000);
   }) .catch((error) => {
-    console.log('Error ' + error);
   });
   }
 // code which invokes loader

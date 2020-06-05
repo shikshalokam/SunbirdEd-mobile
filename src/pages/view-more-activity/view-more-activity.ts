@@ -384,7 +384,6 @@ export class ViewMoreActivityPage implements OnInit {
 
       })
       .catch((error: any) => {
-        console.log(error);
       });
   }
 

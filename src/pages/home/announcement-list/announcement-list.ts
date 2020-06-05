@@ -59,7 +59,6 @@ export class AnnouncementListComponent {
         this.authService = authService;
         this.userId = '659b011a-06ec-4107-84ad-955e16b0a48a';
         this.events.subscribe('genie.event', (response) => {
-            console.log('Result ' + response);
         });
     }
     /**
@@ -68,7 +67,6 @@ export class AnnouncementListComponent {
      * It internally calls Announcement List handler of genie sdk
      */
     getAnnouncementList(scrollEvent?): void {
-        console.log('making api call to Announcement list');
 
         const option = {
             offset: this.apiOffset,
@@ -77,11 +75,9 @@ export class AnnouncementListComponent {
         this.announcementService.getAnnouncementList(option, (data: any) => {
             if (data) {
                 data = JSON.parse(data);
-                console.log(data);
                 this.ngZone.run(() => {
                     this.enableInfiniteScroll = (this.apiOffset + this.apiLimit) < data.count ? true : false;
                     if (scrollEvent) { scrollEvent.complete(); }
-                    console.log('Data.announce', data.announcements);
                     Array.prototype.push.apply(this.announcementList, data.announcements);
                     this.announcementList.forEach(announcement => {
                         announcement.attachments.forEach(element => {
@@ -89,12 +85,10 @@ export class AnnouncementListComponent {
                             element.mimetype = element.mimetype[element.mimetype.length - 1];
                         });
                     });
-                    console.log('this announcement list', this.announcementList);
                     this.spinner(false);
                 });
             }
         }, (error: any) => {
-            console.log('error while loading  Announcement list', error);
             this.spinner(false);
         });
     }
@@ -108,7 +102,6 @@ export class AnnouncementListComponent {
      * Angular life cycle hooks
      */
     ionViewWillEnter() {
-        console.log('ng oninit component initialized...');
         this.spinner(true);
         this.getAnnouncementList();
     }
@@ -129,9 +122,7 @@ export class AnnouncementListComponent {
     }
     onSyncClick() {
         this.telemetryService.sync().then((response) => {
-            console.log('Telemetry Home : ' + response);
         }) .catch((error) => {
-            console.log('Telemetry Home : ' + error);
         });
         this.downloadContent();
     }
@@ -143,13 +134,10 @@ export class AnnouncementListComponent {
         contentImportRequest.contentImportMap = {
             'do_2123823398249594881455': contentImport
         };
-        console.log('Hello ' + JSON.stringify(contentImportRequest));
 
         this.contentService.importContent(contentImportRequest)
          .then((response) => {
-            console.log('Home : ' + response);
         }) .catch((error) => {
-            console.log('Home : ' + error);
         });
     }
     doInfiniteScroll(scrollEvent) {

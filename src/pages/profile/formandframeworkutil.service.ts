@@ -116,7 +116,6 @@ export class FormAndFrameworkUtilService {
             this.appGlobalService.setCourseFilterConfig(courseFilterConfig);
             resolve(courseFilterConfig);
         }).catch((error: any) => {
-            console.log('Error - ' + error);
             resolve(courseFilterConfig);
         });
     }
@@ -144,7 +143,6 @@ export class FormAndFrameworkUtilService {
             this.appGlobalService.setLibraryFilterConfig(libraryFilterConfig);
             resolve(libraryFilterConfig);
         }).catch((error: any) => {
-            console.log('Error - ' + error);
             resolve(libraryFilterConfig);
         });
     }
@@ -214,11 +212,9 @@ export class FormAndFrameworkUtilService {
      */
     checkNewAppVersion(): Promise<any> {
         return new Promise((resolve, reject) => {
-            console.log('checkNewAppVersion Called');
 
             this.appVersion.getVersionCode()
                 .then((versionCode: any) => {
-                    console.log('checkNewAppVersion Current app version - ' + versionCode);
 
                     let result: any;
 
@@ -257,7 +253,6 @@ export class FormAndFrameworkUtilService {
 
                                 ranges.forEach(element => {
                                     if (versionCode >= element.minVersionCode && versionCode <= element.maxVersionCode) {
-                                        console.log('App needs a upgrade of type - ' + element.type);
                                         type = element.type;
 
                                         if (type === forceType) {
@@ -417,7 +412,6 @@ export class FormAndFrameworkUtilService {
                         return rootOrganizations;
                     }
             } catch (error) {
-            console.log(error);
             }
 
      }
@@ -428,7 +422,6 @@ export class FormAndFrameworkUtilService {
                 // if data not cached
                 if (courseFrameworkId === undefined || courseFrameworkId.length === 0) {
                     courseFrameworkId = await this.framework.getCourseFrameworkId();
-                    console.log('COURSE FrameWork Id', courseFrameworkId);
                     // cache the data
                     this.appGlobalService.setCourseFrameworkId(courseFrameworkId);
                     return courseFrameworkId ;
@@ -437,7 +430,6 @@ export class FormAndFrameworkUtilService {
                         return courseFrameworkId;
                     }
             } catch (error) {
-            console.log(error);
             }
 
      }

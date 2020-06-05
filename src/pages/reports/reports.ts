@@ -71,7 +71,6 @@ export class ReportsPage {
           });
         })
         .catch((error) => {
-          console.log('Something went wrong while fetching user list', error);
           reject(error);
         });
     });

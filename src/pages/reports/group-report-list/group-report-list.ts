@@ -181,7 +181,6 @@ export class GroupReportListPage {
             })
                 .catch((error: any) => {
                     const data = JSON.parse(error);
-                    console.log('Error received', data);
                     loader.dismiss();
                 });
         } else
@@ -219,7 +218,6 @@ export class GroupReportListPage {
                 })
                     .catch((error: any) => {
                         const data = JSON.parse(error);
-                        console.log('Error received', data);
                         loader.dismiss();
                     });
             }

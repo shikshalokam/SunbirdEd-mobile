@@ -40,7 +40,6 @@ export class ReportAlert {
    * It will Dismiss active popup
    */
   dismissPopup() {
-    console.log('Fired ionViewWillLeave');
     const activePortal = this.ionicApp._modalPortal.getActive() || this.ionicApp._overlayPortal.getActive();
 
     if (activePortal) {

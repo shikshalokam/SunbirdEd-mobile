@@ -62,7 +62,6 @@ export class GroupReportAlert {
         }
       }) .catch((error: any) => {
         const data = JSON.parse(error);
-        console.log('Error received', data);
         loader.dismiss();
       });
     }

@@ -118,7 +118,6 @@ describe.only('UserReportPage Component', () => {
     userReportPage.response = csvdata;
     const csv = userReportPage.convertToCSV(csvdata);
     datePipeMock.transform.mockReturnValue('');
-    console.log(csv);
     expect(csv).toBeTruthy();
   });
 });

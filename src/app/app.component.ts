@@ -262,7 +262,6 @@ export class MyApp {
                     that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
                   });
               }, err => {
-                console.log('err', err);
                 that.nav.setRoot(CategoriesEditPage, { showOnlyMandatoryFields: true });
               });
              } */
@@ -282,7 +281,6 @@ export class MyApp {
       // try {
       //   this.fetchUpdate();
       // } catch (error) {
-      //   console.log(error);
       // }
 
       this.handleBackButton();
@@ -311,23 +309,19 @@ export class MyApp {
     this.formAndFrameworkUtilService.checkNewAppVersion()
       .then(result => {
         if (result !== undefined) {
-          console.log('Force Optional Upgrade - ' + JSON.stringify(result));
           setTimeout(() => {
             this.events.publish('force_optional_upgrade', { upgrade: result });
           }, 5000);
         }
       })
       .catch(error => {
-        console.log('Error - ' + error);
       });
   }
 
   makeEntryInSupportFolder() {
     (<any>window).supportfile.makeEntryInSunbirdSupportFile((result) => {
-      console.log('Result - ' + JSON.parse(result));
       this.preference.putString(KEY_SUNBIRD_SUPPORT_FILE_PATH, JSON.parse(result));
     }, (error) => {
-      console.log('Error - ' + error);
     });
   }
 
@@ -387,7 +381,6 @@ export class MyApp {
     if (error) {
       console.error(error);
     } else {
-      console.log('Update is loaded...');
       const confirm = window['thisRef'].alertCtrl.create({
         title: 'Application Update',
         message: 'Update available, do you want to apply it?',
@@ -405,7 +398,6 @@ export class MyApp {
                     buttons: ['OK']
                   }).present();
                 } else {
-                  console.log('Update installed...');
                 }
               });
             }
@@ -464,9 +456,7 @@ export class MyApp {
 
           });
         } else if (response && action && action.actionType === 'connected') {
-          console.log('connected to openrap device with the IP ' + action.ip);
         } else if (response && action && action.actionType === 'disconnected') {
-          console.log('disconnected from openrap device with the IP ' + action.ip);
         } else if (response && response.data.action && response.data.action === EventTopics.COURSE_STATUS_UPDATED_SUCCESSFULLY) {
           this.events.publish(EventTopics.COURSE_STATUS_UPDATED_SUCCESSFULLY, {
             update: true
@@ -499,7 +489,6 @@ export class MyApp {
   registerDeeplinks() {
     (<any>window).splashscreen.onDeepLink(deepLinkResponse => {
 
-      console.log('Deeplink : ' + deepLinkResponse);
       deepLinkResponse ? this.spinnerDialog.show('','Please wait while redirecting...') : null;
       setTimeout(() => {
         const response = deepLinkResponse;
@@ -531,17 +520,14 @@ export class MyApp {
 
   showContentDetails(content) {
     if (content.contentData.contentType === ContentType.COURSE) {
-      console.log('Calling course details page');
       this.nav.push(EnrolledCourseDetailsPage, {
         content: content
       });
     } else if (content.mimeType === MimeType.COLLECTION) {
-      console.log('Calling collection details page');
        this.nav.push(CollectionDetailsPage, {
         content: content
       });
     } else {
-      console.log('Calling content details page');
       this.nav.push(ContentDetailsPage, {
         content: content
       });
@@ -554,7 +540,6 @@ export class MyApp {
         const val = (value === '') ? 'true' : 'false';
         this.preference.putString('show_app_walkthrough_screen', val);
       });
-    console.log('open rap discovery enabled', this.appGlobalService.OPEN_RAPDISCOVERY_ENABLED);
   }
 
   showGreetingPopup() {
@@ -573,12 +558,9 @@ export class MyApp {
   // TODO: this method will be used to communicate with the openrap device
   openrapDiscovery() {
     if (this.appGlobalService.OPEN_RAPDISCOVERY_ENABLED) {
-      console.log('openrap called', this.appGlobalService.OPEN_RAPDISCOVERY_ENABLED);
       (<any>window).openrap.startDiscovery(
         (success) => {
-          console.log(success);
         }, (error) => {
-          console.log(error);
         }
       );
     }

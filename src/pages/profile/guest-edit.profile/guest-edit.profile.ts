@@ -567,7 +567,6 @@ export class GuestEditProfilePage {
       .catch((err: any) => {
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('PROFILE_UPDATE_FAILED'));
-        console.log('Err', err);
       });
   }
 

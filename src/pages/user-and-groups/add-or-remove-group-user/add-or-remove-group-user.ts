@@ -61,7 +61,6 @@ export class AddOrRemoveGroupUserPage {
     this.addUsers = Boolean(this.navParams.get('isAddUsers'));
     this.groupInfo = this.navParams.get('groupInfo');
     this.groupMembers = this.navParams.get('groupMembers');
-    console.log('length of group member', this.groupMembers.length);
   }
 
   ionViewWillEnter() {
@@ -93,7 +92,6 @@ export class AddOrRemoveGroupUserPage {
         });
       })
       .catch((error) => {
-        console.log('Something went wrong while fetching user list', error);
       });
   }
 
@@ -124,7 +122,6 @@ export class AddOrRemoveGroupUserPage {
   }
 
   isUserSelected(index: number) {
-    console.log('Index', index);
     this.getSelectedUids();
     return Boolean(this.userSelectionMap.get(this.uniqueUserList[index].uid));
   }
@@ -171,7 +168,6 @@ export class AddOrRemoveGroupUserPage {
       }
     });
 
-    console.log('selectedUids', selectedUids.length);
     this.zone.run(() => {
       this.selectedUserLength = (selectedUids.length) ? selectedUids.length.toString() : '';
     });
@@ -186,7 +182,6 @@ export class AddOrRemoveGroupUserPage {
       }
     });
 
-    console.log('selectedUids', selectedUids.length);
     this.zone.run(() => {
       this.selectedGroupMemberLength = (selectedUids.length) ? selectedUids.length.toString() : '';
     });
@@ -209,7 +204,6 @@ export class AddOrRemoveGroupUserPage {
     };
     this.groupService.addUpdateProfilesToGroup(req)
       .then((success) => {
-        console.log(success);
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('GROUP_MEMBER_ADD_SUCCESS'));
         this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 2));
@@ -217,7 +211,6 @@ export class AddOrRemoveGroupUserPage {
       .catch((error) => {
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
-        console.log('Error : ' + error);
         loader.dismiss();
       });
   }
@@ -234,7 +227,6 @@ export class AddOrRemoveGroupUserPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked');
           }
         },
         {
@@ -274,7 +266,6 @@ export class AddOrRemoveGroupUserPage {
 
     this.groupService.addUpdateProfilesToGroup(req)
       .then((success) => {
-        console.log(success);
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('GROUP_MEMBER_DELETE_SUCCESS'));
         this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 2));
@@ -282,7 +273,6 @@ export class AddOrRemoveGroupUserPage {
       .catch((error) => {
         loader.dismiss();
         this.commonUtilService.showToast(this.commonUtilService.translateMessage('SOMETHING_WENT_WRONG'));
-        console.log('Error : ' + error);
         loader.dismiss();
       });
   }

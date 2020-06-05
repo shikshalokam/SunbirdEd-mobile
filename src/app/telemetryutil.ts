@@ -51,9 +51,6 @@ export const generateRatingSubmitTelemetry = (interactType, subType, env, pageId
 	if (object && object.version) {
 		interact.objVer = object.version;
 	}
-	console.log("======= INTERACT TELEMETRY START =======");
-	console.log(interact);
-	console.log("======= INTERACT TELEMETRY END =======");
     return interact;
 };
 

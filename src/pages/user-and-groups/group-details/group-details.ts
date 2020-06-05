@@ -131,11 +131,9 @@ export class GroupDetailsPage {
             this.isNoUsers = (this.userList.length) ? false : true;
             loader.dismiss();
           }
-          console.log('UserList', JSON.parse(profiles));
         });
       }).catch((error) => {
         loader.dismiss();
-        console.log('Something went wrong while fetching user list', error);
       });
     });
   }
@@ -202,7 +200,6 @@ export class GroupDetailsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked' + selectedUser);
           }
         },
         {
@@ -284,10 +281,8 @@ export class GroupDetailsPage {
   }
 
   presentPopoverNav(myEvent) {
-    console.log('clicked nav popover');
     const popover = this.popOverCtrl.create(GroupDetailNavPopoverPage, {
       goToEditGroup: () => {
-        console.log('go to edit group');
         this.navCtrl.push(CreateGroupPage, {
           groupInfo: this.group
         });
@@ -340,7 +335,6 @@ export class GroupDetailsPage {
         popover.dismiss();
       },
       delete: () => {
-        console.log('in delete');
         this.userDeleteGroupConfirmBox(index);
         popover.dismiss();
 
@@ -368,7 +362,6 @@ export class GroupDetailsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked');
           }
         },
         {
@@ -384,7 +377,6 @@ export class GroupDetailsPage {
   }
 
   deleteGroup() {
-    console.log(this.group.gid);
     const telemetryObject: TelemetryObject = new TelemetryObject();
     telemetryObject.id = this.group.gid;
     telemetryObject.type = ObjectType.GROUP;
@@ -398,11 +390,9 @@ export class GroupDetailsPage {
       telemetryObject
     );
     this.groupService.deleteGroup(this.group.gid).then((sucess) => {
-      console.log(sucess);
       this.navCtrl.popTo(this.navCtrl.getByIndex(this.navCtrl.length() - 2));
 
     }).catch((error) => {
-      console.log(error);
     });
   }
 
@@ -420,7 +410,6 @@ export class GroupDetailsPage {
           role: 'cancel',
           cssClass: 'alert-btn-cancel',
           handler: () => {
-            console.log('Cancel clicked');
           }
         },
         {
@@ -451,14 +440,12 @@ export class GroupDetailsPage {
 
     this.groupService.addUpdateProfilesToGroup(req).then(
       (success) => {
-        console.log('success', success);
         this.userList.splice(userListIndex, 1);
         this.isNoUsers = (this.userList.length) ? false : true;
       }
     ).catch(error => {
 
     });
-    console.log('request is', req);
   }
 
   /**
@@ -499,7 +486,6 @@ export class GroupDetailsPage {
   private setAsCurrentUser(selectedUser, isBeingPlayed: boolean) {
     this.groupService.setCurrentGroup(this.group.gid)
       .then(val => {
-        console.log('Value : ' + val);
         this.profileService.setCurrentUser(selectedUser.uid) .then((success) => {
           if (isBeingPlayed) {
             this.event.publish('playConfig', this.playConfig);
@@ -526,10 +512,8 @@ export class GroupDetailsPage {
           toast.present();
 
         }) .catch((error) => {
-          console.log('Error ' + error);
         });
       }).catch(error => {
-        console.log('Error : ' + error);
       });
   }
 

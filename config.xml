@@ -23,7 +23,7 @@
     <hook src="scripts/copyGradleFiles.js" type="before_run" />
     <hook src="scripts/copyBundledData.js" type="before_run" />
     <platform name="android">
-        <config-file parent="/manifest/application" target="AndroidManifest.xml">
+        <config-file parent="/manifest/application" target="app/src/main/AndroidManifest.xml">
             <meta-data android:name="io.fabric.ApiKey" android:value="${fabricKey}" />
             <meta-data android:name="io.fabric.ApiSecret" android:value="${fabricSecret}" />
         </config-file>
@@ -87,35 +87,40 @@
         <splash height="480" src="resources/ios/splash/Default~iphone.png" width="320" />
         <splash height="2732" src="resources/ios/splash/Default@2x~universal~anyany.png" width="2732" />
     </platform>
-    <plugin name="cordova-plugin-file-opener2" spec="^2.0.19" />
-    <plugin name="cordova-plugin-customconfigparameters" spec="^3.0.0" />
+    <engine name="android" spec="^8.0.0" />
     <plugin name="ionic-plugin-keyboard" spec="^2.2.1" />
     <plugin name="cordova-plugin-whitelist" spec="^1.3.4" />
     <plugin name="cordova-plugin-ionic-webview" spec="^1.2.1" />
     <plugin name="cordova-plugin-globalization" spec="^1.11.0" />
     <plugin name="cordova-plugin-uniquedeviceid" spec="^1.3.2" />
     <plugin name="cordova-plugin-app-version" spec="^0.1.9" />
-    <plugin name="cordova-plugin-x-socialsharing" spec="^5.6.3" />
+    <plugin name="cordova-plugin-x-socialsharing" spec="^5.6.5">
+        <variable name="ANDROID_SUPPORT_V4_VERSION" value="24.1.1+" />
+    </plugin>
     <plugin name="cordova-plugin-device" spec="^1.1.7" />
     <plugin name="cordova-plugin-file" spec="^6.0.2" />
     <plugin name="cordova-plugin-file-transfer" spec="^1.7.1" />
-    <plugin name="cordova-plugin-inappbrowser" spec="^3.2.0" />
-    <plugin name="cordova-plugin-browsertab" spec="^0.2.0" />
     <plugin name="cordova-plugin-console" spec="^1.1.0" />
+    <plugin name="cordova-plugin-imagechooser" spec="git+https://github.com/project-sunbird/cordova-plugin-imagechooser.git#release-1.14.0" />
+    <plugin name="cordova-plugin-file-support" spec="git+https://github.com/project-sunbird/cordova-plugin-file-support.git#release-1.14.0" />
+    <plugin name="cordova-plugin-qr-scanner" spec="git+https://github.com/project-sunbird/cordova-plugin-qr-scanner.git#release-1.14.0" />
     <plugin name="cordova-plugin-network-information" spec="^2.0.2" />
+    <plugin name="cordova-plugin-customconfigparameters" spec="^3.0.0" />
+    <plugin name="cordova-plugin-browsertab" spec="^0.2.0" />
+    <plugin name="cordova-plugin-file-opener2" spec="^2.2.1">
+        <variable name="ANDROID_SUPPORT_V4_VERSION" value="27.+" />
+    </plugin>
+    <plugin name="cordova-plugin-sunbirdsplash" spec="git+https://github.com/project-sunbird/cordova-plugin-sunbirdsplash.git#release-1.14.0" />
+    <plugin name="cordova-plugin-genie-sdk" spec="git+https://github.com/project-sunbird/cordova-plugin-genie-sdk.git#release-1.14.0" />
+    <plugin name="cordova-plugin-openrap" spec="git+https://github.com/project-sunbird/cordova-plugin-openrap.git#release-1.14.0" />
     <plugin name="cordova-android-support-gradle-release" spec="^2.1.0">
         <variable name="ANDROID_SUPPORT_VERSION" value="27.1.0" />
     </plugin>
-    <plugin name="sb-cordova-plugin-customtabs" spec="https://github.com/Sunbird-Ed/sb-cordova-plugin-customtabs.git#release-1.14.0">
+    <plugin name="sb-cordova-plugin-customtabs" spec="git+https://github.com/Sunbird-Ed/sb-cordova-plugin-customtabs.git#release-1.14.0">
         <variable name="URL_SCHEME" value="org.shikshalokam.bodh" />
         <variable name="URL_HOST" value="mobile" />
     </plugin>
-    <plugin name="cordova-plugin-genie-sdk" spec="https://github.com/project-sunbird/cordova-plugin-genie-sdk.git#release-1.14.0" />
-    <plugin name="cordova-plugin-imagechooser" spec="https://github.com/project-sunbird/cordova-plugin-imagechooser.git#release-1.14.0" />
-    <plugin name="cordova-plugin-file-support" spec="https://github.com/project-sunbird/cordova-plugin-file-support.git#release-1.14.0" />
-    <plugin name="cordova-plugin-qr-scanner" spec="https://github.com/project-sunbird/cordova-plugin-qr-scanner.git#release-1.14.0" />
-    <plugin name="cordova-plugin-sunbirdsplash" spec="https://github.com/project-sunbird/cordova-plugin-sunbirdsplash.git#release-1.14.0" />
-    <plugin name="cordova-plugin-openrap" spec="https://github.com/project-sunbird/cordova-plugin-openrap.git#release-1.14.0" />
-    <plugin name="cordova-plugin-geniecanvas" spec="https://github.com/project-sunbird/cordova-plugin-geniecanvas.git#release-1.14.0.1" />
-    <engine name="android" spec="^8.0.0" />
+    <plugin name="cordova-plugin-inappbrowser" spec="^3.2.0" />
+    <plugin name="cordova-plugin-geniecanvas" spec="git+https://github.com/project-sunbird/cordova-plugin-geniecanvas.git#release-1.14.0.1" />
+    <plugin name="cordova-plugin-badge" spec="^0.8.8" />
 </widget>

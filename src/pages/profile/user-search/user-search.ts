@@ -166,7 +166,6 @@ export class UserSearchComponent {
       }
 
       onScrollEnd(event: any): void {
-        console.log("end of scroll");
         this.getVisibleElementRange();
       }
 
@@ -178,12 +177,10 @@ export class UserSearchComponent {
 
       getVisibleElementRange() {
         this.userList.forEach((element, index) => {
-          console.log(`Index ${index}: `, this.isElementInViewport(document.getElementById(<string>index)));
           if (document.getElementById(<string>index)) {
             this.generateVisitObject(element, index);
           }
         });
-        console.log("VisibleItemArray=", this.visibleItems);
       }
 
       isElementInViewport(el) {
@@ -206,7 +203,6 @@ export class UserSearchComponent {
 
       ionViewWillLeave() {
         this.visibleItems = _.uniq(this.visibleItems);
-        console.log("Visible Items", this.visibleItems);
       }
   */
 

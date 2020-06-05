@@ -121,7 +121,6 @@ export class CourseBatchesPage implements OnInit {
         data = JSON.parse(data);
         this.zone.run(() => {
           this.sync(enrollCourseRequest);
-          console.log('You have successfully enrolled...');
           this.commonUtilService.showToast(this.commonUtilService.translateMessage('COURSE_ENROLLED'));
           this.events.publish(EventTopics.ENROL_COURSE_SUCCESS, {
             batchId: item.id,
@@ -131,7 +130,6 @@ export class CourseBatchesPage implements OnInit {
         });
       })
       .catch((error: any) => {
-        console.log('error while enrolling into batch ==>', error);
         this.zone.run(() => {
           error = JSON.parse(error);
           if (error && error.error === 'CONNECTION_ERROR') {
@@ -168,7 +166,6 @@ export class CourseBatchesPage implements OnInit {
   getUserId(): void {
     this.authService.getSessionData((session) => {
       if (session === undefined || session == null || session === 'null') {
-        console.log('session expired');
         this.zone.run(() => { this.isGuestUser = true; });
       } else {
         this.zone.run(() => {

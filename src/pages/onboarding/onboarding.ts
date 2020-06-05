@@ -157,7 +157,6 @@ export class OnboardingPage {
         if (error) {
           this.commonUtilService.showToast(this.commonUtilService.translateMessage('ERROR_WHILE_LOGIN'));
         }
-        console.log(error);
       });
   }
 
